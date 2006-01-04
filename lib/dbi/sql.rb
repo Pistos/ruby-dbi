@@ -1,5 +1,5 @@
 #
-# $Id: sql.rb,v 1.1 2006/01/04 02:03:22 francis Exp $
+# $Id: sql.rb,v 1.1.1.1 2006/01/04 02:03:22 francis Exp $
 #
 # parts extracted from Jim Weirichs DBD::Pg
 #

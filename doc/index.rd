@@ -1,6 +1,6 @@
 =begin
 = Ruby/DBI - a database independent interface for accessing databases - similar to Perl's DBI
-$Id: index.rd,v 1.1 2006/01/04 02:03:10 francis Exp $
+$Id: index.rd,v 1.1.1.1 2006/01/04 02:03:10 francis Exp $
 
 == License
 

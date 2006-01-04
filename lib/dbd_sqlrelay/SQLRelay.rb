@@ -27,7 +27,7 @@
 # OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 # ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
-# $Id: SQLRelay.rb,v 1.1 2006/01/04 02:03:21 francis Exp $
+# $Id: SQLRelay.rb,v 1.1.1.1 2006/01/04 02:03:21 francis Exp $
 #
 
 require "sqlrelay"

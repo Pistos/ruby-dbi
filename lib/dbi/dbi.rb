@@ -27,7 +27,7 @@
 # OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 # ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
-# $Id: dbi.rb,v 1.1 2006/01/04 02:03:22 francis Exp $
+# $Id: dbi.rb,v 1.1.1.1 2006/01/04 02:03:22 francis Exp $
 #
 
 require "dbi/row"

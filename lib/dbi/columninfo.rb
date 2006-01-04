@@ -1,5 +1,5 @@
 # 
-# $Id: columninfo.rb,v 1.1 2006/01/04 02:03:21 francis Exp $
+# $Id: columninfo.rb,v 1.1.1.1 2006/01/04 02:03:21 francis Exp $
 #
 # by Michael Neumann (neumann@s-direktnet.de)
 #

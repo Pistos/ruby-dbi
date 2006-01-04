@@ -1,4 +1,4 @@
-#$Id: test_blob.rb,v 1.1 2006/01/04 02:03:21 francis Exp $
+#$Id: test_blob.rb,v 1.1.1.1 2006/01/04 02:03:21 francis Exp $
 
 require "dbi"
 

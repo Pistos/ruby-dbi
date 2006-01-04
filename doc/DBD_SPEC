@@ -2,7 +2,7 @@
 = DBD Specification Version 0.2.2 (Draft)
 by Michael Neumann (mneumann@fantasy-coders.de)
 
- $Id: DBD_SPEC,v 1.1 2006/01/04 02:03:10 francis Exp $
+ $Id: DBD_SPEC,v 1.1.1.1 2006/01/04 02:03:10 francis Exp $
 
 == DBD Directory Layout
 The directory layout is the following:

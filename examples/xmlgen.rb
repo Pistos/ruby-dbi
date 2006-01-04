@@ -1,4 +1,4 @@
-# $Id: xmlgen.rb,v 1.1 2006/01/04 02:03:17 francis Exp $
+# $Id: xmlgen.rb,v 1.1.1.1 2006/01/04 02:03:17 francis Exp $
 # by Michael Neumann
 
 module DBI; module Utils; module XMLFormatter 

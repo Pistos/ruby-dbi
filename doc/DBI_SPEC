@@ -2,7 +2,7 @@
 = DBI Interface Specification Version 0.2.2 (Draft)
 by Michael Neumann (mneumann@fantasy-coders.de)
 
- $Id: DBI_SPEC,v 1.1 2006/01/04 02:03:10 francis Exp $
+ $Id: DBI_SPEC,v 1.1.1.1 2006/01/04 02:03:10 francis Exp $
  
 == Module DBD
 

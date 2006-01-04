@@ -27,7 +27,7 @@
 # OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 # ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
-# $Id: DB2.rb,v 1.1 2006/01/04 02:03:19 francis Exp $
+# $Id: DB2.rb,v 1.1.1.1 2006/01/04 02:03:19 francis Exp $
 #
 
 require 'db2/db2cli.rb'
