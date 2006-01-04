@@ -1,10 +1,11 @@
 #
-# $Id: sql.rb,v 1.1 2006/01/04 02:03:22 francis Exp $
+# $Id: sql.rb,v 1.2 2006/01/04 17:31:52 francis Exp $
 #
 # parts extracted from Jim Weirichs DBD::Pg
 #
 
 module DBI
+require "dbi/utils"
 require "parsedate"
 require "time"
 

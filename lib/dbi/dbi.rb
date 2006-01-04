@@ -27,7 +27,7 @@
 # OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 # ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
-# $Id: dbi.rb,v 1.1 2006/01/04 02:03:22 francis Exp $
+# $Id: dbi.rb,v 1.2 2006/01/04 17:31:52 francis Exp $
 #
 
 require "dbi/row"
@@ -224,132 +224,6 @@ class Binary
 
   def to_s
     @data
-  end
-end
-
-class Date
-  attr_accessor :year, :month, :day
-  def initialize(year=0, month=0, day=0)
-    case year
-    when ::Date
-      @year, @month, @day = year.year, year.month, year.day 
-      @original_date = year
-    when ::Time
-      @year, @month, @day = year.year, year.month, year.day 
-      @original_time = year
-    else
-      @year, @month, @day = year, month, day
-    end
-  end
-
-  def mon() @month end
-  def mon=(val) @month=val end
-
-  def mday() @day end
-  def mday=(val) @day=val end
-
-  def to_time
-    @original_time || ::Time.local(@year, @month, @day, 0, 0, 0)
-  end
-
-  def to_date
-    @original_date || ::Date.new(@year, @month, @day)
-  end
-
-  def to_s
-    sprintf("%04d-%02d-%02d", @year, @month, @day)
-  end
-end
-
-
-class Time
-  attr_accessor :hour, :minute, :second
-  def initialize(hour=0, minute=0, second=0)
-    case hour
-    when ::Time
-      @hour, @minute, @second = hour.hour, hour.min, hour.sec
-      @original_time = hour
-    else
-      @hour, @minute, @second = hour, minute, second
-    end
-  end
-
-  def min() @minute end
-  def min=(val) @minute=val end
-
-  def sec() @second end
-  def sec=(val) @second=val end
-
-  def to_time
-    if @original_time
-      @original_time
-    else
-      t = ::Time.now
-      ::Time.local(t.year, t.month, t.day, @hour, @minute, @second)
-    end
-  end
-
-  def to_s
-    sprintf("%02d:%02d:%02d", @hour, @minute, @second)
-  end
-end
-
-
-class Timestamp
-  attr_accessor :year, :month, :day
-  attr_accessor :hour, :minute, :second
-  attr_writer   :fraction
-  
-  def initialize(year=0, month=0, day=0, hour=0, minute=0, second=0, fraction=nil)
-    case year
-    when ::Time
-      @year, @month, @day = year.year, year.month, year.day 
-      @hour, @minute, @second, @fraction = year.hour, year.min, year.sec, nil 
-      @original_time = year
-    when ::Date
-      @year, @month, @day = year.year, year.month, year.day 
-      @hour, @minute, @second, @fraction = 0, 0, 0, nil 
-      @original_date = year
-    else
-      @year, @month, @day = year, month, day
-      @hour, @minute, @second, @fraction = hour, minute, second, fraction
-    end
-  end
-
-  def ==(otherTimestamp)
-    a = otherTimestamp
-
-    @year == a.year and @month == a.month and @day == a.day and
-    @hour == a.hour and @minute == a.minute and @second == a.second and
-    (fraction() == a.fraction)
-  end
-
-  def fraction() @fraction || 0 end
-
-  def mon() @month end
-  def mon=(val) @month=val end
-  def mday() @day end
-  def mday=(val) @day=val end
-  def min() @minute end
-  def min=(val) @minute=val end
-  def sec() @second end
-  def sec=(val) @second=val end
-
-  def to_s
-    s = sprintf("%04d-%02d-%02d %02d:%02d:%02d", @year, @month, @day, @hour, @minute, @second) 
-    if @fraction.nil?
-      s
-    else
-      s + '.' + @fraction.to_s.split('.').last
-    end
-  end
-
-  def to_time
-    @original_time || ::Time.local(@year, @month, @day, @hour, @minute, @second)
-  end
-
-  def to_date
-    @original_date || ::Date.new(@year, @month, @day)
   end
 end
 

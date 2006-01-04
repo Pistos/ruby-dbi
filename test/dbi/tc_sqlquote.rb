@@ -1,21 +1,14 @@
-#!/usr/local/bin/ruby
-# Ruby Unit Tests
-
-require 'runit/testcase'
-require 'runit/cui/testrunner'
-
-require 'require_dispatch'
-require "dbi"
+$: << 'lib'
+require 'test/unit'
+require 'dbi/dbi'
 
 class MockSql
   include DBI::SQL::BasicQuote
 end
 
-$last_suite = RUNIT::TestSuite.new
-
 # --------------------------------------------------------------------
 
-class TestSqlQuote < RUNIT::TestCase
+class TestSqlQuote < Test::Unit::TestCase
   def setup
     @sql = MockSql.new
   end
@@ -59,13 +52,3 @@ class TestSqlQuote < RUNIT::TestCase
 
 end
 
-$last_suite.add_test(TestSqlQuote.suite)
-
-
-
-# --------------------------------------------------------------------
-
-if __FILE__ == $0 then
-  RUNIT::CUI::TestRunner.quiet_mode = false
-  RUNIT::CUI::TestRunner.run($last_suite)
-end

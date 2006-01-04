@@ -1,18 +1,9 @@
-#!/usr/local/bin/ruby
-# Ruby Unit Tests
-
-require 'runit/testcase'
-require 'runit/cui/testrunner'
-
-require 'require_dispatch'
-require "dbi"
-require "sql"
-
-
-$last_suite = RUNIT::TestSuite.new
+$: << 'lib'
+require 'test/unit'
+require "dbi/sql"
 
 # ====================================================================
-class TestSqlBind < RUNIT::TestCase
+class TestSqlBind < Test::Unit::TestCase
 
   include DBI::SQL::BasicQuote
   include DBI::SQL::BasicBind
@@ -29,13 +20,13 @@ class TestSqlBind < RUNIT::TestCase
   end
 
   def test_too_many
-    assert_exception (RuntimeError) {
+    assert_raise (RuntimeError) {
       bind(self, "age=?", [10, 11])
     }
   end
 
   def test_too_few
-    assert_exception (RuntimeError) {
+    assert_raise (RuntimeError) {
       bind(self, "age in (?, ?, ?)", [10, 11])
     }
   end
@@ -101,11 +92,10 @@ ENDSQL
 
 end
 
-$last_suite.add_test(TestSqlBind.suite)
 
 
 # ====================================================================
-class TestSqlPreparedStmt < RUNIT::TestCase
+class TestSqlPreparedStmt < Test::Unit::TestCase
   include DBI::SQL::BasicQuote
 
   def get_stmt(sql)
@@ -124,13 +114,13 @@ class TestSqlPreparedStmt < RUNIT::TestCase
   end
 
   def test_too_many
-    assert_exception (RuntimeError) {
+    assert_raise (RuntimeError) {
       get_stmt("age=?").bind([10, 11])
     }
   end
 
   def test_too_few
-    assert_exception (RuntimeError) {
+    assert_raise (RuntimeError) {
       get_stmt("age in (?, ?, ?)").bind([10, 11])
     }
   end
@@ -155,12 +145,11 @@ class TestSqlPreparedStmt < RUNIT::TestCase
 
 end
 
-$last_suite.add_test(TestSqlPreparedStmt.suite)
 
 
 
 ######################################################################
-class TestLex < RUNIT::TestCase
+class TestLex < Test::Unit::TestCase
 
   include DBI::SQL::BasicBind
 
@@ -222,12 +211,3 @@ class TestLex < RUNIT::TestCase
 
 end
 
-$last_suite.add_test(TestLex.suite)
-
-
-######################################################################
-
-if __FILE__ == $0 then
-  RUNIT::CUI::TestRunner.quiet_mode = false
-  RUNIT::CUI::TestRunner.run($last_suite)
-end

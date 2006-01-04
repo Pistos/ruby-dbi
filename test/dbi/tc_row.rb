@@ -1,15 +1,9 @@
-#!/usr/local/bin/ruby
-# Ruby Unit Tests
-
-require 'runit/testcase'
-require 'runit/cui/testrunner'
-
-require '../row'
-
-$last_suite = RUNIT::TestSuite.new
+$: << 'lib'
+require 'test/unit'
+require 'dbi/row'
 
 # ====================================================================
-class TestDbRow < RUNIT::TestCase
+class TestDbRow < Test::Unit::TestCase
 
   def test_create
     row = make_row
@@ -115,12 +109,3 @@ class TestDbRow < RUNIT::TestCase
 
 end
 
-$last_suite.add_test(TestDbRow.suite)
-
-
-# --------------------------------------------------------------------
-
-if __FILE__ == $0 then
-  RUNIT::CUI::TestRunner.quiet_mode = false
-  RUNIT::CUI::TestRunner.run($last_suite)
-end

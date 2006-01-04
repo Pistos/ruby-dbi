@@ -1,17 +1,9 @@
-#!/usr/bin/env ruby
-# Ruby Unit Tests
-
-require 'runit/testcase'
-require 'runit/cui/testrunner'
-
-require 'require_dispatch'
-require "dbi"
-require "sql"
-
-$last_suite = RUNIT::TestSuite.new
+$: << 'lib'
+require 'test/unit'
+require 'dbi/sql'
 
 # ====================================================================
-class TestSqlCoerce < RUNIT::TestCase
+class TestSqlCoerce < Test::Unit::TestCase
 
   def setup
     @coerce = DBI::SQL::BasicQuote::Coerce.new
@@ -79,12 +71,3 @@ class TestSqlCoerce < RUNIT::TestCase
 
 end
 
-$last_suite.add_test(TestSqlCoerce.suite)
-
-
-######################################################################
-
-if __FILE__ == $0 then
-  RUNIT::CUI::TestRunner.quiet_mode = false
-  RUNIT::CUI::TestRunner.run($last_suite)
-end
