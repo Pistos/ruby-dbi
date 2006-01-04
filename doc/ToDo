@@ -1,33 +1,34 @@
 =begin
 = ToDo
+== General bugs:
+* StatementHandle#fetch(...) should return nil if no more rows are available. But it returns nil only the first time, after that it raises "DBI::InterfaceError: Statement must first be executed".
+* DBI::Timestamp cannot compare with nil.
+* Unpacking an empty field fails on an ia64 Linux system.
+* DBI.load_driver will fail silently if it can't find a driver, instead of raising an exception.
 
-* num_rows, which returns the number of rows in a result-set.
-* SQL statement parser like Perl's SQL::Statement 
-* LDAP DBD
-* column_info: precision == column_size or == column_size - scale ??? 
-* fetch_many callable as iterator
-* make SQL::bind preparable (parse SQL statement before)
-* columns / column_info with more DBDs (DB2, Oracle, Interbase, ODBC)
-* Tainting
-* table_info
-* bind_param_inout
-* type_info / type_info_all
-* bind_col ?
-* Rewrite DBI-dispatching in C?
-* warn if commit/rollback and AutoCommit is on
-* bind_out_param/bind_inout_param
-* tracing/logging for DBDs by calling log(...)
-* define exact behaviour of fetch_scroll
-* define exact behaviour of exception classes
-* do not pass *args paramters to DBD (it's harder for C-extensions to handle them)
-* thead safety ?
-* asynchronous execution
+== Bugs with Frontbase:
+* DBI interface is 7.5x slower than raw access to the Frontbase driver.
 
-= Done
+== Bugs with MySQL:
+* MySQL DBD needs to read options from client to handle text from non-latin1 tables.
+* DBI raises on encountering 0000-00-00 00:00 00 in mysql datetime columns.
 
-* version.rb; don't update everytime dbi.rb when version changes
-* fetch_all should always return an array, as well as select_all etc., fetch_many always []
-* get a Driver object, call methods on it
-* blob_import etc. for DBD::Pg
-* parameter markers in DB2
+== Bugs with PostgreSQL:
+* Though the document says that 'tables' method returns an Array of all tables and views, 'tables' method in Pg driver only returns an Array of all tables.
+* PGresult#type raises system runtime error.
+* PGconn.quote is not supporting Shift-JIS encoding
+* AutoCommit attribute in connect() has no effect.
+
+== Bugs with SQLite:
+* If you supply an optional --rb-dir and config --with=dbd_sqlite, the sqlite portion of the install still tries to install directly into the default tree.
+
+== Bugs with SQLRelay:
+* Raises "Failed to get a cursor id" when doing more than 6 successive select queries.
+
+= Broader goals:
+* Easier installation
+* More documentation
+* More Ruby-ish API?
+* Optimize
+
 =end

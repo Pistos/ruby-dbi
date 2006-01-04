@@ -4,41 +4,47 @@
   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
-<title>ToDo List for DBI</title>
-<link href="rubyStyle.css" type="text/css" rel="stylesheet" />
+<title>doc/ToDo</title>
 </head>
 <body>
 <h1><a name="label-0" id="label-0">ToDo</a></h1><!-- RDLabel: "ToDo" -->
+<h2><a name="label-1" id="label-1">General bugs:</a></h2><!-- RDLabel: "General bugs:" -->
 <ul>
-<li>num_rows, which returns the number of rows in a result-set.</li>
-<li>SQL statement parser like Perl's SQL::Statement </li>
-<li>LDAP DBD</li>
-<li>column_info: precision == column_size or == column_size - scale ??? </li>
-<li>fetch_many callable as iterator</li>
-<li>make SQL::bind preparable (parse SQL statement before)</li>
-<li>columns / column_info with more DBDs (DB2, Oracle, Interbase, ODBC)</li>
-<li>Tainting</li>
-<li>table_info</li>
-<li>bind_param_inout</li>
-<li>type_info / type_info_all</li>
-<li>bind_col ?</li>
-<li>Rewrite DBI-dispatching in C?</li>
-<li>warn if commit/rollback and AutoCommit is on</li>
-<li>bind_out_param/bind_inout_param</li>
-<li>tracing/logging for DBDs by calling log(...)</li>
-<li>define exact behaviour of fetch_scroll</li>
-<li>define exact behaviour of exception classes</li>
-<li>do not pass *args paramters to DBD (it's harder for C-extensions to handle them)</li>
-<li>thead safety ?</li>
-<li>asynchronous execution</li>
+<li>StatementHandle#fetch(...) should return nil if no more rows are available. But it returns nil only the first time, after that it raises "DBI::InterfaceError: Statement must first be executed".</li>
+<li>DBI::Timestamp cannot compare with nil.</li>
+<li>Unpacking an empty field fails on an ia64 Linux system.</li>
+<li>DBI.load_driver will fail silently if it can't find a driver, instead of raising an exception.</li>
 </ul>
-<h1><a name="label-1" id="label-1">Done</a></h1><!-- RDLabel: "Done" -->
+<h2><a name="label-2" id="label-2">Bugs with Frontbase:</a></h2><!-- RDLabel: "Bugs with Frontbase:" -->
 <ul>
-<li>version.rb; don't update everytime dbi.rb when version changes</li>
-<li>fetch_all should always return an array, as well as select_all etc., fetch_many always []</li>
-<li>get a Driver object, call methods on it</li>
-<li>blob_import etc. for DBD::Pg</li>
-<li>parameter markers in DB2</li>
+<li>DBI interface is 7.5x slower than raw access to the Frontbase driver.</li>
+</ul>
+<h2><a name="label-3" id="label-3">Bugs with MySQL:</a></h2><!-- RDLabel: "Bugs with MySQL:" -->
+<ul>
+<li>MySQL DBD needs to read options from client to handle text from non-latin1 tables.</li>
+<li>DBI raises on encountering 0000-00-00 00:00 00 in mysql datetime columns.</li>
+</ul>
+<h2><a name="label-4" id="label-4">Bugs with PostgreSQL:</a></h2><!-- RDLabel: "Bugs with PostgreSQL:" -->
+<ul>
+<li>Though the document says that 'tables' method returns an Array of all tables and views, 'tables' method in Pg driver only returns an Array of all tables.</li>
+<li>PGresult#type raises system runtime error.</li>
+<li>PGconn.quote is not supporting Shift-JIS encoding</li>
+<li>AutoCommit attribute in connect() has no effect.</li>
+</ul>
+<h2><a name="label-5" id="label-5">Bugs with SQLite:</a></h2><!-- RDLabel: "Bugs with SQLite:" -->
+<ul>
+<li>If you supply an optional --rb-dir and config --with=dbd_sqlite, the sqlite portion of the install still tries to install directly into the default tree.</li>
+</ul>
+<h2><a name="label-6" id="label-6">Bugs with SQLRelay:</a></h2><!-- RDLabel: "Bugs with SQLRelay:" -->
+<ul>
+<li>Raises "Failed to get a cursor id" when doing more than 6 successive select queries.</li>
+</ul>
+<h1><a name="label-7" id="label-7">Broader goals:</a></h1><!-- RDLabel: "Broader goals:" -->
+<ul>
+<li>Easier installation</li>
+<li>More documentation</li>
+<li>More Ruby-ish API?</li>
+<li>Optimize</li>
 </ul>
 
 </body>
