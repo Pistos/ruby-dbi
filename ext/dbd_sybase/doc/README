@@ -1,0 +1,14 @@
+
+Currently outdated!!! Do not work with DBI 0.0.5.
+=================================================
+
+This is a sample Sybase driver for Rainer Perl's DBI-for-Ruby.
+
+It is based on (and requires) "FreeTDS" http://www.freetds.org/
+
+
+Notes
+=====
+
+I am using tds_convert to convert all fields to strings. If something does
+not work as expected, please drop me a note.

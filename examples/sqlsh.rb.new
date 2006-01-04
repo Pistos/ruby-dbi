@@ -1,0 +1,220 @@
+
+require "dbi"
+require "readline"
+
+class ReadlineControl
+  
+  def initialize
+    @keywords = []
+    set_prompt
+    Readline.completion_proc = proc {|str| complete(str) }
+  end
+
+  def add_keywords(arr)
+    @keywords += arr
+  end
+
+  def complete(str)
+    @keywords.grep(/^#{Regexp.escape(str)}/i)
+  end
+
+  def set_prompt(prompt="> ")
+    @prompt = prompt
+  end
+
+  def readline
+    Readline.readline(@prompt, true)
+  end
+
+end
+
+class ConnectionInfo
+  attr_reader :user, :passwd, :driver_url, :driver_name, :driver_parameter
+
+  def initialize(driver_url, user=nil, passwd=nil)
+    @user       = user
+    @passwd     = passwd
+    @driver_url = driver_url
+    driver_url =~ /dbi:([^:]*)(:(.*))?/
+    @driver_name = $1
+    @driver_parameter = $3
+  end
+
+  def to_a
+    return @driver_url, @user, @passwd
+  end
+
+  def to_s
+    "#@driver_url #@user #@passwd"
+  end
+
+  # %u = username
+  # %d = driver name
+  # %D = driver URL
+  # %p = driver_specific_parameter
+  
+  def subst_prompt(str)
+    str = str.gsub("%u", @user || "")
+    str = str.gsub("%d", @driver_name)
+    str = str.gsub("%D", @driver_url)
+    str = str.gsub("%p", @driver_parameter)
+  end
+
+end
+ 
+
+PROMPT_NOCONN = ENV['SQLSH_PROMPT_NOCONN'] || "dbi # " 
+PROMPT  = ENV['SQLSH_PROMPT']  || "%u@%D # "
+PROMPT2 = ENV['SQLSH_PROMPT2'] || "%u@%D \ " 
+
+SQL_KEYWORDS = %w(
+  INSERT DELETE UPDATE SELECT FROM WHERE IN LIKE SET VALUES INTO
+  CREATE TABLE DROP 
+  COMMIT ROLLBACK
+  CHAR VARCHAR VARCHAR2 INT INTEGER NUMBER FLOAT REAL LONG CLOB BLOB DECIMAL 
+  DBCLOB DBBLOB
+)
+
+
+
+
+
+if ARGV.size == 0 
+  $conn = nil
+  $dbconn = nil
+elsif ARGV.size >= 1 and ARGV.size <= 3 
+  $conn = ConnectionInfo.new(*ARGV)
+  $dbconn = nil
+
+  begin
+    $dbconn = DBI.connect(*$conn.to_a)
+  rescue DBI::Error, DBI::Warning
+    puts "ERROR: Couldn't connect to #{$conn.to_s}"
+    p $!
+    $conn = nil
+    $dbconn = nil
+  end
+  puts "Successfully connected with #{$conn.to_s}"
+else
+  puts
+  puts "USAGE: #{$0} [driver_url [user [password] ]]"
+  puts
+  exit 1
+end
+
+
+def prompt(cont=false)
+  if $conn.nil?
+    PROMPT_NOCONN
+  else
+    if cont
+      $conn.subst_prompt(PROMPT2)
+    else
+      $conn.subst_prompt(PROMPT)
+    end
+  end
+end
+
+
+
+rd = ReadlineControl.new
+rd.add_keywords SQL_KEYWORDS
+rd.set_prompt(prompt)
+
+
+loop {
+  line = rd.readline
+  line.chomp!
+  next if line.empty?
+
+  begin 
+
+    if line =~ /^\\/ then
+      #if line =~ /^\\list tables/i then
+        #stmt = Conn.createStatement.tables
+      #elsif line =~ /^\\list views/i then
+      #  stmt = Conn.createStatement.tables("%", "%", "VIEW")
+
+      if line =~ /^\\q/i then
+        break 
+      elsif line =~ /^\\disconnect/i then
+        if $dbconn.nil?
+          puts "Cannot disconnect! No connection!"
+        else
+          $dbconn.disconnect
+          $dbconn = $conn = nil
+          puts "Disconnected"
+          rd.set_prompt(prompt)
+        end
+        
+      elsif line =~ /^\\connect ([^ ].*)/i then
+        if $dbconn.nil?
+          begin
+            $conn = ConnectionInfo.new(* $1.split(/ /) )
+            $dbconn = DBI.connect(*$conn.to_a)
+            rd.set_prompt(prompt)
+          rescue DBI::Error, DBI::Warning
+            puts "ERROR: Couldn't connect to #{$conn.to_s}"
+            p $!
+            $conn = nil
+            $dbconn = nil
+          end
+          puts "Successfully connected with #{$conn.to_s}"
+
+        else
+          puts "Cannot connect! Disconnect first connection!"
+        end
+
+      else
+        puts
+        puts "Unknown command!"
+        puts
+        next
+      end
+    else
+      # multi-line
+      if line[-1].chr == "\\" then
+        line.chop!
+        rd.set_prompt(prompt(true))
+        loop {
+          ln = rd.readline
+          line.chomp!
+          next if line.empty?
+           
+          if ln[-1].chr == "\\" then
+            line += ln.chop
+          else
+            line += ln
+            break
+          end
+        }
+      end
+
+      rd.set_prompt(prompt)
+
+      if $dbconn.nil? then
+        puts "Cannot execute <#{line}>, no connection"
+        next
+      else
+
+        stmt = $dbconn.prepare(line)
+        head = stmt.column_names
+        next if head.empty? 
+        rows = stmt.fetch_all
+        DBI::Utils::TableFormatter.ascii(head, rows)
+
+      end
+    end
+
+  rescue DBI::Error, DBI::Warning => err
+    puts
+    puts err.message
+    puts
+  end
+
+
+}
+
+$dbconn.disconnect unless $dbconn.nil?
+
+

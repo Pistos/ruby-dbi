@@ -1,0 +1,12 @@
+#!/bin/sh
+
+RUBY="/usr/bin/env ruby -p -e"
+subst="'$_.gsub!(/&<var>amp<\/var>;/, %q|<var>&amp;</var>|)'"
+subst2="'$_.gsub!(/&<var>lt<\/var>;/, %q|<var>&lt;</var>|)'"
+RD="rd2 -r rd/rd2html-lib --with-css=rubyStyle.css" 
+
+$RD --html-title="ToDo List for DBI" ../doc/ToDo  | $RUBY "$subst" | $RUBY "$subst2"  > ../doc/html/ToDo.html
+$RD --html-title="DBD Specification Version 0.1 (Draft)" ../doc/DBD_SPEC  | $RUBY "$subst" | $RUBY "$subst2"  > ../doc/html/DBD_SPEC.html
+$RD --html-title="DBI Specification Version 0.5 (Draft)" ../doc/DBI_SPEC  | $RUBY "$subst" | $RUBY "$subst2"  > ../doc/html/DBI_SPEC.html
+$RD --html-title="Homepage of Ruby's DBI" ../doc/index.rd > ../doc/html/index.html
+

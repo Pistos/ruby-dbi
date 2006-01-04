@@ -1,0 +1,13 @@
+dbi dbi dbi 
+dbd_mysql dbd_mysql DBD/Mysql
+dbd_msql dbd_msql DBD/Msql
+dbd_interbase dbd_interbase DBD/InterBase
+dbd_oracle dbd_oracle DBD/Oracle
+dbd_db2 dbd_db2 DBD/DB2
+dbd_ado dbd_ado DBD/ADO
+dbd_pg dbd_pg DBD/Pg
+dbd_proxy dbd_proxy DBD/Proxy
+dbd_odbc dbd_odbc DBD/ODBC
+dbd_sqlrelay dbd_sqlrelay DBD/SQLRelay
+dbd_frontbase dbd_frontbase DBD/FrontBase
+wrapper dbi .

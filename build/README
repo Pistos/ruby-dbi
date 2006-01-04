@@ -1,0 +1,7 @@
+= How to make a release?
+
+Run
+
+  sh package.sh
+
+And follow the steps!

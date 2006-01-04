@@ -1,0 +1,39 @@
+DBRC
+
+What is it?
+
+   A supplement to the dbi module, allowing you to avoid hard-coding
+   passwords in your programs that make database connections.
+
+What does it do?
+
+   It reads entries out of a file called .dbrc, which is meant to be
+   analogous to the .netrc file (used by programs such as telnet).
+
+   The .dbrc file is simply a space separated list of items that
+   contain the following:
+
+   Database name
+   User name
+   Password
+   Driver
+   Timeout (for connections)
+   Maximum number of reconnect attempts (for retry blocks)
+   Interval (seconds between connection attempts)
+
+What's the point?
+
+   The point is to provide a bit of obfuscation for passwords and a
+   bit of convenience, by  having all of your database entries in
+   one place.
+
+Isn't that dangerous?
+
+   The rules for the .dbrc file state that it must have perms of
+   600 and be owned by uid of the script that calls it.  That
+   means that only *you* and *root* should be able to see it.
+
+What it doesn't do:
+
+   It does not establish a database connection.  It's simply meant
+   to provide information.

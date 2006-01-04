@@ -1,0 +1,2 @@
+dbd_sybase dbd_sybase DBD/Sybase
+dbd_sqlite dbd_sqlite DBD/SQLite 
