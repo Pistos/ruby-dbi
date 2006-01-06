@@ -61,18 +61,6 @@ module DBI
          Row.new(@column_names, new_values)
       end
 
-      def []=(*args)
-         #if args.size == 1
-         #  raise ArgumentError, "wrong # of arguments(#{args.size} for at least 2)"
-         if args.size == 2
-            @arr[conv_param(args[0])] = args[-1]
-         elsif args.size == 3
-            @arr[conv_param(args[0]), conv_param(args[1])] = args[-1]
-         else
-            raise ArgumentError, "wrong # of arguments(#{args.size} for 2)"
-         end
-      end
-
       alias field_names column_names
 
       # Retrieve a value by index (rather than name)
@@ -156,6 +144,22 @@ module DBI
             end
          rescue TypeError
             nil
+         end
+      end
+
+      # Assign a value to a Row object by element.  You can assign using
+      # a single element reference, or by using a start and length similar
+      # to the second form of Array#[]=.
+      #
+      # row[0]     = "kirk"
+      # row[:last] = "haines"
+      # row[0, 2]  = "test" 
+      #
+      def []=(key, value_or_length, obj=nil)
+         if obj
+            @arr[conv_param(key), conv_param(value_or_length)] = obj
+         else
+            @arr[conv_param(key)] = value_or_length
          end
       end
 
