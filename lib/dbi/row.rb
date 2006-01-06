@@ -177,8 +177,8 @@ module DBI
                   first = @column_map[arg.first.to_s]
                   last  = @column_map[arg.last.to_s]
                else
-                  first = @column_map[arg.first]
-                  last  = @column_map[arg.last]
+                  first = arg.first
+                  last  = arg.last
                end
 
                if arg.exclude_end?
