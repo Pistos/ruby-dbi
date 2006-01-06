@@ -115,6 +115,13 @@ class TC_DBD_Row < Test::Unit::TestCase
       assert_equal(["Daniel", "36"], @row[[0,:age]])
    end
 
+   def test_indexing_range
+      assert_equal(["Daniel","Berger"], @row[0..1])
+      assert_equal(["Berger","36"], @row[1..2])
+      assert_equal(["Berger","36"], @row[1..99])
+      assert_equal(nil, @row[90..100])
+   end
+
    # The two argument reference should behave like the second form of Array#[]
    def test_indexing_two_args
       assert_equal([], @row[0,0])
