@@ -54,11 +54,10 @@ class TC_DBD_Row < Test::Unit::TestCase
    end
    
    def test_row_data_by_field
-      row = make_row
-      assert_equal sample_data[0], row.by_field('first')
-      assert_equal sample_data[1], row.by_field('last')
-      assert_equal sample_data[2], row.by_field('age')
-      assert_equal nil, row.by_field('unknown')
+      assert_equal @data[0], @row.by_field('first')
+      assert_equal @data[1], @row.by_field('last')
+      assert_equal @data[2], @row.by_field('age')
+      assert_equal nil, @row.by_field('unknown')
    end
    
    def test_row_set_values
@@ -140,68 +139,66 @@ class TC_DBD_Row < Test::Unit::TestCase
       assert_equal(["Berger", "36", "Daniel", nil], @row[1, 2, 0, :bogus])
    end
 
-  def test_create
-    row = make_row
-    assert_not_nil row
-  end
+   def test_indexing_assignment
+      assert_nothing_raised{ @row[0] = "kirk" }
+      assert_equal("kirk", @row[0])
 
-  def test_iteration
-    row = make_row
-    expect = sample_data.clone
-    row.each { |value|
-      assert_equal expect.shift, value
-    }
-    assert_equal [], expect
-    row.collect { |value| "Field=#{value}" }
-  end
+      assert_nothing_raised{ @row[:age] = 29 }
+      assert_equal(29, @row[:age])
 
-  
+      assert_nothing_raised{ @row[1,2] = "francis" }
+      assert_equal("francis", @row[:last])
+      assert_nil(@row[:age])
+   end
 
-  def test_clone_with
-    row = make_row
-    another_row = row.clone_with(["Jane", "Smith", 33])
-    assert_equal "Jane", another_row.by_index(0)
-    assert_equal "Smith", another_row.by_index(1)
-    assert_equal 33, another_row.by_index(2)
-    assert row != another_row
-  end
+   def test_clone_with
+      another_row = @row.clone_with(["Jane", "Smith", 33])
+      assert_kind_of(DBI::Row, another_row)
+      assert_equal "Jane", another_row.by_index(0)
+      assert_equal "Smith", another_row.by_index(1)
+      assert_equal 33, another_row.by_index(2)
+      assert(@row != another_row)
+   end
 
-  def test_to_array
-    assert_equal sample_data, make_row.to_a
-  end
+   def test_iteration
+      expect = @data.clone
+      @row.each { |value|
+         assert_equal(expect.shift, value)
+      }
+      assert_equal([], expect)
+      @row.collect { |value| "Field=#{value}" }
+   end
 
-  def test_dup_clone
-    row = make_row
-    dupped = row.dup
-    cloned = row.clone
-    row.set_values(["Bill", "Jones", 16])
-    assert_equal sample_data, dupped.to_a
-    assert_equal sample_data, cloned.to_a
-  end
+   def test_to_array
+      assert_respond_to(@row, :to_a)
+      assert_equal(@data, DBI::Row.new(@cols, @data).to_a)
+   end
 
-  def test_dup_ruby18
-    res = []
-    r = DBI::Row.new(["col1","col2"],[nil,nil])
+   def test_dup_clone
+      dupped = nil
+      cloned = nil
 
-    [["one",1],["two",2],["three",3]].each do |x,y|
-      r["col1"] = x
-      r["col2"] = y
-      res << r.dup
-    end
+      assert_nothing_raised{ dupped = @row.dup }
+      assert_nothing_raised{ cloned = @row.clone }
+      assert_nothing_raised{ @row.set_values(["Bill", "Jones", 16])}
 
-    assert_equal res, [["one", 1], ["two", 2], ["three", 3]]
-  end
+      assert_equal(@data, dupped.to_a)
+      assert_equal(@data, cloned.to_a)
 
-  private
+      assert(dupped.object_id != @row.object_id)
+      assert(cloned.object_id != @row.object_id)
+   end
 
-  def make_row
-    names  = %w(first last age)
-    DBI::Row.new(names, sample_data.clone)
-  end
+   def test_dup_ruby18
+      res = []
+      r = DBI::Row.new(["col1","col2"],[nil,nil])
 
-  def sample_data
-    ['Jim', 'Weirich', 45]
-  end
+      [["one",1],["two",2],["three",3]].each do |x,y|
+         r["col1"] = x
+         r["col2"] = y
+         res << r.dup
+      end
 
+      assert_equal res, [["one", 1], ["two", 2], ["three", 3]]
+   end
 end
-
