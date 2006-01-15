@@ -7,6 +7,7 @@ $LOAD_PATH.unshift(Dir.pwd)
 $LOAD_PATH.unshift(File.dirname(Dir.pwd))
 $LOAD_PATH.unshift("../../lib")
 $LOAD_PATH.unshift("../../lib/dbi")
+$LOAD_PATH.unshift("lib")
 
 require 'test/unit'
 require 'dbi/row'

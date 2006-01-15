@@ -36,7 +36,7 @@ class TestSqlCoerce < Test::Unit::TestCase
     assert_equal "test", @coerce.as_str("test") 
 
     a = [1,2,3]
-    assert_equal a.id,   @coerce.as_str(a).id 
+    assert_equal a.object_id,   @coerce.as_str(a).object_id 
   end
 
   def test_bool

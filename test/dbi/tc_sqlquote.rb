@@ -1,6 +1,6 @@
 $: << 'lib'
 require 'test/unit'
-require 'dbi/dbi'
+require 'dbi'
 
 class MockSql
   include DBI::SQL::BasicQuote
