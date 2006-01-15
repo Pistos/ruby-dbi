@@ -11,7 +11,7 @@ $LOAD_PATH.unshift("../../lib/dbi")
 require 'test/unit'
 require 'dbi/row'
 
-class TC_DBD_Row < Test::Unit::TestCase
+class TC_DBI_Row < Test::Unit::TestCase
    def setup
       @data = %w/Daniel Berger 36/
       @cols = %w/first last age/
