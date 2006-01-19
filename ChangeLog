@@ -1,3 +1,17 @@
+== 0.1.0 - 18-Jan-2006
+* Project taken over by Kirk Haines, Francis Hwang, Patrick May and Daniel
+  Berger as of January, 2006 (with the permission of Michael Neumann).
+* Changelog style changed from diff style to summary style.  If you want diffs,
+  you can watch the CVS commits via RubyForge's builtin utilities.
+* Old RUnit tests replaced with Test/Unit style tests.  
+* Updated the README file to actually include useful documentation instead of
+  pointing to an html document.
+* Lots of internal file/directory reorganization and renaming - none of which
+  should matter to you.
+* General refactoring of the DBI::Row class including a bug fix where using
+  multiple column references did not return the proper values.
+* Corresponding test suite additions and changes for DBI::Row.
+
 2004-05-20 10:36  tag dbi-0-0-23
 
 2004-05-20 10:36  Michael Neumann <mneumann@ntecs.de>
