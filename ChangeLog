@@ -11,6 +11,8 @@
 * General refactoring of the DBI::Row class including a bug fix where using
   multiple column references did not return the proper values.
 * Corresponding test suite additions and changes for DBI::Row.
+* Removed the dbrc.rb file from this distribution.  The dbi-dbrc package can
+  be downloaded separately from the RAA or installed as a gem.
 
 2004-05-20 10:36  tag dbi-0-0-23
 
