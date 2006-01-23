@@ -34,6 +34,16 @@ class TC_DBI_Row < Test::Unit::TestCase
       assert_raises(ArgumentError){ DBI::Row.new }
       assert_raises(TypeError){ DBI::Row.new(@cols, {}) }
    end
+
+   # Test added to ensure that Row#at is equivalent to Row#by_index.  When the
+   # latter method is (hopefully) removed, this test can be removed as well.
+   def test_at
+      assert_respond_to(@row, :at)
+      assert_equal(@data[0], @row.at(0))
+      assert_equal(@data[1], @row.at(1))
+      assert_equal(@data[2], @row.at(2))
+      assert_equal(@data[99], @row.at(99))
+   end
    
    # Should respond to Array and Enumerable methods
    def test_row_delegate
@@ -46,7 +56,7 @@ class TC_DBI_Row < Test::Unit::TestCase
       assert_equal(3, @row.length)
       assert_equal(3, DBI::Row.new(@cols).length)
    end
-   
+
    def test_row_data_by_index
       assert_equal(@data[0], @row.by_index(0))
       assert_equal(@data[1], @row.by_index(1))
@@ -73,10 +83,18 @@ class TC_DBI_Row < Test::Unit::TestCase
       assert_respond_to(@row, :to_h)
       assert_nothing_raised{ @row.to_h }
       assert_kind_of(Hash, @row.to_h)
-      assert_equal({"first"=>"Daniel", "last"=>"Berger", "age"=>"36"},@row.to_h)
+      assert_equal({"first"=>"Daniel", "last"=>"Berger", "age"=>"36"}, @row.to_h)
    end
    
    def test_row_column_names
+      assert_respond_to(@row, :column_names)
+      assert_nothing_raised{ @row.column_names }
+      assert_kind_of(Array, @row.column_names)
+      assert_equal(["first", "last", "age"], @row.column_names)
+   end
+
+   # An alias for column_names
+   def test_row_field_names
       assert_respond_to(@row, :column_names)
       assert_nothing_raised{ @row.column_names }
       assert_kind_of(Array, @row.column_names)
@@ -170,7 +188,17 @@ class TC_DBI_Row < Test::Unit::TestCase
       @row.collect { |value| "Field=#{value}" }
    end
 
-   def test_to_array
+   def test_row_each_with_name
+      assert_respond_to(@row, :each_with_name)
+      assert_nothing_raised{ @row.each_with_name{ } }
+
+      @row.each_with_name{ |value, column|
+         assert(@cols.include?(column))
+         assert(@data.include?(value))
+      }
+   end
+
+   def test_to_a
       assert_respond_to(@row, :to_a)
       assert_equal(@data, DBI::Row.new(@cols, @data).to_a)
    end
