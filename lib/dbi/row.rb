@@ -16,6 +16,10 @@ module DBI
       # argument may either be an Integer or an Array.  If it is not provided,
       # it defaults to the length of +columns+.
       #
+      # DBI::Row is a delegate of the Array class, so all of the Array
+      # instance methods are available to your DBI::Row object (keeping in
+      # mind that initialize, [], and []= have been explicitly overridden).
+      #
       def initialize(columns, size_or_array=nil)
          size_or_array ||= columns.size 
 
@@ -42,7 +46,8 @@ module DBI
          @arr.replace(new_values)
       end
       
-      # Yields a column value by name (rather than index).
+      # Yields a column value by name (rather than index), along with the
+      # column name itself.
       def each_with_name
          @arr.each_with_index do |v, i|
             yield v, @column_names[i]
@@ -63,7 +68,9 @@ module DBI
 
       alias field_names column_names
 
-      # Retrieve a value by index (rather than name)
+      # Retrieve a value by index (rather than name).
+      #
+      # Deprecated.  Since Row delegates to Array, just use Row#at.
       def by_index(index)
          @arr[index]
       end
