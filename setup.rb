@@ -39,7 +39,14 @@ class Installer
   TASK_ORDER = %w( config setup install clean dryrun show )
 
   FILETYPES = %w( bin lib ext share )
-
+	
+	SUBPACKAGES = {
+		'dbd_mysql' => 'Mysql', 'dbd_msql' => 'Msql',
+		'dbd_interbase' => 'InterBase', 'dbd_oracle' => 'Oracle',
+		'dbd_db2' => 'DB2', 'dbd_ado' => 'ADO', 'dbd_pg' => 'Pg',
+		'dbd_proxy' => 'Proxy', 'dbd_odbc' => 'ODBC', 'dbd_sqlrelay' => 'SQLRelay',
+		'dbd_frontbase' => 'FrontBase'
+	}
 
   def initialize( argv )
     argv = argv.dup
@@ -256,12 +263,21 @@ class Installer
       end
     }
     into_dir( 'lib' ) {
-      foreach_package do |targ, topfile|
-        install_rb targ
-        if topfile then
-          create_topfile targ, topfile
-        end
-      end
+			into_dir( 'dbd' ) {
+				SUBPACKAGES.each do |package_code, capname|
+					basefile = capname + '.rb'
+					if @with.include?( package_code )
+						isdir( File.join( @config['rb-dir'], 'DBD', capname ) )
+						install(
+							basefile,
+							File.join( @config['rb-dir'], 'DBD', capname, basefile ),
+							0644
+						)
+					end
+				end
+			}
+			into_dir( 'dbi' ) { install_rb 'dbi' }
+			install( 'dbi.rb', @config['rb-dir'], 0644 )
     }
     into_dir( 'ext' ) {
       foreach_package do |targ, *dummy|
@@ -461,7 +477,7 @@ class Installer
     path = {}
     foreach_record( './PATHCONV' ) do |dir, pack, targ, topfile, *dummy|
       path[dir] = [pack, targ, topfile]
-    end
+		end
 
     base = File.basename( Dir.getwd )
     Dir.foreach('.') do |dir|

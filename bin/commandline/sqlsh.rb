@@ -1,3 +1,4 @@
+#!/usr/local/bin/ruby
 #!/usr/bin/env ruby
 #
 # Copyright (c) 2001, 2002 Michael Neumann <neumann@s-direktnet.de>
@@ -26,7 +27,7 @@
 # OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 # ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
-# $Id: sqlsh.rb,v 1.1 2006/01/04 02:03:08 francis Exp $
+# $Id: sqlsh.rb,v 1.2 2006/01/24 04:20:01 francis Exp $
 #
 
 require "dbi"

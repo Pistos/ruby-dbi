@@ -2,7 +2,8 @@
 * Project taken over by Kirk Haines, Francis Hwang, Patrick May and Daniel
   Berger as of January, 2006 (with the permission of Michael Neumann).
 * Changelog style changed from diff style to summary style.  If you want diffs,
-  you can watch the CVS commits via RubyForge's builtin utilities.
+  you can watch the CVS commits at
+	http://ruby-dbi.rubyforge.org/statcvs/commit_log.html.
 * Old RUnit tests replaced with Test/Unit style tests.  
 * Updated the README file to actually include useful documentation instead of
   pointing to an html document.
