@@ -1,5 +1,5 @@
 # 
-# $Id: columninfo.rb,v 1.1 2006/01/04 02:03:21 francis Exp $
+# $Id: columninfo.rb,v 1.2 2006/01/27 23:29:22 djberg96 Exp $
 #
 # by Michael Neumann (neumann@s-direktnet.de)
 #
@@ -44,12 +44,12 @@ class ColumnInfo
 
   # Attribute getter/setter --------------------------------------------------------------------
   
-  def []( attr ) 
-    @hash[attr]
+  def []( key ) 
+    @hash[key.to_s]
   end
 
-  def []=( attr, value ) 
-    @hash[attr] = value
+  def []=( key, value ) 
+    @hash[key.to_s] = value
   end
 
   def keys
