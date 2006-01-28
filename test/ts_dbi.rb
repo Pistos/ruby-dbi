@@ -5,6 +5,7 @@ $LOAD_PATH.unshift(Dir.pwd + "/lib")
 Dir.chdir("test") rescue nil
 
 require 'dbi/tc_row'
+require 'dbi/tc_columninfo'
 require 'dbi/tc_sqlbind'
 require 'dbi/tc_sqlcoerce'
 require 'dbi/tc_sqlquote'
