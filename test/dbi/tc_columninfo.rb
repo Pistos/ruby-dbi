@@ -26,6 +26,14 @@ class TC_DBI_ColumnInfo < Test::Unit::TestCase
          "primary"   => true,
          "unique"    => false
       )
+      @keys = %w/name sql_type type_name precision scale default nullable
+         indexed primary unique
+      /
+   end
+   
+   def test_constructor
+      assert_nothing_raised{ ColumnInfo.new }
+      assert_raises(TypeError){ ColumnInfo.new(1) }
    end
 
    def test_name_basic
@@ -34,7 +42,6 @@ class TC_DBI_ColumnInfo < Test::Unit::TestCase
    end
 
    def test_name
-      assert_equal("test", @colinfo[:name])
       assert_equal("test", @colinfo["name"])
       assert_equal("test", @colinfo.name)
    end
@@ -45,7 +52,6 @@ class TC_DBI_ColumnInfo < Test::Unit::TestCase
    end
    
    def test_sql_type
-      assert_equal("numeric", @colinfo[:sql_type])
       assert_equal("numeric", @colinfo["sql_type"])
       assert_equal("numeric", @colinfo.sql_type)
    end
@@ -56,7 +62,6 @@ class TC_DBI_ColumnInfo < Test::Unit::TestCase
    end
 
    def test_type_name
-      assert_equal("test_type_name", @colinfo[:type_name])
       assert_equal("test_type_name", @colinfo["type_name"])
       assert_equal("test_type_name", @colinfo.type_name)
    end
@@ -71,8 +76,7 @@ class TC_DBI_ColumnInfo < Test::Unit::TestCase
    end
 
    def test_precision
-      assert_equal(2, @colinfo[:precision])
-      assert_equal(2, @colinfo[:precision])
+      assert_equal(2, @colinfo["precision"])
       assert_equal(2, @colinfo.precision)
    end
 
@@ -84,7 +88,6 @@ class TC_DBI_ColumnInfo < Test::Unit::TestCase
    end
 
    def test_scale
-      assert_equal(2, @colinfo[:scale])
       assert_equal(2, @colinfo["scale"])
       assert_equal(2, @colinfo.scale)
    end
@@ -95,7 +98,6 @@ class TC_DBI_ColumnInfo < Test::Unit::TestCase
    end
 
    def test_default
-      assert_equal(100.00, @colinfo[:default])
       assert_equal(100.00, @colinfo["default"])
       assert_equal(100.00, @colinfo.default)
    end
@@ -107,7 +109,6 @@ class TC_DBI_ColumnInfo < Test::Unit::TestCase
    end
 
    def test_nullable
-      assert_equal(false, @colinfo[:nullable])
       assert_equal(false, @colinfo["nullable"])
       assert_equal(false, @colinfo.nullable)
    end
@@ -119,7 +120,6 @@ class TC_DBI_ColumnInfo < Test::Unit::TestCase
    end
 
    def test_indexed
-      assert_equal(true, @colinfo[:indexed])
       assert_equal(true, @colinfo["indexed"])
       assert_equal(true, @colinfo.indexed)
    end
@@ -131,7 +131,6 @@ class TC_DBI_ColumnInfo < Test::Unit::TestCase
    end
 
    def test_primary
-      assert_equal(true, @colinfo[:primary])
       assert_equal(true, @colinfo["primary"])
       assert_equal(true, @colinfo.primary)
    end
@@ -144,9 +143,19 @@ class TC_DBI_ColumnInfo < Test::Unit::TestCase
    end
 
    def test_unique
-      assert_equal(false, @colinfo[:unique])
       assert_equal(false, @colinfo["unique"])
       assert_equal(false, @colinfo.unique)
+   end
+   
+   def test_keys
+      assert_respond_to(@colinfo, :keys)
+      assert_equal(@keys.sort, @colinfo.keys.sort)
+   end
+   
+   def test_respond_to_hash_methods
+      assert_respond_to(@colinfo, :each)
+      assert_respond_to(@colinfo, :empty?)
+      assert_respond_to(@colinfo, :has_key?)
    end
 
    def teardown
