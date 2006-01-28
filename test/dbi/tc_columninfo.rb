@@ -9,7 +9,7 @@ $LOAD_PATH.unshift("../../lib")
 $LOAD_PATH.unshift("../../lib/dbi")
 $LOAD_PATH.unshift("lib")
 
-require "columninfo"
+require "dbi/columninfo"
 require "test/unit"
 
 class TC_DBI_ColumnInfo < Test::Unit::TestCase
