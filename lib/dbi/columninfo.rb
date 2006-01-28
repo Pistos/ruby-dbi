@@ -1,19 +1,13 @@
-require "delegate"
-
-class ColumnInfo < DelegateClass(Hash)
+class ColumnInfo < Hash
 
    # Creates and returns a ColumnInfo object.  This represents metadata for
    # columns within a given table, such as the data type, whether or not the
    # the column is a primary key, etc.
    #
-   # ColumnInfo is a delegate of Hash.
+   # ColumnInfo is a subclass of Hash.
    #
    def initialize(hash=nil)
-      if hash
-         super(Hash[hash])
-      else
-         super(Hash[])
-      end
+      self.update(hash) if hash
    end
    
    # Returns the column's name.
@@ -139,6 +133,7 @@ class ColumnInfo < DelegateClass(Hash)
       self['unique'] = val
    end
 
+   # Aliases
    alias nullable? nullable
    alias is_nullable? nullable
 
