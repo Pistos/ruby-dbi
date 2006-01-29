@@ -1,14 +1,14 @@
 #
-# $Id: utils.rb,v 1.3 2006/01/29 03:56:18 djberg96 Exp $
+# $Id: utils.rb,v 1.4 2006/01/29 05:20:55 djberg96 Exp $
 #
 
 module DBI
    class Date
       attr_accessor :year, :month, :day
 
-      # Date.new(year = 0, month = 0, day = 0
-      # Date.new(Date)
-      # Date.new(Time)
+      # DBI::Date.new(year = 0, month = 0, day = 0)
+      # DBI::Date.new(Date)
+      # DBI::Date.new(Time)
       #
       # Creates and returns a new DBI::Date object.  It's similar to the
       # standard Date class' constructor except that it also accepts a
@@ -44,43 +44,51 @@ module DBI
          @original_date || ::Date.new(@year, @month, @day)
       end
 
-      # Returns a DBI::Date object in YYYY-MM-DD format.
+      # Returns a DBI::Date object as a string in YYYY-MM-DD format.
       def to_s
          sprintf("%04d-%02d-%02d", @year, @month, @day)
       end
    end
 
-class Time
-  attr_accessor :hour, :minute, :second
-  def initialize(hour=0, minute=0, second=0)
-    case hour
-    when ::Time
-      @hour, @minute, @second = hour.hour, hour.min, hour.sec
-      @original_time = hour
-    else
-      @hour, @minute, @second = hour, minute, second
-    end
-  end
+   class Time
+      attr_accessor :hour, :minute, :second
 
-  def min() @minute end
-  def min=(val) @minute=val end
+      # DBI::Time.new(hour = 0, minute = 0, second = 0)
+      # DBI::Time.new(Time)
+      #
+      # Creates and returns a new DBI::Time object.  Unlike the  
+      def initialize(hour=0, minute=0, second=0)
+         case hour
+            when ::Time
+               @hour, @minute, @second = hour.hour, hour.min, hour.sec
+               @original_time = hour
+            else
+               @hour, @minute, @second = hour, minute, second
+         end
+      end
 
-  def sec() @second end
-  def sec=(val) @second=val end
+      alias :min :minute
+      alias :min= :minute=
+      alias :sec :second
+      alias :sec= :second=
 
-  def to_time
-    if @original_time
-      @original_time
-    else
-      t = ::Time.now
-      ::Time.local(t.year, t.month, t.day, @hour, @minute, @second)
-    end
-  end
+      # Returns a new Time object based on the hour, minute and second, using
+      # the current year, month and day.  If a Time object was passed to the
+      # constructor, returns that object instead.
+      def to_time
+         if @original_time
+            @original_time
+         else
+            t = ::Time.now
+            ::Time.local(t.year, t.month, t.day, @hour, @minute, @second)
+         end
+      end
 
-  def to_s
-    sprintf("%02d:%02d:%02d", @hour, @minute, @second)
-  end
-end
+      # Returns a DBI::Time object as a string in HH:MM:SS format.
+      def to_s
+         sprintf("%02d:%02d:%02d", @hour, @minute, @second)
+      end
+   end
 
 class Timestamp
   attr_accessor :year, :month, :day
