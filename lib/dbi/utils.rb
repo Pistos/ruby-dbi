@@ -1,41 +1,54 @@
 #
-# $Id: utils.rb,v 1.2 2006/01/04 17:31:52 francis Exp $
+# $Id: utils.rb,v 1.3 2006/01/29 03:56:18 djberg96 Exp $
 #
 
 module DBI
-class Date
-  attr_accessor :year, :month, :day
-  def initialize(year=0, month=0, day=0)
-    case year
-    when ::Date
-      @year, @month, @day = year.year, year.month, year.day 
-      @original_date = year
-    when ::Time
-      @year, @month, @day = year.year, year.month, year.day 
-      @original_time = year
-    else
-      @year, @month, @day = year, month, day
-    end
-  end
+   class Date
+      attr_accessor :year, :month, :day
 
-  def mon() @month end
-  def mon=(val) @month=val end
+      # Date.new(year = 0, month = 0, day = 0
+      # Date.new(Date)
+      # Date.new(Time)
+      #
+      # Creates and returns a new DBI::Date object.  It's similar to the
+      # standard Date class' constructor except that it also accepts a
+      # Date or Time object.
+      def initialize(year=0, month=0, day=0)
+         case year
+            when ::Date
+               @year, @month, @day = year.year, year.month, year.day 
+               @original_date = year
+            when ::Time
+               @year, @month, @day = year.year, year.month, year.day 
+               @original_time = year
+            else
+               @year, @month, @day = year, month, day
+         end
+      end
 
-  def mday() @day end
-  def mday=(val) @day=val end
+      # Aliases
+      alias :mon :month
+      alias :mon= :month=
+      alias :mday :day
+      alias :mday= :day=
 
-  def to_time
-    @original_time || ::Time.local(@year, @month, @day, 0, 0, 0)
-  end
+      # Returns a new Time object based on the year, month and day or, if a
+      # Time object was passed to the constructor, returns that object.
+      def to_time
+         @original_time || ::Time.local(@year, @month, @day, 0, 0, 0)
+      end
 
-  def to_date
-    @original_date || ::Date.new(@year, @month, @day)
-  end
+      # Returns a new Time object based on the year, month and day or, if a
+      # Time object was passed to the constructor, returns that object.
+      def to_date
+         @original_date || ::Date.new(@year, @month, @day)
+      end
 
-  def to_s
-    sprintf("%04d-%02d-%02d", @year, @month, @day)
-  end
-end
+      # Returns a DBI::Date object in YYYY-MM-DD format.
+      def to_s
+         sprintf("%04d-%02d-%02d", @year, @month, @day)
+      end
+   end
 
 class Time
   attr_accessor :hour, :minute, :second
