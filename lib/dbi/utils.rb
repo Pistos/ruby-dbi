@@ -1,5 +1,5 @@
 #
-# $Id: utils.rb,v 1.4 2006/01/29 05:20:55 djberg96 Exp $
+# $Id: utils.rb,v 1.5 2006/01/29 06:14:19 djberg96 Exp $
 #
 
 module DBI
@@ -38,8 +38,8 @@ module DBI
          @original_time || ::Time.local(@year, @month, @day, 0, 0, 0)
       end
 
-      # Returns a new Time object based on the year, month and day or, if a
-      # Time object was passed to the constructor, returns that object.
+      # Returns a new Date object based on the year, month and day or, if a
+      # Date object was passed to the constructor, returns that object.
       def to_date
          @original_date || ::Date.new(@year, @month, @day)
       end
@@ -56,7 +56,9 @@ module DBI
       # DBI::Time.new(hour = 0, minute = 0, second = 0)
       # DBI::Time.new(Time)
       #
-      # Creates and returns a new DBI::Time object.  Unlike the  
+      # Creates and returns a new DBI::Time object.  Unlike the Time object
+      # in the standard library, accepts an hour, minute and second, or a
+      # Time object.
       def initialize(hour=0, minute=0, second=0)
          case hour
             when ::Time
@@ -90,63 +92,85 @@ module DBI
       end
    end
 
-class Timestamp
-  attr_accessor :year, :month, :day
-  attr_accessor :hour, :minute, :second
-  attr_writer   :fraction
+   class Timestamp
+      attr_accessor :year, :month, :day
+      attr_accessor :hour, :minute, :second
+      attr_writer   :fraction
   
-  def initialize(year=0, month=0, day=0, hour=0, minute=0, second=0, fraction=nil)
-    case year
-    when ::Time
-      @year, @month, @day = year.year, year.month, year.day 
-      @hour, @minute, @second, @fraction = year.hour, year.min, year.sec, nil 
-      @original_time = year
-    when ::Date
-      @year, @month, @day = year.year, year.month, year.day 
-      @hour, @minute, @second, @fraction = 0, 0, 0, nil 
-      @original_date = year
-    else
-      @year, @month, @day = year, month, day
-      @hour, @minute, @second, @fraction = hour, minute, second, fraction
-    end
-  end
+      # DBI::Timestamp(year=0,month=0,day=0,hour=0,min=0,sec=0,fraction=nil)
+      # DBI::Timestamp(Time)
+      # DBI::Timestamp(Date)
+      #
+      # Creates and returns a new DBI::Timestamp object.  This is similar to
+      # a Time object in the standard library, but it also contains fractional
+      # seconds.  In addition, the constructor accepts either a Date or Time
+      # object.
+      def initialize(year=0, month=0, day=0, hour=0, min=0, sec=0, fraction=nil)
+         case year
+            when ::Time
+               @year, @month, @day = year.year, year.month, year.day 
+               @hour, @minute, @second, @fraction = year.hour, year.min, year.sec, nil 
+               @original_time = year
+            when ::Date
+               @year, @month, @day = year.year, year.month, year.day 
+               @hour, @minute, @second, @fraction = 0, 0, 0, nil 
+               @original_date = year
+            else
+               @year, @month, @day = year, month, day
+               @hour, @minute, @second, @fraction = hour, min, sec, fraction
+         end
+      end
 
-  def ==(otherTimestamp)
-    a = otherTimestamp
+      # Returns true if +timestamp+ has a year, month, day, hour, minute,
+      # second and fraction equal to the comparing object.
+      #
+      # Returns false if the comparison fails for any reason.
+      def ==(timestamp)
+         @year == timestamp.year and @month == timestamp.month and
+         @day == timestamp.day and @hour == timestamp.hour and
+         @minute == timestamp.minute and @second == timestamp.second and
+         (fraction() == timestamp.fraction)
+      rescue
+         false
+      end
 
-    @year == a.year and @month == a.month and @day == a.day and
-    @hour == a.hour and @minute == a.minute and @second == a.second and
-    (fraction() == a.fraction)
-  end
+      # Returns fractional seconds, or 0 if not set.
+      def fraction
+         @fraction || 0
+      end
 
-  def fraction() @fraction || 0 end
+      # Aliases
+      alias :mon :month
+      alias :mon= :month=
+      alias :mday :day
+      alias :mday= :day=
+      alias :min :minute
+      alias :min= :minute=
+      alias :sec :second
+      alias :sec= :second=
 
-  def mon() @month end
-  def mon=(val) @month=val end
-  def mday() @day end
-  def mday=(val) @day=val end
-  def min() @minute end
-  def min=(val) @minute=val end
-  def sec() @second end
-  def sec=(val) @second=val end
+      # Returns a DBI::Timestamp object as a string in YYYY-MM-DD HH:MM:SS
+      # format.  If a fraction is present, then it is appended in ".FF" format.
+      def to_s
+         string = sprintf("%04d-%02d-%02d %02d:%02d:%02d",
+             @year, @month, @day, @hour, @minute, @second) 
 
-  def to_s
-    s = sprintf("%04d-%02d-%02d %02d:%02d:%02d", @year, @month, @day, @hour, @minute, @second) 
-    if @fraction.nil?
-      s
-    else
-      s + '.' + @fraction.to_s.split('.').last
-    end
-  end
+         string += "." + @fraction.to_s.split(".").last if @fraction
+         string
+      end
 
-  def to_time
-    @original_time || ::Time.local(@year, @month, @day, @hour, @minute, @second)
-  end
+      # Returns a new Time object based on the year, month and day or, if a
+      # Time object was passed to the constructor, returns that object.
+      def to_time
+         @original_time || ::Time.local(@year, @month, @day, @hour, @minute, @second)
+      end
 
-  def to_date
-    @original_date || ::Date.new(@year, @month, @day)
-  end
-end
+      # Returns a new Date object based on the year, month and day or, if a
+      # Date object was passed to the constructor, returns that object.
+      def to_date
+         @original_date || ::Date.new(@year, @month, @day)
+      end
+   end
 
 module Utils
 
