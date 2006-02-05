@@ -1,3 +1,4 @@
+$LOAD_PATH.unshift(File.dirname(__FILE__))
 #
 # Ruby/DBI
 #
@@ -27,9 +28,10 @@
 # OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 # ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
-# $Id: dbi.rb,v 1.2 2006/02/05 10:57:37 djberg96 Exp $
+# $Id: dbi.rb,v 1.3 2006/02/05 16:50:26 djberg96 Exp $
 #
 
+require "find"
 require "dbi/row"
 require "dbi/utils"
 require "dbi/sql"
@@ -40,7 +42,7 @@ module DBI
    VERSION = "0.1.0"
 
    module DBD
-      DIR         = "dbi/dbd"
+      DIR         = "dbd"
       API_VERSION = "0.3"
    end
 
@@ -115,10 +117,7 @@ module DBI
      SQL_OTHER             => nil
    }
 
-   #  Exceptions
-
-   # Exception classes "borrowed" from Python API 2.0
-   #
+   #  Exceptions (borrowed by Python API 2.0)
 
    # Base class of all other error exceptions.  Use this to catch all DBI
    # errors.
@@ -182,111 +181,88 @@ module DBI
    class NotSupportedError < DatabaseError
    end
 
+   #  Datatypes
 
-#----------------------------------------------------
-#  Datatypes
-#----------------------------------------------------
-
-
-# TODO: do we need Binary?
-# perhaps easier to call #bind_param(1, binary_string, 'type' => SQL_BLOB)
-class Binary
-  attr_accessor :data
-  def initialize(data)
-    @data = data
-  end
-
-  def to_s
-    @data
-  end
-end
-
-
-#----------------------------------------------------
-#  Module functions (of DBI)
-#----------------------------------------------------
-
-  @@driver_map = Hash.new 
-
-  DEFAULT_TRACE_MODE = 2
-  DEFAULT_TRACE_OUTPUT = STDERR
-
-  @@trace_mode   = DEFAULT_TRACE_MODE
-  @@trace_output = DEFAULT_TRACE_OUTPUT
-
-
-
-
-
-
-
-  class << self
-
-  ##
-  # establish a database connection
-  # 
-  def connect(driver_url, user=nil, auth=nil, params=nil, &p)
-    dr, db_args = _get_full_driver(driver_url)
-    dh = dr[0] # driver-handle
-
-    dh.connect(db_args, user, auth, params, &p)
-  end
-
-  ##
-  # load a DBD and returns the DriverHandle object
-  # 
-  def get_driver(driver_url)
-    _get_full_driver(driver_url)[0][0]  # return DriverHandle
-  end
-
-
-  ##
-  # extracts the db_args from driver_url and returns the correspondeing
-  # entry of the @@driver_map.
-  #
-  def _get_full_driver(driver_url)
-    db_driver, db_args = parse_url(driver_url)
-    db_driver = load_driver(db_driver)
-    dr = @@driver_map[db_driver]
-    [dr, db_args]
-  end
-
-  def trace(mode=nil, output=nil)
-    @@trace_mode   = mode   || @@trace_mode   || DBI::DEFAULT_TRACE_MODE
-    @@trace_output = output || @@trace_output || DBI::DEFAULT_TRACE_OUTPUT
-  end
-
-  def available_drivers
-    found_drivers = []
-    $:.each do |path|
-      Dir["#{path}/#{DBD::DIR}/*"].each do |dr| 
-        if FileTest.directory? dr then
-          dir = File.basename(dr)
-          Dir["#{path}/#{DBD::DIR}/#{dir}/*"].each do |fl|
-            next unless FileTest.file? fl 
-            found_drivers << dir if File.basename(fl) =~ /^#{dir}\./
-          end
-        end
+   # TODO: do we need Binary?
+   # perhaps easier to call #bind_param(1, binary_string, 'type' => SQL_BLOB)
+   class Binary
+      attr_accessor :data
+      def initialize(data)
+         @data = data
       end
-    end
-    found_drivers.uniq.collect {|dr| "dbi:#{dr}:" }
-  end
 
-  def data_sources(driver)
-    db_driver, = parse_url(driver)
-    db_driver = load_driver(db_driver)
-    dh = @@driver_map[db_driver][0]
-    dh.data_sources
-  end
+      def to_s
+         @data
+      end
+   end
 
-  def disconnect_all( driver = nil )
-    if driver.nil?
-      @@driver_map.each {|k,v| v[0].disconnect_all}
-    else
-      db_driver, = parse_url(driver)
-      @@driver_map[db_driver][0].disconnect_all
-    end
-  end
+   #  Module functions (of DBI)
+   DEFAULT_TRACE_MODE = 2
+   DEFAULT_TRACE_OUTPUT = STDERR
+
+   # TODO: Is using class variables within a module such a wise idea? - Dan B.
+   @@driver_map   = Hash.new 
+   @@trace_mode   = DEFAULT_TRACE_MODE
+   @@trace_output = DEFAULT_TRACE_OUTPUT
+
+   class << self
+
+      # Establish a database connection.  This is mostly a facade for the
+      # DBD's connect method.
+      def connect(driver_url, user=nil, auth=nil, params=nil, &p)
+         dr, db_args = _get_full_driver(driver_url)
+         dh = dr[0] # driver-handle
+         dh.connect(db_args, user, auth, params, &p)
+      end
+
+      # Load a DBD and returns the DriverHandle object
+      def get_driver(driver_url)
+         _get_full_driver(driver_url)[0][0]  # return DriverHandle
+      end
+
+      # Extracts the db_args from driver_url and returns the correspondeing
+      # entry of the @@driver_map.
+      def _get_full_driver(driver_url)
+         db_driver, db_args = parse_url(driver_url)
+         db_driver = load_driver(db_driver)
+         dr = @@driver_map[db_driver]
+         [dr, db_args]
+      end
+
+      def trace(mode=nil, output=nil)
+         @@trace_mode   = mode   || @@trace_mode   || DBI::DEFAULT_TRACE_MODE
+         @@trace_output = output || @@trace_output || DBI::DEFAULT_TRACE_OUTPUT
+      end
+
+      # Returns a list of the currently available drivers on your system in
+      # 'dbi:driver:' format.
+      def available_drivers
+         drivers = []
+         path = File.dirname(File.dirname(__FILE__)) + "/" + DBD::DIR
+         Find.find(path){ |f|
+            if File.file?(f)
+               driver = File.basename(f, ".rb")
+               drivers.push("dbi:#{driver}:")
+            end
+         }
+         drivers
+      end
+
+      def data_sources(driver)
+         db_driver, = parse_url(driver)
+         db_driver = load_driver(db_driver)
+         dh = @@driver_map[db_driver][0]
+         dh.data_sources
+      end
+
+     def disconnect_all( driver = nil )
+       if driver.nil?
+         @@driver_map.each {|k,v| v[0].disconnect_all}
+       else
+         db_driver, = parse_url(driver)
+         @@driver_map[db_driver][0].disconnect_all
+       end
+     end
 
 
   private
