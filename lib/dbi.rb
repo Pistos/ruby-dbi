@@ -27,186 +27,160 @@
 # OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 # ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
-# $Id: dbi.rb,v 1.1 2006/01/04 22:59:28 djberg96 Exp $
+# $Id: dbi.rb,v 1.2 2006/02/05 10:57:37 djberg96 Exp $
 #
 
 require "dbi/row"
 require "dbi/utils"
 require "dbi/sql"
 require "dbi/columninfo"
-require "dbi/version"
 require "date"
  
 module DBI
+   VERSION = "0.1.0"
 
-module DBD
-  DIR = "DBD"
-  API_VERSION = "0.2"
-end
+   module DBD
+      DIR         = "dbi/dbd"
+      API_VERSION = "0.3"
+   end
 
+   #  Constants
 
-#----------------------------------------------------
-#  Constants
-#----------------------------------------------------
+   # Constants for fetch_scroll
+   #
+   SQL_FETCH_NEXT     = 1
+   SQL_FETCH_PRIOR    = 2
+   SQL_FETCH_FIRST    = 3
+   SQL_FETCH_LAST     = 4
+   SQL_FETCH_ABSOLUTE = 5
+   SQL_FETCH_RELATIVE = 6
 
-##
-# Constants for fetch_scroll
-#
-SQL_FETCH_NEXT, SQL_FETCH_PRIOR, SQL_FETCH_FIRST, SQL_FETCH_LAST, 
-SQL_FETCH_ABSOLUTE, SQL_FETCH_RELATIVE = (1..6).to_a
+   # SQL type constants
+   # 
+   SQL_CHAR       = 1
+   SQL_NUMERIC    = 2
+   SQL_DECIMAL    = 3
+   SQL_INTEGER    = 4
+   SQL_SMALLINT   = 5
+   SQL_FLOAT      = 6
+   SQL_REAL       = 7
+   SQL_DOUBLE     = 8
+   SQL_DATE       = 9  # 91
+   SQL_TIME       = 10 # 92 
+   SQL_TIMESTAMP  = 11 # 93 
+   SQL_VARCHAR    = 12
 
+   SQL_LONGVARCHAR   = -1
+   SQL_BINARY        = -2
+   SQL_VARBINARY     = -3
+   SQL_LONGVARBINARY = -4
+   SQL_BIGINT        = -5
+   SQL_TINYINT       = -6
+   SQL_BIT           = -7
 
-##
-# SQL type constants
-# 
-SQL_BIT = -7
-SQL_TINYINT = -6
-SQL_SMALLINT = 5
-SQL_INTEGER = 4
-SQL_BIGINT = -5
+   # TODO
+   # Find types for these (XOPEN?)
+   #SQL_ARRAY = 
+   SQL_BLOB = -10   # TODO
+   SQL_CLOB = -11   # TODO
+   #SQL_DISTINCT = 
+   #SQL_OBJECT = 
+   #SQL_NULL = 
+   SQL_OTHER = 100
+   #SQL_REF = 
+   #SQL_STRUCT = 
 
-SQL_FLOAT = 6
-SQL_REAL = 7
-SQL_DOUBLE = 8
+   SQL_TYPE_NAMES = {
+     SQL_BIT               => 'BIT',
+     SQL_TINYINT           => 'TINYINT',
+     SQL_SMALLINT          => 'SMALLINT',
+     SQL_INTEGER           => 'INTEGER',
+     SQL_BIGINT            => 'BIGINT',
+     SQL_FLOAT             => 'FLOAT',
+     SQL_REAL              => 'REAL',
+     SQL_DOUBLE            => 'DOUBLE',
+     SQL_NUMERIC           => 'NUMERIC',
+     SQL_DECIMAL           => 'DECIMAL',
+     SQL_CHAR              => 'CHAR',
+     SQL_VARCHAR           => 'VARCHAR',
+     SQL_LONGVARCHAR       => 'LONG VARCHAR',
+     SQL_DATE              => 'DATE',
+     SQL_TIME              => 'TIME',
+     SQL_TIMESTAMP         => 'TIMESTAMP',
+     SQL_BINARY            => 'BINARY',
+     SQL_VARBINARY         => 'VARBINARY',
+     SQL_LONGVARBINARY     => 'LONG VARBINARY',
+     SQL_BLOB              => 'BLOB',
+     SQL_CLOB              => 'CLOB',
+     SQL_OTHER             => nil
+   }
 
-SQL_NUMERIC = 2
-SQL_DECIMAL = 3
+   #  Exceptions
 
-SQL_CHAR = 1
-SQL_VARCHAR = 12
-SQL_LONGVARCHAR = -1
+   # Exception classes "borrowed" from Python API 2.0
+   #
 
-SQL_DATE = 9       # 91
-SQL_TIME = 10      # 92 
-SQL_TIMESTAMP = 11 # 93 
+   # Base class of all other error exceptions.  Use this to catch all DBI
+   # errors.
+   class Error < RuntimeError
+   end
 
-SQL_BINARY = -2
-SQL_VARBINARY = -3
-SQL_LONGVARBINARY = -4
+   # For important warnings like data truncation, etc.
+   class Warning < RuntimeError
+   end
 
-# TODO
-# Find types for these (XOPEN?)
-#SQL_ARRAY = 
-SQL_BLOB = -10   # TODO
-SQL_CLOB = -11   # TODO
-#SQL_DISTINCT = 
-#SQL_OBJECT = 
-#SQL_NULL = 
-SQL_OTHER = 100
-#SQL_REF = 
-#SQL_STRUCT = 
+   # Exception for errors related to the DBI interface rather than the
+   # database itself.
+   class InterfaceError < Error
+   end
 
-SQL_TYPE_NAMES = {
-  SQL_BIT               => 'BIT',
-  SQL_TINYINT           => 'TINYINT',
-  SQL_SMALLINT          => 'SMALLINT',
-  SQL_INTEGER           => 'INTEGER',
-  SQL_BIGINT            => 'BIGINT',
-  SQL_FLOAT             => 'FLOAT',
-  SQL_REAL              => 'REAL',
-  SQL_DOUBLE            => 'DOUBLE',
-  SQL_NUMERIC           => 'NUMERIC',
-  SQL_DECIMAL           => 'DECIMAL',
-  SQL_CHAR              => 'CHAR',
-  SQL_VARCHAR           => 'VARCHAR',
-  SQL_LONGVARCHAR       => 'LONG VARCHAR',
-  SQL_DATE              => 'DATE',
-  SQL_TIME              => 'TIME',
-  SQL_TIMESTAMP         => 'TIMESTAMP',
-  SQL_BINARY            => 'BINARY',
-  SQL_VARBINARY         => 'VARBINARY',
-  SQL_LONGVARBINARY     => 'LONG VARBINARY',
-  SQL_BLOB              => 'BLOB',
-  SQL_CLOB              => 'CLOB',
-  SQL_OTHER             => nil
-}
+   # Exception raised if the DBD driver has not specified a mandatory method.
+   class NotImplementedError < InterfaceError
+   end
 
+   # Exception for errors related to the database.
+   class DatabaseError < Error
+      attr_reader :err, :errstr, :state
 
-#----------------------------------------------------
-#  Exceptions
-#----------------------------------------------------
+      def initialize(errstr="", err=nil, state=nil)
+         super(errstr)
+         @err, @errstr, @state = err, errstr, state
+      end
+   end
 
+   # Exception for errors due to problems with the processed 
+   # data such as division by zero, numeric value out of range, etc.
+   class DataError < DatabaseError
+   end
 
-#
-# Exception classes "borrowed" from Python API 2.0
-#
+   # Exception for errors related to the database's operation which are not
+   # necessarily under the control of the programmer.  This includes such
+   # things as unexpected disconnect, datasource name not found, transaction
+   # could not be processed, a memory allocation error occured during
+   # processing, etc.
+   class OperationalError < DatabaseError
+   end
 
-##
-# for important warnings like data truncation etc.
-class Warning < RuntimeError
-end
+   # Exception raised when the relational integrity of the database
+   # is affected, e.g. a foreign key check fails.
+   class IntegrityError < DatabaseError
+   end
 
-##
-# base class of all other error exceptions
-# use this to catch all errors
-class Error < RuntimeError
-end
+   # Exception raised when the database encounters an internal error, 
+   # e.g. the cursor is not valid anymore, the transaction is out of sync.
+   class InternalError < DatabaseError
+   end
 
+   # Exception raised for programming errors, e.g. table not found
+   # or already exists, syntax error in SQL statement, wrong number
+   # of parameters specified, etc.
+   class ProgrammingError < DatabaseError
+   end
 
-##
-# exception for errors related to the DBI interface
-# rather than the database itself
-class InterfaceError < Error
-end
-
-##
-# exception raised if the DBD driver has not specified
-# a mandantory method [not in Python API 2.0]
-class NotImplementedError < InterfaceError
-end
-
-
-##
-# exception for errors related to the database 
-class DatabaseError < Error
-  attr_reader :err, :errstr, :state
-
-  def initialize(errstr="", err=nil, state=nil)
-    super(errstr)
-    @err, @errstr, @state = err, errstr, state
-  end
-end
-
-##
-# exception for errors due to problems with the processed 
-# data like division by zero, numeric value out of range etc.
-class DataError < DatabaseError
-end
-
-##
-# exception for errors related to the database's operation which
-# are not necessarily under the control of the programmer like
-# unexpected disconnect, datasource name not found, transaction
-# could not be processed, a memory allocation error occured during
-# processing etc.
-class OperationalError < DatabaseError
-end
-
-##
-# exception raised when the relational integrity of the database
-# is affected, e.g. a foreign key check fails
-class IntegrityError < DatabaseError
-end
-
-##
-# exception raised when the database encounters an internal error, 
-# e.g. the cursor is not valid anymore, the transaction is out of
-# sync
-class InternalError < DatabaseError
-end
-
-##
-# exception raised for programming errors, e.g. table not found
-# or already exists, syntax error in SQL statement, wrong number
-# of parameters specified, etc.
-class ProgrammingError < DatabaseError
-end
-
-##
-# raised if e.g. commit() is called for a database which do not
-# support transactions
-class NotSupportedError < DatabaseError
-end
+   # Exception raised if e.g. commit() is called for a database which do not
+   # support transactions.
+   class NotSupportedError < DatabaseError
+   end
 
 
 #----------------------------------------------------
