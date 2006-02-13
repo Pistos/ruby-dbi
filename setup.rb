@@ -668,7 +668,7 @@ class Installer
     return if @no_harm
 
     if File.exist? fname or File.symlink? fname then
-      File.chmod 777, fname
+      File.chmod 0777, fname
       File.unlink fname
     end
   end
