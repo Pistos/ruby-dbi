@@ -14,7 +14,11 @@ require 'test/unit'
 
 class TC_DBI < Test::Unit::TestCase
    def setup
-      @db_error = DBI::DatabaseError.new("test", 1, "montana")
+      @db_error  = DBI::DatabaseError.new("test", 1, "montana")
+      @db_binary = DBI::Binary.new("test")
+      @url_basic = 'dbi:foo:bar'
+      @url_inter = 'dbi:foo:bar:host'
+      @url_advan = 'dbi:foo:database=db;host=xx;port=99'
    end
 
    def test_dbi_version
@@ -22,7 +26,7 @@ class TC_DBI < Test::Unit::TestCase
    end
 
    def test_dbd_module
-      assert_equal("dbi/dbd", DBI::DBD::DIR)
+      assert_equal("dbd", DBI::DBD::DIR)
       assert_equal("0.3", DBI::DBD::API_VERSION)
    end
 
@@ -111,7 +115,43 @@ class TC_DBI < Test::Unit::TestCase
       assert_equal("montana", @db_error.state)
    end
 
+   def test_binary_datatype
+      assert_respond_to(@db_binary, :data)
+      assert_respond_to(@db_binary, :to_s)
+      assert_equal("test", @db_binary.data)
+      assert_equal("test", @db_binary.to_s)
+   end
+
+   def test_misc_constants
+      assert_equal(2, DBI::DEFAULT_TRACE_MODE)
+      assert_equal(STDERR, DBI::DEFAULT_TRACE_OUTPUT)
+   end
+
+   def test_connect
+      assert_respond_to(DBI, :connect)
+   end
+
+   def test_available_drivers
+      assert_respond_to(DBI, :available_drivers)
+   end
+   
+   # PRIVATE METHODS
+   def test_parse_url
+      assert_nothing_raised{ DBI.send(:parse_url, "dbi:foo:bar") }
+      assert_equal(["foo","bar"], DBI.send(:parse_url, @url_basic))
+      assert_equal(["foo","bar:host"], DBI.send(:parse_url, @url_inter))
+      assert_equal(["foo","database=db;host=xx;port=99"],
+         DBI.send(:parse_url, @url_advan)
+      )
+   end
+
+   def test_parse_url_expected_errors
+      assert_raises(DBI::InterfaceError){ DBI.send(:parse_url, 'dbi') }
+      assert_raises(DBI::InterfaceError){ DBI.send(:parse_url, 'dbi::foo') }
+   end
+
    def teardown
-      @db_error = nil
+      @db_error  = nil
+      @db_binary = nil
    end
 end
