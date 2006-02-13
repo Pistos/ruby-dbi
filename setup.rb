@@ -57,7 +57,6 @@ class Installer
     @config = {}
     @task = nil
     @other_args = []
-
     @task = parsearg( argv )
     parsearg_TASK @task, argv
 
@@ -465,11 +464,12 @@ class Installer
   def packages
     ret = []
     FILETYPES.each do |type|
-      next unless File.exist? type
+      next unless File.exist? "#{ type }/PATHCONV"
       foreach_record( "#{type}/PATHCONV" ) do |dir, pack, *dummy|
         ret.push pack
       end
     end
+    SUBPACKAGES.each do |package_code, capname| ret.push( package_code ); end
     ret.uniq
   end
 
