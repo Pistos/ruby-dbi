@@ -28,7 +28,7 @@ $LOAD_PATH.unshift(File.dirname(__FILE__))
 # OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 # ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
-# $Id: dbi.rb,v 1.4 2006/02/13 02:46:57 djberg96 Exp $
+# $Id: dbi.rb,v 1.5 2006/02/14 01:43:19 djberg96 Exp $
 #
 
 require "find"
@@ -42,7 +42,7 @@ module DBI
    VERSION = "0.1.0"
    
    module DBD
-      DIR         = "dbd"
+      DIR         = "DBD"
       API_VERSION = "0.3"
    end
    
@@ -288,7 +288,7 @@ module DBI
                begin
                   require "#{DBD::DIR}/#{driver_name}/#{driver_name}"
                rescue LoadError
-                  $:.each do |dir|
+                  $LOAD_PATH.each do |dir|
                      path = "#{dir}/#{DBD::DIR}"
                      next unless FileTest.directory?(path)
                      found = Dir.entries(path).find {|e| e.downcase == dc}
@@ -320,6 +320,15 @@ module DBI
                found = DBI::DBD.constants.find { |e| e.downcase == found }
                dr = DBI::DBD.const_get(found.intern) unless found.nil?
             end
+            
+            # If dr is nil at this point, it means the underlying driver
+            # failed to load.  This usually means it's not installed, but
+            # can fail for other reasons.
+            if dr.nil?
+               err = "Unable to load driver '#{driver_name}'"
+               raise DBI::InterfaceError, err
+            end
+            
             dbd_dr = dr::Driver.new
             drh = DBI::DriverHandle.new(dbd_dr)
             drh.trace(@@trace_mode, @@trace_output)
