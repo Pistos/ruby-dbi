@@ -5,12 +5,20 @@ require 'rake'
 #
 # TODO: Add more documents to generate
 #
-task :docs do
-   require "rdoc/rdoc"
-   dest_dir = Dir.pwd + "/rdoc"
-   rdoc = RDoc::RDoc.new
-   rdoc.document(["doc/ToDo", "-o#{dest_dir}"])
+file 'doc/html/index.html' => [ 'README' ] do
+  require 'rdoc/markup/simple_markup'
+  require 'rdoc/markup/simple_markup/to_html'
+	p = SM::SimpleMarkup.new
+  h = SM::ToHtml.new
+  input_string = File.read 'README'
+	output = "<html><head><link rel=\"StyleSheet\" href=\"rubyStyle.css\" type=\"text/css\" />"
+  output += p.convert(input_string, h)
+  File.open( 'doc/html/index.html', 'w+' ) do |f|
+    f << output
+  end
 end
+
+task :docs => [ 'doc/html/index.html' ]
 
 # Runs the DBI test suite (though not the various DBD tests)
 task :test do
