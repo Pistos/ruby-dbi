@@ -2,7 +2,7 @@
 = DBD Specification Version 0.2.2 (Draft)
 by Michael Neumann (mneumann@fantasy-coders.de)
 
- $Id: DBD_SPEC,v 1.1 2006/01/04 02:03:10 francis Exp $
+ $Id: DBD_SPEC,v 1.2 2006/03/03 22:31:36 pdubois Exp $
 
 == DBD Directory Layout
 The directory layout is the following:
@@ -120,7 +120,7 @@ This class must inherit from (({DBI::BaseDatabase})).
     Commits or rolls back the current transaction.
  
     The default is to raise a NotSupportedError exception, so if the database does not implement 
-    transactions (mSQL, MySQL, CSV), do not overwrite this method.
+    transactions (mSQL, CSV), do not overwrite this method.
 
 --- tables
     Returns an (({Array})) of all tables and views. 
