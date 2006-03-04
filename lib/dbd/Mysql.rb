@@ -62,7 +62,18 @@ class Driver < DBI::BaseDriver
     hash['port'] = hash['port'].to_i unless hash['port'].nil?
     hash['flag'] = hash['flag'].to_i unless hash['flag'].nil?
 
-    handle = ::Mysql.connect(hash['host'], user, auth, hash['database'], hash['port'], hash['socket'], hash['flag'])
+    handle = ::Mysql.init
+
+    # Look for options in connect string that must be handled
+    # through mysql_options() before connecting
+    !hash['mysql_read_default_file'].nil? and
+      handle.options(::Mysql::READ_DEFAULT_FILE,
+                     hash['mysql_read_default_file'])
+    !hash['mysql_read_default_group'].nil? and
+      handle.options(::Mysql::READ_DEFAULT_GROUP,
+                     hash['mysql_read_default_group'])
+
+    handle.connect(hash['host'], user, auth, hash['database'], hash['port'], hash['socket'], hash['flag'])
     #handle.select_db(hash['database'])
 
     return Database.new(handle, attr)
