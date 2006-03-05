@@ -42,7 +42,27 @@ USED_DBD_VERSION = "0.2"
 
 MyError = ::MysqlError
 
+  module Util
+
+    private
+
+    # Raise exception using information from MysqlError object e.
+    # For state value, use SQLSTATE value if mysql-ruby defines
+    # sqlstate method, otherwise nil.
+
+    def error(e)
+      begin
+        sqlstate = e.sqlstate
+      rescue
+        sqlstate = nil
+      end
+      raise DBI::DatabaseError.new(e.message, e.errno, sqlstate)
+    end
+
+  end # module Util
+
 class Driver < DBI::BaseDriver
+  include Util
 
   def initialize
     super(USED_DBD_VERSION)
@@ -78,7 +98,7 @@ class Driver < DBI::BaseDriver
 
     return Database.new(handle, attr)
   rescue MyError => err
-    raise DBI::DatabaseError.new(err.message, err.errno)
+    error(err)
   end
 
   def data_sources
@@ -87,7 +107,7 @@ class Driver < DBI::BaseDriver
     handle.close
     return res
   rescue MyError => err
-    raise DBI::DatabaseError.new(err.message, err.errno)
+    error(err)
   end
 
   # Driver-specific functions ------------------------------------------------
@@ -133,6 +153,7 @@ class Driver < DBI::BaseDriver
 end # class Driver
 
 class Database < DBI::BaseDatabase
+  include Util
   include SQL::BasicBind
 
   # Eli Green:
@@ -209,7 +230,7 @@ class Database < DBI::BaseDatabase
     self.rollback unless @attr['AutoCommit']
     @handle.close
   rescue MyError => err
-    raise DBI::DatabaseError.new(err.message, err.errno)
+    error(err)
   end
 
   def ping
@@ -224,7 +245,7 @@ class Database < DBI::BaseDatabase
   def tables
     @handle.list_tables
   rescue MyError => err
-    raise DBI::DatabaseError.new(err.message, err.errno)
+    error(err)
   end
 
   # Eli Green (fixed up by Michael Neumann)
@@ -273,7 +294,7 @@ class Database < DBI::BaseDatabase
       @handle.affected_rows     # return value
     }
   rescue MyError => err
-    raise DBI::DatabaseError.new(err.message, err.errno)
+    error(err)
   end
  
 
@@ -288,7 +309,7 @@ class Database < DBI::BaseDatabase
       raise NotSupportedError
     end
   rescue MyError => err
-    raise DBI::DatabaseError.new(err.message, err.errno)
+    error(err)
   end
 
   def rollback
@@ -298,7 +319,7 @@ class Database < DBI::BaseDatabase
       raise NotSupportedError
     end
   rescue MyError => err
-    raise DBI::DatabaseError.new(err.message, err.errno)
+    error(err)
   end
 
 
@@ -384,6 +405,7 @@ end # class Database
 
 
 class Statement < DBI::BaseStatement
+  include Util
   #include SQL::BasicBind
 
   def initialize(parent, handle, statement, mutex)
@@ -411,13 +433,13 @@ class Statement < DBI::BaseStatement
       @rows = @handle.affected_rows
     }
   rescue MyError => err
-    raise DBI::DatabaseError.new(err.message, err.errno)
+    error(err)
   end
 
   def finish
     @res_handle.free if @res_handle
   rescue MyError => err
-    raise DBI::DatabaseError.new(err.message, err.errno)
+    error(err)
   end
 
   def fill_array(rowdata)
@@ -435,7 +457,7 @@ class Statement < DBI::BaseStatement
     @current_row += 1
     fill_array(@res_handle.fetch_row)
   rescue MyError => err
-    raise DBI::DatabaseError.new(err.message, err.errno)
+    error(err)
   end
 
   def fetch_scroll(direction, offset)
@@ -479,7 +501,7 @@ class Statement < DBI::BaseStatement
     }
     retval
   rescue MyError => err
-    raise DBI::DatabaseError.new(err.message, err.errno)
+    error(err)
   end
 
   def rows
