@@ -21,7 +21,7 @@
 
    To install dbi and some DBDs:
 
-   ruby setup.rb config --with=dbi, dbd_pg, ...
+   ruby setup.rb config --with=dbi,dbd_pg, ...
    ruby setup.rb setup
    ruby setup.rb install
 
