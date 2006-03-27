@@ -1,5 +1,5 @@
 #
-# $Id: sql.rb,v 1.2 2006/01/04 17:31:52 francis Exp $
+# $Id: sql.rb,v 1.3 2006/03/27 20:25:02 francis Exp $
 #
 # parts extracted from Jim Weirichs DBD::Pg
 #
@@ -58,7 +58,12 @@ module SQL
       def as_timestamp(str)
         return nil if str.nil? or str.empty?
         ary = ParseDate.parsedate(str)
-        time = ::Time.gm(*(ary[0,6]))
+        begin 
+          time = ::Time.gm(*(ary[0,6])) 
+        rescue ArgumentError => ae 
+          # don't fault stupid values that MySQL nevertheless stores 
+          return nil 
+        end
         if ary[6] =~ /^((\+|\-)\d+)(:\d+)?$/
           diff = $1.to_i * 3600  # seconds per hour 
           time -= diff

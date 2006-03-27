@@ -56,6 +56,7 @@ class TestSqlCoerce < Test::Unit::TestCase
   def test_timestamp
     assert_equal nil, @coerce.as_timestamp(nil)
     assert_equal nil, @coerce.as_timestamp("")
+    assert_nil @coerce.as_timestamp( "0000-00-00 00:00:00" )
     assert_equal DBI::Timestamp.new(2003, 1, 2, 12, 34, 56), @coerce.as_timestamp("2003-01-02 12:34:56")
 
     assert_equal Time.gm(2003, 1, 2, 12, 34, 56), @coerce.as_timestamp("2003-01-02 12:34:56+00").to_time.getutc
