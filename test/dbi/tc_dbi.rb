@@ -26,7 +26,7 @@ class TC_DBI < Test::Unit::TestCase
    end
 
    def test_dbd_module
-      assert_equal("dbd", DBI::DBD::DIR)
+      assert_equal("DBD", DBI::DBD::DIR)
       assert_equal("0.3", DBI::DBD::API_VERSION)
    end
 
