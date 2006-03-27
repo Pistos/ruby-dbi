@@ -28,7 +28,7 @@ $LOAD_PATH.unshift(File.dirname(__FILE__))
 # OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 # ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
-# $Id: dbi.rb,v 1.5 2006/02/14 01:43:19 djberg96 Exp $
+# $Id: dbi.rb,v 1.6 2006/03/27 20:03:01 francis Exp $
 #
 
 require "find"
@@ -293,7 +293,7 @@ module DBI
                      next unless FileTest.directory?(path)
                      found = Dir.entries(path).find {|e| e.downcase == dc}
                      next unless found
-                     
+
                      require "#{DBD::DIR}/#{found}/#{found}"
                      break
                   end
@@ -655,7 +655,6 @@ module DBI
          
          def fetch(&p)
             raise InterfaceError, "Statement was already closed!" if @handle.nil?
-            raise InterfaceError, "Statement must first be executed" unless @fetchable
             
             if block_given? 
                while (res = @handle.fetch) != nil
