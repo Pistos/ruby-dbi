@@ -16,6 +16,9 @@
   server to return rows-changed counts (0) or rows-matched counts (1)
   for statements that modify rows (mostly relevant for UPDATE).  (Default
   is rows-changed counts)
+  Bugfix: column_info calculated precision as col.length - col.decimals.
+  Should be col.length (precision is not just the digits to left of
+  decimal point).
 * 4-Mar-2006 Paul DuBois.
   Mysql.rb: Added state member value to DBI::DatabaseError exceptions for
   MySQL.  If mysql-ruby doesn't define a sqlstate method that provides the
