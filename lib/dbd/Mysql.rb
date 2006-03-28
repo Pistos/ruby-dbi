@@ -68,19 +68,15 @@ class Driver < DBI::BaseDriver
     # connect to database
     hash = Utils.parse_params(dbname)
 
-    #if hash['database'].nil? 
-    #  raise DBI::InterfaceError, "must specify database"
-    #end
-
     hash['host'] ||= 'localhost'
 
     # these two connection parameters should be passed as numbers
     hash['port'] = hash['port'].to_i unless hash['port'].nil?
-    hash['flag'] = hash['flag'].to_i unless hash['flag'].nil?
+    hash['flag'] = hash['flag'].nil? ? 0 : hash['flag'] = hash['flag'].to_i
 
     handle = ::Mysql.init
 
-    # Look for options in connect string that must be handled
+    # Look for options in connect string to be handled
     # through mysql_options() before connecting
     !hash['mysql_read_default_file'].nil? and
       handle.options(::Mysql::READ_DEFAULT_FILE,
@@ -88,9 +84,23 @@ class Driver < DBI::BaseDriver
     !hash['mysql_read_default_group'].nil? and
       handle.options(::Mysql::READ_DEFAULT_GROUP,
                      hash['mysql_read_default_group'])
+    # The following options can be handled either using mysql_options()
+    # or in the flag argument to connect().
+    hash['mysql_compression'].to_i != 0 and
+      handle.options(::Mysql::OPT_COMPRESS, nil)
+    hash['mysql_local_infile'].to_i != 0 and
+      handle.options(::Mysql::OPT_LOCAL_INFILE, true)
+
+    # Look for options to be handled in the flags argument to connect()
+    if !hash['mysql_client_found_rows'].nil?
+      if hash['mysql_client_found_rows'].to_i != 0
+        hash['flag'] |= ::Mysql::CLIENT_FOUND_ROWS
+      else
+        hash['flag'] &= ~::Mysql::CLIENT_FOUND_ROWS
+      end
+    end
 
     handle.connect(hash['host'], user, auth, hash['database'], hash['port'], hash['socket'], hash['flag'])
-    #handle.select_db(hash['database'])
 
     return Database.new(handle, attr)
   rescue MyError => err

@@ -10,6 +10,12 @@
 * 27-Mar-2006 Paul DuBois.
   Mysql.rb. Test for sqlstate method using respond_to? rather than by
   raising an exception.
+  Implement mysql_compression={0|1} option in DSN to disable/enable
+  compression of client/server protocol. (Default off.)
+  Implement mysql_client_found_rows={0|1} option in DSN to cause
+  server to return rows-changed counts (0) or rows-matched counts (1)
+  for statements that modify rows (mostly relevant for UPDATE).  (Default
+  is rows-changed counts)
 * 4-Mar-2006 Paul DuBois.
   Mysql.rb: Added state member value to DBI::DatabaseError exceptions for
   MySQL.  If mysql-ruby doesn't define a sqlstate method that provides the
