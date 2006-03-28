@@ -51,11 +51,7 @@ MyError = ::MysqlError
     # sqlstate method, otherwise nil.
 
     def error(e)
-      begin
-        sqlstate = e.sqlstate
-      rescue
-        sqlstate = nil
-      end
+      sqlstate = e.respond_to?("sqlstate") ? e.sqlstate : nil
       raise DBI::DatabaseError.new(e.message, e.errno, sqlstate)
     end
 

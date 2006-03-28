@@ -7,6 +7,9 @@
 
 === MySQL
 
+* 27-Mar-2006 Paul DuBois.
+  Mysql.rb. Test for sqlstate method using respond_to? rather than by
+  raising an exception.
 * 4-Mar-2006 Paul DuBois.
   Mysql.rb: Added state member value to DBI::DatabaseError exceptions for
   MySQL.  If mysql-ruby doesn't define a sqlstate method that provides the
