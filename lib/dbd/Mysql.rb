@@ -33,6 +33,56 @@
 require "mysql"
 require "thread"   # for Mutex
 
+
+# The MySQL-specific column_info method defines some MySQL-specific
+# members of the column info attribute array. Extend ColumnInfo by
+# adding methods so that info["x"], for each MySQL-specific x, also
+# has get and set info.x and info.x= methods.
+
+class ColumnInfo
+
+  # Get the column's MySQL type code
+  def _type
+     self['_type']
+  end
+   
+  # Set the column's MySQL type code
+  def _type=(val)
+     self['_type'] = val
+  end
+
+  # Get the column's MySQL length
+  def _length
+     self['_length']
+  end
+   
+  # Set the column's MySQL length
+  def _length=(val)
+     self['_length'] = val
+  end
+
+  # Get the column's MySQL max length
+  def _max_length
+     self['_max_length']
+  end
+   
+  # Set the column's MySQL max length
+  def _max_length=(val)
+     self['_max_length'] = val
+  end
+
+  # Get the column's MySQL flags
+  def _flags
+     self['_flags']
+  end
+   
+  # Set the column's MySQL flags
+  def _flags=(val)
+     self['_flags'] = val
+  end
+
+end # class ColumnInfo
+
 module DBI
 module DBD
 module Mysql
@@ -501,11 +551,28 @@ class Statement < DBI::BaseStatement
 
     return [] if @res_handle.nil?
 
+    unique_key_flag = MysqlField.const_get(:UNIQUE_KEY_FLAG)
+    multiple_key_flag = MysqlField.const_get(:MULTIPLE_KEY_FLAG)
+    indexed = (unique_key_flag | multiple_key_flag)
+
+    # Note: Cannot get 'default' because MysqlField.def is set
+    # only by mysql_list_fields()
+
     @res_handle.fetch_fields.each {|col| 
       retval << {
+                  # Standard Ruby DBI keys
                   'name'        => col.name,
+                  #'sql_type'    => ???,
+                  #'type_name'   => ???,
                   'precision'   => col.length,
                   'scale'       => col.decimals,
+                  'nullable'    => !col.is_not_null?,
+                  'primary'     => col.is_pri_key?,
+                  'unique'      => ((col.flags & unique_key_flag) != 0) ||
+                                   col.is_pri_key?,
+                  'indexed'     => ((col.flags & indexed) != 0) ||
+                                   col.is_pri_key?,
+                  # MySQL-specific keys (signified by leading underscore)
                   '_type'       => col.type,
                   '_length'     => col.length,
                   '_max_length' => col.max_length,

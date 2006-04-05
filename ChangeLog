@@ -7,6 +7,11 @@
 
 === MySQL
 
+* 05-Apr-2006 Paul DuBois.
+  Mysql.rb. Modify column_info method to support standard column
+  attributes: nullable, primary, unique, indexed
+  Modify column_info method to support MySQL-specific column
+  attributes: _type, _length, _max_length, _flags
 * 27-Mar-2006 Paul DuBois.
   Mysql.rb. Test for sqlstate method using respond_to? rather than by
   raising an exception.
