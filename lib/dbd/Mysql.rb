@@ -36,49 +36,49 @@ require "thread"   # for Mutex
 
 # The MySQL-specific column_info method defines some MySQL-specific
 # members of the column info attribute array. Extend ColumnInfo by
-# adding methods so that info["x"], for each MySQL-specific x, also
-# has get and set info.x and info.x= methods.
+# adding methods so that info["mysql_x"], for each MySQL-specific x, also
+# has get and set info.mysql_x and info.mysql_x= methods.
 
 class ColumnInfo
 
   # Get the column's MySQL type code
-  def _type
-     self['_type']
+  def mysql_type
+     self['mysql_type']
   end
    
   # Set the column's MySQL type code
-  def _type=(val)
-     self['_type'] = val
+  def mysql_type=(val)
+     self['mysql_type'] = val
   end
 
   # Get the column's MySQL length
-  def _length
-     self['_length']
+  def mysql_length
+     self['mysql_length']
   end
    
   # Set the column's MySQL length
-  def _length=(val)
-     self['_length'] = val
+  def mysql_length=(val)
+     self['mysql_length'] = val
   end
 
   # Get the column's MySQL max length
-  def _max_length
-     self['_max_length']
+  def mysql_max_length
+     self['mysql_max_length']
   end
    
   # Set the column's MySQL max length
-  def _max_length=(val)
-     self['_max_length'] = val
+  def mysql_max_length=(val)
+     self['mysql_max_length'] = val
   end
 
   # Get the column's MySQL flags
-  def _flags
-     self['_flags']
+  def mysql_flags
+     self['mysql_flags']
   end
    
   # Set the column's MySQL flags
-  def _flags=(val)
-     self['_flags'] = val
+  def mysql_flags=(val)
+     self['mysql_flags'] = val
   end
 
 end # class ColumnInfo
@@ -112,6 +112,10 @@ class Driver < DBI::BaseDriver
 
   def initialize
     super(USED_DBD_VERSION)
+  end
+
+  def default_user
+    ['', nil]
   end
 
   def connect(dbname, user, auth, attr)
@@ -502,7 +506,7 @@ class Statement < DBI::BaseStatement
     return nil if rowdata.nil?
     row = []
     rowdata.each_with_index { |value, index|
-      type = @column_info[index]['_type']
+      type = @column_info[index]['mysql_type']
       type_symbol = Database::TYPE_MAP[type] || :as_str
       row[index] = @coerce.coerce(type_symbol, value)
     }
@@ -573,10 +577,10 @@ class Statement < DBI::BaseStatement
                   'indexed'     => ((col.flags & indexed) != 0) ||
                                    col.is_pri_key?,
                   # MySQL-specific keys (signified by leading underscore)
-                  '_type'       => col.type,
-                  '_length'     => col.length,
-                  '_max_length' => col.max_length,
-                  '_flags'      => col.flags
+                  'mysql_type'       => col.type,
+                  'mysql_length'     => col.length,
+                  'mysql_max_length' => col.max_length,
+                  'mysql_flags'      => col.flags
                 }
     }
     retval
@@ -609,4 +613,3 @@ end # class Statement
 end # module Mysql
 end # module DBD
 end # module DBI
-

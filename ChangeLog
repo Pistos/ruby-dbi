@@ -7,6 +7,10 @@
 
 === MySQL
 
+* 11-Apr-2006 Paul DuBois.
+  Mysql.rb. Renamed column info attributes/methods: 
+  _type, _length, _max_length, _flags are now
+  mysql_type, mysql_length, mysql_max_length, mysql_flags
 * 05-Apr-2006 Paul DuBois.
   Mysql.rb. Modify column_info method to support standard column
   attributes: nullable, primary, unique, indexed
