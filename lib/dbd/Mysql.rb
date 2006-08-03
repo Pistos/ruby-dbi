@@ -51,6 +51,16 @@ class ColumnInfo
      self['mysql_type'] = val
   end
 
+  # Get the column's MySQL type name
+  def mysql_type_name
+     self['mysql_type_name']
+  end
+   
+  # Set the column's MySQL type name
+  def mysql_type_name=(val)
+     self['mysql_type_name'] = val
+  end
+
   # Get the column's MySQL length
   def mysql_length
      self['mysql_length']
@@ -119,7 +129,7 @@ class Driver < DBI::BaseDriver
   end
 
   def connect(dbname, user, auth, attr)
-    # connect to database
+    # connect to database server
     hash = Utils.parse_params(dbname)
 
     hash['host'] ||= 'localhost'
@@ -217,10 +227,11 @@ class Database < DBI::BaseDatabase
   include SQL::BasicBind
 
   # Eli Green:
-  #   The hope is that we don't ever need to just assume the default values. However,
-  #   in some cases (notably floats and doubles), I have seen "show fields from table"
-  #   return absolutely zero information about size and precision. Sigh.
-  #   I probably should have made a struct to store this info in ... but I didn't.
+  #   The hope is that we don't ever need to just assume the default values.
+  #   However, in some cases (notably floats and doubles), I have seen
+  #   "show fields from table" return absolutely zero information about size
+  #   and precision. Sigh. I probably should have made a struct to store
+  #   this info in ... but I didn't.
   MYSQL_to_XOPEN = {
     "TINYINT"    => [SQL_TINYINT, 1, nil],
     "SMALLINT"   => [SQL_SMALLINT, 6, nil],
@@ -241,47 +252,82 @@ class Database < DBI::BaseDatabase
     "TIMESTAMP"  => [SQL_TIMESTAMP, 19, nil],
     "DATETIME"   => [SQL_TIMESTAMP, 19, nil],
     "TINYBLOB"   => [SQL_BINARY, 255, nil],
-    "BLOB"       => [SQL_VARBINARY, 16277215, nil],
-    "MEDIUMBLOB" => [SQL_VARBINARY, 2147483657, nil],
+    "BLOB"       => [SQL_VARBINARY, 65535, nil],
+    "MEDIUMBLOB" => [SQL_VARBINARY, 16277215, nil],
     "LONGBLOB"   => [SQL_LONGVARBINARY, 2147483657, nil],
     "TINYTEXT"   => [SQL_VARCHAR, 255, nil],
     "TEXT"       => [SQL_LONGVARCHAR, 65535, nil],
     "MEDIUMTEXT" => [SQL_LONGVARCHAR, 16277215, nil],
+    "LONGTEXT"   => [SQL_LONGVARCHAR, 2147483657, nil],
     "ENUM"       => [SQL_CHAR, 255, nil],
     "SET"        => [SQL_CHAR, 255, nil],
+    "BIT"        => [SQL_BIT, 8, nil],
     nil          => [SQL_OTHER, nil, nil]
   }
 
+  # Map MySQL numeric type codes to:
+  # - (uppercase) MySQL type names
+  # - coercion method
+
   TYPE_MAP = {}
   MysqlField.constants.grep(/^TYPE_/).each do |const|
-    value = MysqlField.const_get(const)
+    mysql_type = MysqlField.const_get(const)  # numeric type code
+    coercion_method = :as_str                 # default coercion method
     case const
-    when 'TYPE_TINY', 'TYPE_INT24', 'TYPE_SHORT', 'TYPE_LONG', 'TYPE_LONGLONG'
-      TYPE_MAP[value] = :as_int
-    when 'TYPE_FLOAT'
-      TYPE_MAP[value] = :as_float
-    when 'TYPE_DATE'
-      TYPE_MAP[value] = :as_date
-    when 'TYPE_TIME'
-      TYPE_MAP[value] = :as_time
-    when 'TYPE_DATETIME'
-      TYPE_MAP[value] = :as_timestamp
+    when 'TYPE_TINY':         mysql_type_name = 'TINYINT'
+                              coercion_method = :as_int
+    when 'TYPE_SHORT':        mysql_type_name = 'SMALLINT'
+                              coercion_method = :as_int
+    when 'TYPE_INT24':        mysql_type_name = 'MEDIUMINT'
+                              coercion_method = :as_int
+    when 'TYPE_LONG':         mysql_type_name = 'INT'
+                              coercion_method = :as_int
+    when 'TYPE_LONGLONG':     mysql_type_name = 'BIGINT'
+                              coercion_method = :as_int
+    when 'TYPE_FLOAT':        mysql_type_name = 'FLOAT'
+                              coercion_method = :as_float
+    when 'TYPE_DOUBLE':       mysql_type_name = 'DOUBLE'
+                              coercion_method = :as_float
+    when 'TYPE_VAR_STRING',
+         'TYPE_STRING':       mysql_type_name = 'VARCHAR'    # questionable?
+                              coercion_method = :as_str
+    when 'TYPE_DATE':         mysql_type_name = 'DATE'
+                              coercion_method = :as_date
+    when 'TYPE_TIME':         mysql_type_name = 'TIME'
+                              coercion_method = :as_time
+    when 'TYPE_DATETIME':     mysql_type_name = 'DATETIME'
+                              coercion_method = :as_timestamp
+    when 'TYPE_CHAR':         mysql_type_name = 'TINYINT'    # questionable?
+    when 'TYPE_TINY_BLOB':    mysql_type_name = 'TINYBLOB'   # questionable?
+    when 'TYPE_MEDIUM_BLOB':  mysql_type_name = 'MEDIUMBLOB' # questionable?
+    when 'TYPE_LONG_BLOB':    mysql_type_name = 'LONGBLOB'   # questionable?
+    when 'TYPE_GEOMETRY':     mysql_type_name = 'BLOB'       # questionable?
+    when 'TYPE_YEAR',
+         'TYPE_TIMESTAMP',
+         'TYPE_DECIMAL',                                     # questionable?
+         'TYPE_BLOB',                                        # questionable?
+         'TYPE_ENUM',
+         'TYPE_SET',
+         'TYPE_BIT',
+         'TYPE_NULL':         mysql_type_name = const.sub(/^TYPE_/, '')
     else
-      TYPE_MAP[value] = :as_str
+                              mysql_type_name = 'UNKNOWN'
     end
+    TYPE_MAP[mysql_type] = [mysql_type_name, coercion_method]
   end
+  TYPE_MAP[nil] = ['UNKNOWN', :as_str]
 
   def initialize(handle, attr)
     super
     # check server version to determine transaction capability
     ver_str = @handle.get_server_info
     major, minor, teeny = ver_str.split(".")
-    teeny.sub!(/\D*$/, "")	# strip any non-numeric suffix if present
+    teeny.sub!(/\D*$/, "")  # strip any non-numeric suffix if present
     server_version = major.to_i*10000 + minor.to_i*100 + teeny.to_i
     # It's not until 3.23.17 that SET AUTOCOMMIT,
     # BEGIN, COMMIT, and ROLLBACK all are available
     @have_transactions = (server_version >= 32317)
-    # assume the connection begins in AutoCommit mode
+    # assume that the connection begins in AutoCommit mode
     @attr['AutoCommit'] = true
     @mutex = Mutex.new 
   end
@@ -411,8 +457,13 @@ class Database < DBI::BaseDatabase
   private # -------------------------------------------------
 
   # Eli Green
+  # Parse column type string (from SHOW FIELDS) to extract type info:
+  # - sqltype: XOPEN type number
+  # - type: MySQL type name
+  # - size: column length (or precision)
+  # - decimal: number of decimals (scale)
   def mysql_type_info(typedef)
-    sql_type, type, size, decimal = nil, nil, nil, nil
+    sqltype, type, size, decimal = nil, nil, nil, nil
 
     pos = typedef.index('(')
     if not pos.nil?
@@ -507,7 +558,7 @@ class Statement < DBI::BaseStatement
     row = []
     rowdata.each_with_index { |value, index|
       type = @column_info[index]['mysql_type']
-      type_symbol = Database::TYPE_MAP[type] || :as_str
+      type_symbol = Database::TYPE_MAP[type][1] || :as_str
       row[index] = @coerce.coerce(type_symbol, value)
     }
     row
@@ -559,25 +610,32 @@ class Statement < DBI::BaseStatement
     multiple_key_flag = MysqlField.const_get(:MULTIPLE_KEY_FLAG)
     indexed = (unique_key_flag | multiple_key_flag)
 
-    # Note: Cannot get 'default' because MysqlField.def is set
-    # only by mysql_list_fields()
+    # Note: Cannot get 'default' column attribute because MysqlField.def
+    # is set only by mysql_list_fields()
 
     @res_handle.fetch_fields.each {|col| 
+      mysql_type_name = Database::TYPE_MAP[col.type][0]
+      xopen_info = Database::MYSQL_to_XOPEN[mysql_type_name] ||
+                   Database::MYSQL_to_XOPEN[nil]
+      sql_type = xopen_info[0]
+      type_name = DBI::SQL_TYPE_NAMES[sql_type]
+
       retval << {
-                  # Standard Ruby DBI keys
+                  # Standard Ruby DBI column attributes
                   'name'        => col.name,
-                  #'sql_type'    => ???,
-                  #'type_name'   => ???,
+                  'sql_type'    => sql_type,
+                  'type_name'   => type_name,
                   'precision'   => col.length,
                   'scale'       => col.decimals,
                   'nullable'    => !col.is_not_null?,
+                  'indexed'     => ((col.flags & indexed) != 0) ||
+                                   col.is_pri_key?,
                   'primary'     => col.is_pri_key?,
                   'unique'      => ((col.flags & unique_key_flag) != 0) ||
                                    col.is_pri_key?,
-                  'indexed'     => ((col.flags & indexed) != 0) ||
-                                   col.is_pri_key?,
-                  # MySQL-specific keys (signified by leading underscore)
+                  # MySQL-specific attributes (signified by leading "mysql_")
                   'mysql_type'       => col.type,
+                  'mysql_type_name'  => mysql_type_name,
                   'mysql_length'     => col.length,
                   'mysql_max_length' => col.max_length,
                   'mysql_flags'      => col.flags
