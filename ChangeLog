@@ -7,6 +7,11 @@
 
 === MySQL
 
+* 04-Aug-2006 Paul DuBois.
+  Mysql.rb. Expose additional attributes through Database::func():
+  :client_info (String), :client_version (Fixnum), :host_info (String),
+  :info (String), :proto_info (Fixnum), :server_info (String),
+  :stat (String), :thread_id (Fixnum).
 * 02-Aug-2006 Paul DuBois.
   Mysql.rb. Modified column_info method to support standard sql_type and
   type_name column attributes and MySQL-specific mysql_type_name

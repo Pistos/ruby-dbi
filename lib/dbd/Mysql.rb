@@ -511,6 +511,38 @@ class Database < DBI::BaseDatabase
     @handle.insert_id
   end
 
+  def __thread_id
+    @handle.thread_id
+  end
+
+  def __info
+    @handle.info
+  end
+
+  def __host_info
+    @handle.host_info
+  end
+
+  def __proto_info
+    @handle.proto_info
+  end
+
+  def __server_info
+    @handle.server_info
+  end
+
+  def __client_info
+    @handle.client_info
+  end
+
+  def __client_version
+    @handle.client_version
+  end
+
+  def __stat
+    @handle.stat
+  end
+
 
 end # class Database
 
