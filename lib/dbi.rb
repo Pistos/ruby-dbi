@@ -28,7 +28,7 @@ $LOAD_PATH.unshift(File.dirname(__FILE__))
 # OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 # ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
-# $Id: dbi.rb,v 1.6 2006/03/27 20:03:01 francis Exp $
+# $Id: dbi.rb,v 1.7 2006/08/12 17:44:43 francis Exp $
 #
 
 require "find"
@@ -39,7 +39,7 @@ require "dbi/columninfo"
 require "date"
 
 module DBI
-   VERSION = "0.1.0"
+   VERSION = "0.1.1"
    
    module DBD
       DIR         = "DBD"

@@ -3,7 +3,7 @@
 === General
 
 * Paul DuBois: README: Added URLs for the RubyForge DBI project.
-* Patrick May: removed miss-leading space in setup.rb config example.
+* Patrick May: removed misleading space in setup.rb config example.
 * Francis Hwang: fixed bug 597: behaviour of StatementHandle#fetch doesn't
   match DBI specification
 * incorporated Matthew Bloch's patch for handling bad timestamps like
