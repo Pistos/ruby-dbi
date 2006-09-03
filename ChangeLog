@@ -1,3 +1,10 @@
+== 0.1.2 - 02-Sep-2006
+
+=== General
+* Paul DuBois: test/dbi/tc_dbi.rb: DBI version number test failed because it
+  was expected to be 0.1.0. (Should have been 0.1.1.) But 0.1.1 has been
+  released, so update DBI version number and expected number in test to 0.1.2.
+
 == 0.1.1 - 12-Aug-2006
 
 === General

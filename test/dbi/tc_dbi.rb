@@ -22,7 +22,7 @@ class TC_DBI < Test::Unit::TestCase
    end
 
    def test_dbi_version
-      assert_equal("0.1.0", DBI::VERSION)
+      assert_equal("0.1.2", DBI::VERSION)
    end
 
    def test_dbd_module
