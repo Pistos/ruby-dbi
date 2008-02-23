@@ -74,3 +74,14 @@ h1 {
     font-weight: bold;
 }
 
+.copyright {
+    display: block;
+    margin: 2em;
+    border: 1px solid black;
+    padding: 1em;
+    color: #444;
+    font-size: 0.6em;
+    text-align: center;
+    font-family: sans-serif;
+}
+
