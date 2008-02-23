@@ -1,6 +1,8 @@
 $: << 'lib'
 require 'dbi'
 require 'rake'
+require 'rake/gempackagetask'
+require 'rake/packagetask'
 
 def release_tag
 	( uber, major, minor ) = DBI::VERSION.split( '.' ).collect! { |str|
@@ -14,20 +16,20 @@ end
 #
 # TODO: Add more documents to generate
 #
-file 'doc/html/index.html' => [ 'README' ] do
-  require 'rdoc/markup/simple_markup'
-  require 'rdoc/markup/simple_markup/to_html'
-	p = SM::SimpleMarkup.new
-  h = SM::ToHtml.new
-  input_string = File.read 'README'
-	output = "<html><head><link rel=\"StyleSheet\" href=\"rubyStyle.css\" type=\"text/css\" />"
-  output += p.convert(input_string, h)
-  File.open( 'doc/html/index.html', 'w+' ) do |f|
-    f << output
-  end
+file 'doc/html/index.html' => [ 'README' ] do # FIXME RDoc
+    require 'rdoc/markup/simple_markup'
+    require 'rdoc/markup/simple_markup/to_html'
+    p = SM::SimpleMarkup.new
+    h = SM::ToHtml.new
+    input_string = File.read 'README'
+    output = "<html><head><link rel=\"StyleSheet\" href=\"rubyStyle.css\" type=\"text/css\" />"
+    output += p.convert(input_string, h)
+    File.open( 'doc/html/index.html', 'w+' ) do |f|
+        f << output
+    end
 end
 
-task :docs => [ 'doc/html/index.html' ]
+task :docs => [ 'doc/html/index.html' ] # FIXME RDoc
 
 task :export_release do
 	Dir.chdir '../releases'
@@ -44,4 +46,42 @@ task :test do
 	system("ruby test/ts_dbi.rb")
 end
 
-task :default => :test
+task :dist      => [:repackage, :gem, :docs] # FIXME RDoc
+task :distclean => [:clobber_package] # FIXME RDoc
+task :clean     => [:distclean]
+task :default => [ :test, :dist ]
+
+spec = Gem::Specification.new do |gem|
+    gem.name        = 'dbi'
+    gem.version     = '0.2.0'
+    gem.authors     = ['Erik Hollensbe', 'Christopher Maujean']
+    gem.email       = 'erik@hollensbe.org'
+    gem.homepage    = 'http://www.rubyforge.org/projects/ruby-dbi'
+    gem.platform    = Gem::Platform::RUBY
+    gem.summary     = 'A vendor independent interface for accessing databases'
+    gem.description = 'A vendor independent interface for accessing databases'
+    gem.test_file   = 'test/ts_dbi.rb'
+    gem.has_rdoc    = true
+    gem.files       = Dir['lib/**/*'] + Dir['test/*'] + Dir['README'] + Dir['LICENSE'] + Dir['ChangeLog']
+    # XXX Pretty sure this isn't required anymore. :)
+    #   gem.files.reject! { |fn| fn.include? 'CVS' }
+    gem.extra_rdoc_files = ['./README']
+    gem.required_ruby_version = '>= 1.8.0'
+    gem.rubyforge_project = 'ruby-dbi'
+end
+
+Rake::GemPackageTask.new(spec) do |s|
+end
+
+Rake::PackageTask.new(spec.name, spec.version) do |p|
+    p.need_tar_gz = true
+    p.need_zip = true
+    p.package_files.include("./bin/**/*")
+    p.package_files.include("./Rakefile")
+    p.package_files.include("./setup.rb")
+    p.package_files.include("./lib/**/*")
+    p.package_files.include("./test/**/*")
+    p.package_files.include("./README")
+    p.package_files.include("./LICENSE")
+    p.package_files.include("./ChangeLog")
+end
