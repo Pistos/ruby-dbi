@@ -90,6 +90,13 @@ ENDSQL
     assert_equal res, bind(self, sql, [])
   end
 
+  def test_nested_insert
+    sql = "insert into logins (user_id, hostmask) values ((select id from users where username = ?), ?)"
+    res = sql.sub(/\?/, "1")
+    res.sub!(/\?/, "'foo@bar'")
+    assert_equal res, bind(self, sql, [1, "foo@bar"])
+  end
+
 end
 
 
