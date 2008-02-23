@@ -21,6 +21,8 @@ task :default => [ :test, :dist ]
 Rake::RDocTask.new do |rd|
     rd.rdoc_dir = "rdoc"
     rd.rdoc_files.include("./README")
+    rd.rdoc_files.include("./ChangeLog")
+    rd.rdoc_files.include("./LICENSE")
     rd.rdoc_files.include("./lib/**/*.rb")
     rd.rdoc_files.include("./ext/**/*.c")
     rd.options = %w(-ap)
