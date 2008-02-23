@@ -33,7 +33,7 @@ h1 {
     color: #444;
     font-size: 1em;
     text-align: center;
-    font-face: sans-serif;
+    font-family: sans-serif;
 }
 
 .main-container {
@@ -60,6 +60,7 @@ h1 {
     font-weight: bold;
     color: black;
     text-align: center;
+    font-family: sans-serif;
 }
 
 .nav-container a {
