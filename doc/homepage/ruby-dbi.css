@@ -24,3 +24,38 @@ a:hover {
     padding: 10px;
     border: 1px solid black;
 }
+
+h1 {
+    display: block;
+    margin: 2em;
+    border: 1px solid black;
+    padding: 1em;
+    color: #444;
+    font-size: 1em;
+}
+
+.main-container {
+    margin: 2em;
+}
+
+.nav-container {
+    display: block;
+    border: 1px solid black;
+    float: left;
+    vertical-align; top:
+    font-size: .8em;
+    min-width: 20%;
+    margin-right: 2em;
+}
+
+.nav-container a {
+    display: block;
+    padding: 5px;
+}
+
+.nav-container a:hover {
+    background-color: #444;
+    color: white;
+    font-weight: bold;
+}
+
