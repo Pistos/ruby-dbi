@@ -1,2 +1,26 @@
 BODY {
+    background-color: white;
+} 
+
+a:visited { 
+    color: #366;
+}
+
+a {
+    color: white;
+}
+
+a:hover {
+    text-decoration: none;
+}
+
+.body-container { 
+    margin-left: auto;
+    margin-right: auto;
+    margin-top: 50px;
+    width: 80%;
+    background-color: #AAA;
+    color: black;
+    padding: 10px;
+    border: 1px solid black;
 }
