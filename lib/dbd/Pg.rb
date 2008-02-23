@@ -2,6 +2,7 @@
 # DBD::Pg
 #
 # Copyright (c) 2001, 2002, 2003 Jim Weirich, Michael Neumann <mneumann@ntecs.de>
+# Copyright (c) 2008 Erik Hollensbe, Christopher Maujean
 # 
 # All rights reserved.
 #
@@ -29,6 +30,12 @@
 #
 # $Id$
 #
+
+begin
+    require 'rubygems'
+    gem 'postgres'
+rescue Exception => e
+end
 
 require 'postgres'
 
