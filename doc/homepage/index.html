@@ -6,65 +6,75 @@
         <title>Ruby/DBI - Direct database access layer for Ruby</title>
         <link rel="stylesheet" type="text/css" href="ruby-dbi.css"/>
     </head>
-    <div class="body-container">
-        <h1>Ruby/DBI - Direct database access layer for Ruby</h1>
-        <div class="main-container">
-            <div class="nav-container">
-                <h1>Links</h1>
-                <a href="http://rubyforge.org/projects/ruby-dbi">RubyForge Project</a>
-                <a href="http://ruby-dbi.rubyforge.org/rdoc/index.html">RDoc</a>
-                <a href="http://code.hollensbe.org/?p=ruby-dbi.git;a=summary">Git Repository</a>
-                <a href="http://ruby-dbi.rubyforge.org/databases.html">Database Links</a>
-                <a href="http://ruby-dbi.rubyforge.org/contact.html">Contact/Reporting Bugs</a>
+    <body>
+        <div class="body-container">
+            <h1>Ruby/DBI - Direct database access layer for Ruby</h1>
+            <div class="main-container">
+                <div class="nav-container">
+                    <h1>Links</h1>
+                    <a href="index.html">Home</a>
+                    <a href="http://rubyforge.org/projects/ruby-dbi">RubyForge Project</a>
+                    <a href="http://ruby-dbi.rubyforge.org/rdoc/index.html">RDoc</a>
+                    <a href="http://code.hollensbe.org/?p=ruby-dbi.git;a=summary">Git Repository</a>
+                    <!-- <a href="http://ruby-dbi.rubyforge.org/databases.html">Database Links</a> -->
+                    <a href="contact.html">Contact/Reporting Bugs</a>
+                </div>
+
+                <p>
+                Ruby/DBI is a database interface in the spirit of Perl's prolific
+                <a href="http://search.cpan.org/~timb/DBI/DBI.pm">DBI</a> authored
+                by Tim Bunce.
+                </p>
+
+                <p>
+                Ruby/DBI differs in quite a few ways, however. It incorporates many
+                "rubyisms" while maintaining the core DBI interface, and
+                (currently) includes it's own suite of DBD's which are maintained
+                with the application.
+                </p>
+
+                <p>
+                Ruby/DBI is <i>not</i> an ORM, like <a
+                    href="http://ar.rubyonrails.com">ActiveRecord</a> or <a
+                    href="http://datamapper.rubyforge.org">DataMapper</a>. It is a
+                lightweight, centralized API to database manipulation. An ORM may
+                or may not be what you want for a given situation, due to weight,
+                ease-of-use or other issues. Our goal with Ruby/DBI is to provide a
+                compelling, lightweight interface that you can use for things where
+                an ORM is too much or too cumbersome.
+                </p>
+
+                <p>
+                Getting started with Ruby/DBI is very easy if you have a working
+                knowledge of SQL and your target database. Read the <a
+                    href="http://ruby-dbi.rubyforge.org/rdoc/index.html">Documentation</a>
+                to get on your way!
+                </p>
+
+                <p>
+                The maintainers, Erik Hollensbe and Christopher Maujean, have a
+                commitment to keeping Ruby/DBI compatible with future Ruby releases
+                and an interest in enhancing the suite by reducing the code
+                footprint and re-using established database interfaces in our
+                drivers.
+                </p>
+
+                <p>
+                Ruby/DBI is a very old project as far as the ruby community is
+                concerned, tracing back to at least 2004. There are plenty of
+                people who <a
+                    href="http://ruby-dbi.rubyforge.org/rdoc/index.html">have
+                    contributed</a> to this effort. Big thanks to the original
+                project lead, Francis Hwang, and Daniel Berger, who held the
+                project in escrow for such a long time. 
+                </p>
             </div>
-
-            <p>
-            Ruby/DBI is a database interface in the spirit of Perl's prolific
-            <a href="http://search.cpan.org/~timb/DBI/DBI.pm">DBI</a> authored
-            by Tim Bunce.
-            </p>
-
-            <p>
-            Ruby/DBI differs in quite a few ways, however. It incorporates many
-            "rubyisms" while maintaining the core DBI interface, and
-            (currently) includes it's own suite of DBD's which are maintained
-            with the application.
-            </p>
-
-            <p>
-            Ruby/DBI is <i>not</i> an ORM, like <a
-                href="http://ar.rubyonrails.com">ActiveRecord</a> or <a
-                href="http://datamapper.rubyforge.org">DataMapper</a>. It is a
-            lightweight, centralized API to database manipulation. An ORM may
-            or may not be what you want for a given situation, due to weight,
-            ease-of-use or other issues. Our goal with Ruby/DBI is to provide a
-            compelling, lightweight interface that you can use for things where
-            an ORM is too much or too cumbersome.
-            </p>
-
-            <p>
-            The maintainers, Erik Hollensbe and Christopher Maujean, have a
-            commitment to keeping Ruby/DBI compatible with future Ruby releases
-            and an interest in enhancing the suite by reducing the code
-            footprint and re-using established database interfaces in our
-            drivers.
-            </p>
-
-            <p>
-            Ruby/DBI is a very old project as far as the ruby community is
-            concerned, tracing back to at least 2004. There are plenty of
-            people who <a
-                href="http://ruby-dbi.rubyforge.org/rdoc/index.html">have
-                contributed</a> to this effort. Big thanks to the original
-            project lead, Francis Hwang, and Daniel Berger, who held the
-            project in escrow for such a long time. 
-            </p>
+            <div class="copyright">
+                &copy;2008 Erik Hollensbe &amp; Christopher Maujean, all rights
+                reserved. Please see the README file for the full copyright notice.
+                Please see the LICENSE file in the source package for information
+                on redistributing the source or any of the site content.
+            </div>
         </div>
-        <div class="copyright">
-            &copy;2008 Erik Hollensbe &amp; Christopher Maujean, all rights
-            reserved. Please see the README file for the full copyright notice.
-            Please see the LICENSE file in the source package for information
-            on redistributing the source or any of the site content.
-        </div>
-    </div>
+    </body>
 </html>
