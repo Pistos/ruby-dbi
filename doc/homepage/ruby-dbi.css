@@ -1,5 +1,5 @@
 BODY {
-    background-color: white;
+    background-color: #666;
 } 
 
 a:visited { 
@@ -32,6 +32,7 @@ h1 {
     padding: 1em;
     color: #444;
     font-size: 1em;
+    text-align: center;
 }
 
 .main-container {
@@ -46,6 +47,17 @@ h1 {
     font-size: .8em;
     min-width: 20%;
     margin-right: 2em;
+}
+
+.nav-container h1 {
+    margin: 0;
+    padding: 0;
+    border: 0;
+    border-bottom: 1px solid black;
+    font-size: 1.2em;
+    font-weight: bold;
+    color: black;
+    text-align: center;
 }
 
 .nav-container a {
