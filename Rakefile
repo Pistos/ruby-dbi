@@ -62,9 +62,7 @@ spec = Gem::Specification.new do |gem|
     gem.description = 'A vendor independent interface for accessing databases'
     gem.test_file   = 'test/ts_dbi.rb'
     gem.has_rdoc    = true
-    gem.files       = Dir['lib/**/*'] + Dir['test/*'] + Dir['README'] + Dir['LICENSE'] + Dir['ChangeLog']
-    # XXX Pretty sure this isn't required anymore. :)
-    #   gem.files.reject! { |fn| fn.include? 'CVS' }
+    gem.files       = Dir['examples/**/*'] + Dir['ext/**/*'] + Dir['lib/**/*'] + Dir['test/*'] + Dir['README'] + Dir['LICENSE'] + Dir['ChangeLog']
     gem.extra_rdoc_files = ['./README']
     gem.required_ruby_version = '>= 1.8.0'
     gem.rubyforge_project = 'ruby-dbi'
@@ -76,10 +74,12 @@ end
 Rake::PackageTask.new(spec.name, spec.version) do |p|
     p.need_tar_gz = true
     p.need_zip = true
+    p.package_files.include("./examples/**/*")
     p.package_files.include("./bin/**/*")
     p.package_files.include("./Rakefile")
     p.package_files.include("./setup.rb")
     p.package_files.include("./lib/**/*")
+    p.package_files.include("./ext/**/*")
     p.package_files.include("./test/**/*")
     p.package_files.include("./README")
     p.package_files.include("./LICENSE")
