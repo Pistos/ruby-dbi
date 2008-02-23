@@ -33,6 +33,7 @@ h1 {
     color: #444;
     font-size: 1em;
     text-align: center;
+    font-face: sans-serif;
 }
 
 .main-container {
@@ -47,6 +48,7 @@ h1 {
     font-size: .8em;
     min-width: 20%;
     margin-right: 2em;
+    margin-bottom: 2em;
 }
 
 .nav-container h1 {
