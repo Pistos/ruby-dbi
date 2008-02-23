@@ -57,6 +57,6 @@ Changes
 
 * 28.05.2001.7 - Added some files that were missed when building .6
 
---
--- Jim Weirich
--- jweirich@one.ent
+
+Jim Weirich
+jweirich@one.ent
