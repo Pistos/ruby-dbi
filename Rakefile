@@ -53,9 +53,9 @@ task :default => [ :test, :dist ]
 
 spec = Gem::Specification.new do |gem|
     gem.name        = 'dbi'
-    gem.version     = '0.2.0'
+    gem.version     = '0.1.2'
     gem.authors     = ['Erik Hollensbe', 'Christopher Maujean']
-    gem.email       = 'erik@hollensbe.org'
+    gem.email       = 'ruby-dbi-users@rubyforge.org'
     gem.homepage    = 'http://www.rubyforge.org/projects/ruby-dbi'
     gem.platform    = Gem::Platform::RUBY
     gem.summary     = 'A vendor independent interface for accessing databases'
