@@ -15,6 +15,7 @@ class TestPostgresTransaction < Test::Unit::TestCase
         sth.execute("Foo")
         assert !sth.fetch
         sth.finish
+        dbh.disconnect 
     end
 
     def test_commit
@@ -33,6 +34,23 @@ class TestPostgresTransaction < Test::Unit::TestCase
         assert_equal "Foo", row[0]
         assert_equal 51, row[1]
         sth.finish
+        dbh.disconnect 
+    end
+
+    def test_select_transaction
+        # per bug #10466
+        dbh = get_dbh
+        dbh["AutoCommit"] = false
+        sth = dbh.prepare('select * from test_insert(?, ?)');
+        sth.execute("Foo", 51)
+        dbh.rollback
+        sth.finish
+
+        sth = dbh.prepare('select name, age from names where name=?')
+        sth.execute("Foo")
+        assert !sth.fetch
+        sth.finish
+        dbh.disconnect 
     end
 
     def get_dbh

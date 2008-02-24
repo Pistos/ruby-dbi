@@ -653,7 +653,8 @@ module DBI
 
           boundsql = @prep_sql.bind(@bindvars)
 
-          if not SQL.query?(boundsql) and not @db['AutoCommit'] then
+          if not @db['AutoCommit'] then
+#          if not SQL.query?(boundsql) and not @db['AutoCommit'] then
             @db.start_transaction unless @db.in_transaction?
           end
           pg_result = @db._exec(boundsql)
