@@ -1,31 +1,57 @@
-require "dbi"
-require "../Pg"
+require 'test/unit'
 
-class MyDB < DBI::DBD::Pg::Database
-  def initialize; end
+LEN = 50
+
+class TestPostgresByteA < Test::Unit::TestCase
+    # FIXME the 'pg' module is broken and doesn't encode/decode properly.
+    # this test should prove that the 'pg' module works so we can back out our
+    # hacks.
+    def skip_underlying_driver 
+        str = generate_random_string
+
+        encoded = PGconn.escape_bytea(str.dup)
+        decoded = PGconn.unescape_bytea(encoded)
+
+        assert_equal str, decoded
+    end
+
+    def test_encode_decode
+        encoder = DBI::DBD::Pg::Database.new('rubytest', 'erikh', 'monkeys', {})
+        decoder = DBI::DBD::Pg::PgCoerce.new
+
+        50_000.times do 
+            str = generate_random_string
+
+            encoded = encoder.__encode_bytea(str.dup)
+            decoded = decoder.as_bytea(encoded)
+
+            assert_equal str, decoded
+        end
+    end
+
+    def generate_random_string
+        # random string test
+        str = " " * LEN
+        for i in 0...LEN
+            str[i] = (rand * 256).to_i.chr
+        end
+
+        return str
+    end
 end
 
-$encoder = MyDB.new
-$decoder = DBI::DBD::Pg::PgCoerce.new
+if __FILE__ == $0 then
+    require 'test/unit/ui/console/testrunner'
+    require 'dbi'
+    require 'DBD/Pg/Pg'
+    
+    begin
+        require 'rubygems'
+        gem 'pg'
+    rescue Exception => e
+    end
 
-# random string test
-LEN = 50
-STR = " " * LEN
+    require 'pg'
 
-50_000.times do 
-  for i in 0...LEN
-    STR[i] = (rand * 256).to_i.chr
-  end
-
-  encoded = $encoder.__encode_bytea(STR.dup)
-  decoded = $decoder.as_bytea(encoded)
- 
-  unless STR == decoded
-    p STR
-    puts "---------------"
-    p encoded
-    puts "---------------"
-    p decoded
-    raise "conversion failed!"
-  end
+    Test::Unit::UI::Console::TestRunner.run(TestPostgresByteA)
 end

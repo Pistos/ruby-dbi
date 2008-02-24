@@ -1,8 +1,7 @@
-#!/usr/local/bin/ruby
+#!/usr/bin/env ruby
 # Ruby Unit Tests
 
 require 'test/unit'
-
 require 'DBD/Pg/Pg'
 
 ######################################################################

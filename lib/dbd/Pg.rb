@@ -593,7 +593,14 @@ module DBI
      if PGconn.respond_to?(:escape_bytea)
 
         def __encode_bytea(str)
-          PGconn.escape_bytea(str)
+          # FIXME there's a bug in the upstream 'pg' driver that does not
+          # properly encode bytea, improperly handling "\123" treating it as
+          # an octet.
+          # 
+          # Fix this for now, but beware that we'll have to unfix this as
+          # soon as they fix their end.
+          str = str.gsub(/\\([0-7]{3})/, "\\\\\1")
+          @connection.escape_bytea(str)
         end
 
       else
@@ -780,12 +787,17 @@ module DBI
         #   http://www.postgresql.org/idocs/index.php?datatype-binary.html
         #
         def as_bytea(str)
-          # TODO: Use quote function of Pg driver
-          a = str.split(/\\\\/, -1).collect! {|s|
-            s.gsub!(/\\[0-7][0-7][0-7]/) {|o| o[1..-1].oct.chr}  #  \### => chr(###)
-            s
-          }
-          a.join("\\")  # \\ => \
+            # FIXME there's a bug in the upstream 'pg' driver that does not
+            # properly decode bytea, leaving in an extra slash for each decoded
+            # character.
+            #
+            # Fix this for now, but beware that we'll have to unfix this as
+            # soon as they fix their end.
+            ret = PGconn.unescape_bytea(str)
+            ret.gsub!(/\\\\/, "\\")
+            ret.gsub!(/\\[0-7]{3}/) { |x| x[1..3].to_i(8).chr }
+            ret.gsub!(/''/, "'")
+            return ret
         end
 
         def as_timestamp(str)
