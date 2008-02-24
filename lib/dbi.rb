@@ -284,17 +284,32 @@ module DBI
                # case-sensitive in safe mode
                require "#{DBD::DIR}/#{driver_name}/#{driver_name}"
             else
+                # FIXME this whole require scheme is so horribly stupid I
+                # can't even begin to think about how much I'd enjoy what
+                # was smoked when this was thought up.
+                #
+                # Here's a hack to get tests to work.
                # try a quick load and then a caseless scan
                begin
-                  require "#{DBD::DIR}/#{driver_name}/#{driver_name}"
+                   begin
+                       require "dbd/#{driver_name}"
+                   rescue LoadError 
+                       require "#{DBD::DIR}/#{driver_name}/#{driver_name}"
+                   end
                rescue LoadError
                   $LOAD_PATH.each do |dir|
+                     path = "#{dir}/dbd"
+                     if FileTest.directory?(path)
+                         require "#{path}/#{driver_name}"
+                         break
+                     end
+
                      path = "#{dir}/#{DBD::DIR}"
                      next unless FileTest.directory?(path)
                      found = Dir.entries(path).find {|e| e.downcase == dc}
                      next unless found
 
-                     require "#{DBD::DIR}/#{found}/#{found}"
+                     require "#{path}/#{found}/#{found}"
                      break
                   end
                end

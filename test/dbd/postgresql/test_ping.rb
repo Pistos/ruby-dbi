@@ -9,9 +9,3 @@ class TestPostgresPing < Test::Unit::TestCase
         assert_raise(DBI::InterfaceError) { dbh.ping }
     end
 end
-
-if __FILE__ == $0 then
-    require 'test/unit/ui/console/testrunner'
-    require 'dbi'
-    Test::Unit::UI::Console::TestRunner.run(TestPostgresPing)
-end

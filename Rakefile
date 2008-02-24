@@ -30,8 +30,11 @@ Rake::RDocTask.new do |rd|
 end
 
 # Runs the DBI test suite (though not the various DBD tests)
+# FIXME: convert to a rake_test_loader sooner or later
 task :test do
-	system("ruby test/ts_dbi.rb")
+    Dir["test/ts_*.rb"].each do |file|
+        system("ruby", file)
+    end
 end
 
 # gemspec

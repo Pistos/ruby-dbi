@@ -34,18 +34,12 @@ class TestPostgresBlob < Test::Unit::TestCase
     end
 
     def setup
-        system "psql rubytest < dump.sql >>sql.log"
+        system "psql rubytest < dbd/postgresql/dump.sql >>sql.log"
         @dbh = DBI.connect("dbi:Pg:rubytest", "erikh", "monkeys")
     end
 
     def teardown
         @dbh.disconnect
-        system "psql rubytest < drop_tables.sql >>sql.log"
+        system "psql rubytest < dbd/postgresql/drop_tables.sql >>sql.log"
     end
-end
-
-if __FILE__ == $0 then
-    require 'test/unit/ui/console/testrunner'
-    require 'dbi'
-    Test::Unit::UI::Console::TestRunner.run(TestPostgresBlob)
 end

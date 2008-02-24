@@ -2,7 +2,7 @@
 # Ruby Unit Tests
 
 require 'test/unit'
-require 'DBD/Pg/Pg'
+require 'dbd/Pg'
 
 ######################################################################
 # Test the PostgreSql DBD driver.  This test exercises options
@@ -110,15 +110,15 @@ class TestDbdPostgres < Test::Unit::TestCase
 
   def test_tables_call
       # per bug #1082, views do not show up in tables listing.
-      assert get_dbi.tables.include? "view_names"
+      assert get_dbi.tables.include?("view_names")
   end
   
   def setup
-      system "psql rubytest < dump.sql >>sql.log"
+      system "psql rubytest < dbd/postgresql/dump.sql >>sql.log"
   end
 
   def teardown
-      system "psql rubytest < drop_tables.sql >>sql.log"
+      system "psql rubytest < dbd/postgresql/drop_tables.sql >>sql.log"
   end
 
   private # ----------------------------------------------------------
@@ -137,10 +137,3 @@ class TestDbdPostgres < Test::Unit::TestCase
 end
 
 # --------------------------------------------------------------------
-
-if __FILE__ == $0 then
-    require 'test/unit/ui/console/testrunner'
-    require 'dbi'
-    Test::Unit::UI::Console::TestRunner.run(TestDbdPostgres)
-end
-

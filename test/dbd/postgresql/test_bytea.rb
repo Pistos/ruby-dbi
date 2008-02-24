@@ -1,5 +1,15 @@
 require 'test/unit'
 
+require 'dbd/Pg'
+
+begin
+    require 'rubygems'
+    gem 'pg'
+rescue Exception => e
+end
+
+require 'pg'
+
 LEN = 50
 
 class TestPostgresByteA < Test::Unit::TestCase
@@ -38,20 +48,4 @@ class TestPostgresByteA < Test::Unit::TestCase
 
         return str
     end
-end
-
-if __FILE__ == $0 then
-    require 'test/unit/ui/console/testrunner'
-    require 'dbi'
-    require 'DBD/Pg/Pg'
-    
-    begin
-        require 'rubygems'
-        gem 'pg'
-    rescue Exception => e
-    end
-
-    require 'pg'
-
-    Test::Unit::UI::Console::TestRunner.run(TestPostgresByteA)
 end

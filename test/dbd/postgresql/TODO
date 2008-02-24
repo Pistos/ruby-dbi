@@ -1,3 +1,14 @@
  * LOB tests don't clean up LOBs, just the tables that hold them 
  * Transaction Tests (AutoCommit on and off, ensuring rollback, etc)
  * more fetch tests
+
+ this showed up:
+
+  1) Failure:
+test_encode_decode(TestPostgresByteA)
+    [./dbd/postgresql/test_bytea.rb:28:in `test_encode_decode'
+     ./dbd/postgresql/test_bytea.rb:22:in `times'
+     ./dbd/postgresql/test_bytea.rb:22:in `test_encode_decode']:
+<"\264\336\037\217\255\023b'\372\342LD\326\266\v\224\356\301\251V\247\a\243+\320+\016\\630-[\032f\004A\243\247\207\214#X\006V\227>\267t%"> expected but was
+<"\264\336\037\217\255\023b'\372\342LD\326\266\v\224\356\301\251V\247\a\243+\320+\016\\\001-[\032f\004A\243\247\207\214#X\006V\227>\267t%">.
+
