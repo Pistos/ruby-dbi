@@ -7,26 +7,30 @@ class TestPostgresBlob < Test::Unit::TestCase
         assert @dbh
         assert @dbh.ping
 
-        # FIXME
-        #
-        # Figure out what's causing the "truncated during write" error, is it
-        # the postgres module, or our DBD?
-        #
+        # test with DBI::Binary
         assert_equal 1, @dbh.do("INSERT INTO blob_test (name, data) VALUES (?,?)", "test", DBI::Binary.new(DATA))
 
+        # test with blob_create directly
         blob = @dbh.func(:blob_create, PGconn::INV_WRITE)
-
         assert blob
-
         assert @dbh.func(:blob_write, blob, DATA)
-
         assert_equal 1, @dbh.do("INSERT INTO blob_test (name, data) VALUES (?,?)", "test (2)", blob)
 
+        # test with blob_import directly
+        File.open('/tmp/pg_dbi_import_test', 'w') { |f| f << DATA }
+        blob = @dbh.func(:blob_import, '/tmp/pg_dbi_import_test')
+        assert blob
+        assert_equal 1, @dbh.do("INSERT INTO blob_test (name, data) VALUES (?,?)", "test (2)", blob)
+
+        index = 0
         @dbh.select_all("SELECT name, data FROM blob_test") do |name, data|
+            index += 1
             assert_equal DATA, @dbh.func(:blob_read, data, DATA.length)
             @dbh.func(:blob_export, data, '/tmp/pg_dbi_read_test')
             assert_equal DATA, File.readlines('/tmp/pg_dbi_read_test').to_s
         end
+
+        assert_equal 3, index
     end
 
     def setup
