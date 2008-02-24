@@ -107,6 +107,11 @@ class TestDbdPostgres < Test::Unit::TestCase
   ensure
     dbd.disconnect if dbd
   end
+
+  def test_tables_call
+      # per bug #1082, views do not show up in tables listing.
+      assert get_dbi.tables.include? "view_names"
+  end
   
   def setup
       system "psql rubytest < dump.sql >>sql.log"
