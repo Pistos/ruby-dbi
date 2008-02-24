@@ -1,2 +1,3 @@
+ * LOB tests don't clean up LOBs, just the tables that hold them 
  * Transaction Tests (AutoCommit on and off, ensuring rollback, etc)
  * more fetch tests
