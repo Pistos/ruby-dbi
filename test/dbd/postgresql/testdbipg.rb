@@ -1,36 +1,34 @@
 #!/usr/local/bin/ruby
 # Ruby Unit Tests
 
-require 'runit/testcase'
-require 'runit/cui/testrunner'
+require 'test/unit'
 
 require 'DBD/Pg/Pg'
-
-$last_suite = RUNIT::TestSuite.new
 
 ######################################################################
 # Test the PostgreSql DBD driver.  This test exercises options
 # difficult to test through the standard DBI interface.
 #
-class TestDbdPostgres < RUNIT::TestCase
+class TestDbdPostgres < Test::Unit::TestCase
 
-  def test_connect
-    dbd = get_dbd
-    assert_not_nil dbd.connection
-    assert_equal 'localhost', dbd.connection.host
-    assert_equal 'jim', dbd.connection.user
-    assert_equal 'rubytest', dbd.connection.db
-    assert_equal 5432, dbd.connection.port
-  ensure
-     dbd.disconnect if dbd
-  end
+    # FIXME this is a feature that should be there, but currently isn't.
+#   def test_connect
+#     dbd = get_dbd
+#     assert_not_nil dbd.connection
+#     assert_equal 'localhost', dbd.connection.host
+#     assert_equal 'erikh', dbd.connection.user
+#     assert_equal 'rubytest', dbd.connection.db
+#     assert_equal 5432, dbd.connection.port
+#   ensure
+#      dbd.disconnect if dbd
+#   end
 
   def test_connect_errors
     dbd = nil
-    ex = assert_exception(DBI::OperationalError) {
+    ex = assert_raise(DBI::OperationalError) {
       dbd = DBI::DBD::Pg::Database.new('rubytest:1234', 'jim', nil, {})
     }
-    ex = assert_exception(DBI::OperationalError) {
+    ex = assert_raise(DBI::OperationalError) {
       dbd = DBI::DBD::Pg::Database.new('bad_db_name', 'jim', nil, {})
     }
   ensure
@@ -60,7 +58,7 @@ class TestDbdPostgres < RUNIT::TestCase
 
   def test_bad_command
     dbd = get_dbd
-    assert_exception (DBI::ProgrammingError) {
+    assert_raise(DBI::ProgrammingError) {
       dbd.do("INSERT INTO bad_table (name, age) VALUES('Dave', 12)")
     }
   ensure
@@ -105,48 +103,29 @@ class TestDbdPostgres < RUNIT::TestCase
   ensure
     dbd.disconnect if dbd
   end
+  
+  def setup
+      system "psql rubytest < dump.sql >>sql.log"
+  end
+
+  def teardown
+      system "psql rubytest < drop_tables.sql >>sql.log"
+  end
 
   private # ----------------------------------------------------------
 
   def get_dbd
-    result = DBI::DBD::Pg::Database.new('rubytest', 'jim', nil, {})
+    result = DBI::DBD::Pg::Database.new('rubytest', 'erikh', 'monkeys', {})
     result['AutoCommit'] = true
     result
   end
+  
 end
-
-$last_suite.add_test(TestDbdPostgres.suite)
-
-
-# ====================================================================
-class TestDbiPostgresWrapper < RUNIT::TestCase
-
-  def initialize(suite)
-    @test_suite = suite
-  end
-
-  def setup
-    system "testsetup.sh rubytest jim '' names >sql.log 2>&1"
-  end
-
-  def teardown
-    system "testteardown.sh rubytest jim '' names >>sql.log 2>&1"
-  end
-
-  def run(test_result)
-    setup
-    @test_suite.run(test_result)
-    teardown
-  end
-end
-
-$last_suite = TestDbiPostgresWrapper.new($last_suite)
-
 
 # --------------------------------------------------------------------
 
 if __FILE__ == $0 then
-  RUNIT::CUI::TestRunner.quiet_mode = true
-  RUNIT::CUI::TestRunner.run($last_suite)
+    require 'test/unit/ui/console/testrunner'
+    Test::Unit::UI::Console::TestRunner.run(TestDbdPostgres)
 end
 
