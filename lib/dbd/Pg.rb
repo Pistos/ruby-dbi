@@ -33,11 +33,11 @@
 
 begin
     require 'rubygems'
-    gem 'postgres'
+    gem 'pg'
 rescue Exception => e
 end
 
-require 'postgres'
+require 'pg'
 
 module DBI
   module DBD
@@ -471,9 +471,9 @@ module DBI
 
           res = _exec("SELECT oid, typname, typelem FROM pg_type WHERE typtype = 'b';")
 
-          res.result.each { |typid, name, elmtype|
-            @type_map[typid.to_i] = 
-            case name
+          res.each do |row|
+            @type_map[row["oid"].to_i] = 
+            case row["typname"]
             when 'bool'                      then :as_bool
             when 'int8', 'int4', 'int2'    then :as_int
             when 'varchar'                   then :as_str
@@ -482,15 +482,14 @@ module DBI
             when 'date'                      then :as_date
             when 'bytea'                     then :as_bytea
             else
-              if name =~ /^_/ and elmtype.to_i > 0 then
-                @elem_map[typid.to_i] = elmtype.to_i
+              if row["typname"] =~ /^_/ and row["typelem"].to_i > 0 then
+                @elem_map[row["typname"].to_i] = row["typelem"].to_i
                 :as_str
               else
                 :as_str
               end
             end
-            
-          }
+          end 
           # additional conversions
           @type_map[705]  ||= :as_str       # select 'hallo'
           @type_map[1114] ||= :as_timestamp # TIMESTAMP WITHOUT TIME ZONE
@@ -700,7 +699,6 @@ module DBI
           @db = db
           @pg_result = pg_result
           @index = -1
-          @result = @pg_result.result
           @row = Array.new
         end
 
@@ -710,8 +708,8 @@ module DBI
 
         def fetchrow
           @index += 1
-          if @index < @result.size && @index >= 0
-            fill_array(@result[@index])
+          if @index < @pg_result.num_tuples && @index >= 0
+            fill_array(@pg_result[@index])
             @row
           else
             nil
@@ -728,7 +726,7 @@ module DBI
           when SQL_FETCH_FIRST
             @index = -1
           when SQL_FETCH_LAST
-            @index = @result.size - 2
+            @index = @pg_result.num_tuples - 2
           when SQL_FETCH_ABSOLUTE
             # Note: if you go "out of range", all fetches will give nil until you get back
             # into range, this doesn't raise an error.
@@ -758,9 +756,9 @@ module DBI
         private # ----------------------------------------------------
 
         def fill_array(rowdata)
-          rowdata.each_with_index { |value, index|
-            @row[index] = @db.convert(value,@pg_result.type(index))
-          }
+            rowdata.each do |key, value|
+                @row[@pg_result.fnumber(key)] = @db.convert(value,@pg_result.ftype(@pg_result.fnumber(key)))
+            end
         end
 
       end # Tuples

@@ -48,10 +48,14 @@ class TestDbdPostgres < Test::Unit::TestCase
 
   def test_simple_command
     dbd = get_dbd
-    dbd.do("INSERT INTO names (name, age) VALUES('Dan', 16)")
-    res = dbd.do("SELECT name FROM names WHERE age=16")
-    # FIXME I'm fairly certain this is a bug in the upstream postgres driver.
-#    assert_equal 1, res
+    res = dbd.do("INSERT INTO names (name, age) VALUES('Dan', 16)")
+    assert_equal 1, res
+    
+    sth = get_dbi.prepare("SELECT name FROM names WHERE age=16")
+    sth.execute
+    assert sth.fetchable?
+    # XXX FIXME This is a bug in the DBD. #rows should equal 1 for select statements.
+    assert_equal 0, sth.rows
   ensure
     dbd.do("DELETE FROM names WHERE age < 20")
     dbd.disconnect if dbd
@@ -114,6 +118,11 @@ class TestDbdPostgres < Test::Unit::TestCase
   end
 
   private # ----------------------------------------------------------
+
+  def get_dbi
+    dbh = DBI.connect("dbi:Pg:rubytest", "erikh", "monkeys")
+    dbh
+  end
 
   def get_dbd
     result = DBI::DBD::Pg::Database.new('rubytest', 'erikh', 'monkeys', {})
