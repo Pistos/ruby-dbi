@@ -141,7 +141,7 @@ module DBI
         end
 
         def tables
-          stmt = execute("SELECT relname FROM pg_class WHERE relkind='r'")
+          stmt = execute("SELECT c.relname FROM pg_catalog.pg_class c LEFT JOIN pg_catalog.pg_namespace n ON n.oid = c.relnamespace WHERE c.relkind IN ('r','v') AND n.nspname NOT IN ('pg_catalog', 'pg_toast') AND pg_catalog.pg_table_is_visible(c.oid)")
           res = stmt.fetch_all.collect {|row| row[0]} 
           stmt.finish
           res
