@@ -5,3 +5,5 @@ create table names (
 
 insert into names (name, age) values ('Bob', 21);
 insert into names (name, age) values ('Charlie', 22);
+
+CREATE TABLE blob_test (name VARCHAR(30), data OID);

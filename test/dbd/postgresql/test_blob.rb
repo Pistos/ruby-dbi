@@ -1,58 +1,56 @@
-#$Id$
+require 'test/unit'
 
-require "dbi"
+class TestPostgresBlob < Test::Unit::TestCase
+    DATA = "this is my new binary object"
 
-DATA = "this is my new binary object"
+    def test_insert
+        assert @dbh
+        assert @dbh.ping
 
-DBI.connect("dbi:Pg:michael", "michael", "michael") do |dbh|
-  begin
-    dbh.do("DROP TABLE blob_test") 
-  rescue; end
+        # FIXME
+        #
+        # Figure out what's causing the "truncated during write" error, is it
+        # the postgres module, or our DBD?
+        #
+        assert_equal 1, @dbh.do("INSERT INTO blob_test (name, data) VALUES (?,?)", "test", DBI::Binary.new(DATA))
 
-  dbh.do("CREATE TABLE blob_test (name VARCHAR(30), data OID)")
+        blob = @dbh.func(:blob_create, PGlarge::INV_WRITE)
 
-  dbh.do("INSERT INTO blob_test (name, data) VALUES (?,?)",
-    "test", DBI::Binary.new(DATA))
+        assert blob
 
-  blob = dbh.func(:blob_create, PGlarge::INV_WRITE)
-  blob.open
-  blob.write DATA
-  
-  dbh.do("INSERT INTO blob_test (name, data) VALUES (?,?)",
-    "test (2)", blob.oid)
-  blob.close
+        assert blob.open
+        assert blob.write(DATA)
 
-  dbh.select_all("SELECT name, data FROM blob_test") do |name, data|
-    print name, ": "
+        assert_equal 1, @dbh.do("INSERT INTO blob_test (name, data) VALUES (?,?)", "test (2)", blob.oid)
 
-    # (1)
-    if dbh.func(:blob_read, data) == DATA
-      print "ok, "
-    else
-      print "wrong, "
+        assert blob.close
+
+        @dbh.select_all("SELECT name, data FROM blob_test") do |name, data|
+            assert_equal DATA, dbh.func(:blob_read, data)
+            assert dbh.func(:blob_export, data, '/tmp/dbitest')
+            assert_equal DATA, File.readlines('/tmp/dbitest').to_s
+
+            blob = dbh.func(:blob_open, data, PGlarge::INV_READ)  
+            assert blob
+            assert blob.open
+            assert_equal DATA, blob.read
+            assert blob.close
+        end
     end
 
-    # (2)
-    dbh.func(:blob_export, data, '/tmp/dbitest')
-    if File.readlines('/tmp/dbitest').to_s == DATA
-      print "ok, "
-    else
-      print "wrong, "
+    def setup
+        system "psql rubytest < dump.sql >>sql.log"
+        @dbh = DBI.connect("dbi:Pg:rubytest", "erikh", "monkeys")
     end
 
-    # (3)
-    blob = dbh.func(:blob_open, data, PGlarge::INV_READ)  
-    blob.open
-    if blob.read == DATA
-      puts "ok"
-    else
-      puts "wrong"
+    def teardown
+        @dbh.disconnect
+        system "psql rubytest < drop_tables.sql >>sql.log"
     end
-    blob.close
-
-  end
-
 end
 
-puts "Test succeeded"
-
+if __FILE__ == $0 then
+    require 'test/unit/ui/console/testrunner'
+    require 'dbi'
+    Test::Unit::UI::Console::TestRunner.run(TestPostgresBlob)
+end
