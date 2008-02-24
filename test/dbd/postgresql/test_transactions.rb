@@ -54,14 +54,17 @@ class TestPostgresTransaction < Test::Unit::TestCase
     end
 
     def get_dbh
-        DBI.connect('dbi:Pg:rubytest', 'erikh', 'monkeys')
+        config = DBDConfig.get_config
+        DBI.connect("dbi:Pg:#{config['postgresql']['dbname']}", config['postgresql']['username'], config['postgresql']['password'])
     end
 
     def setup
-        system "psql rubytest < dbd/postgresql/dump.sql >>sql.log"
+        config = DBDConfig.get_config
+        system "psql #{config['postgresql']['dbname']} < dbd/postgresql/dump.sql >>sql.log"
     end
 
     def teardown
-        system "psql rubytest < dbd/postgresql/drop_tables.sql >>sql.log"
+        config = DBDConfig.get_config
+        system "psql #{config['postgresql']['dbname']} < dbd/postgresql/drop_tables.sql >>sql.log"
     end
 end

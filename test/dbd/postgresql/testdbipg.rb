@@ -113,25 +113,26 @@ class TestDbdPostgres < Test::Unit::TestCase
       assert get_dbi.tables.include?("view_names")
   end
   
+  def get_dbi
+      config = DBDConfig.get_config
+      DBI.connect("dbi:Pg:#{config['postgresql']['dbname']}", config['postgresql']['username'], config['postgresql']['password'])
+  end
+
   def setup
-      system "psql rubytest < dbd/postgresql/dump.sql >>sql.log"
+      config = DBDConfig.get_config
+      system "psql #{config['postgresql']['dbname']} < dbd/postgresql/dump.sql >>sql.log"
   end
 
   def teardown
-      system "psql rubytest < dbd/postgresql/drop_tables.sql >>sql.log"
-  end
-
-  private # ----------------------------------------------------------
-
-  def get_dbi
-    dbh = DBI.connect("dbi:Pg:rubytest", "erikh", "monkeys")
-    dbh
+      config = DBDConfig.get_config
+      system "psql #{config['postgresql']['dbname']} < dbd/postgresql/drop_tables.sql >>sql.log"
   end
 
   def get_dbd
-    result = DBI::DBD::Pg::Database.new('rubytest', 'erikh', 'monkeys', {})
-    result['AutoCommit'] = true
-    result
+      config = DBDConfig.get_config['postgresql']
+      result = DBI::DBD::Pg::Database.new(config['dbname'], config['username'], config['password'], {})
+      result['AutoCommit'] = true
+      result
   end
   
 end
