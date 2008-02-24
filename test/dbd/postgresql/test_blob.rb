@@ -14,27 +14,18 @@ class TestPostgresBlob < Test::Unit::TestCase
         #
         assert_equal 1, @dbh.do("INSERT INTO blob_test (name, data) VALUES (?,?)", "test", DBI::Binary.new(DATA))
 
-        blob = @dbh.func(:blob_create, PGlarge::INV_WRITE)
+        blob = @dbh.func(:blob_create, PGconn::INV_WRITE)
 
         assert blob
 
-        assert blob.open
-        assert blob.write(DATA)
+        assert @dbh.func(:blob_write, blob, DATA)
 
-        assert_equal 1, @dbh.do("INSERT INTO blob_test (name, data) VALUES (?,?)", "test (2)", blob.oid)
-
-        assert blob.close
+        assert_equal 1, @dbh.do("INSERT INTO blob_test (name, data) VALUES (?,?)", "test (2)", blob)
 
         @dbh.select_all("SELECT name, data FROM blob_test") do |name, data|
-            assert_equal DATA, dbh.func(:blob_read, data)
-            assert dbh.func(:blob_export, data, '/tmp/dbitest')
-            assert_equal DATA, File.readlines('/tmp/dbitest').to_s
-
-            blob = dbh.func(:blob_open, data, PGlarge::INV_READ)  
-            assert blob
-            assert blob.open
-            assert_equal DATA, blob.read
-            assert blob.close
+            assert_equal DATA, @dbh.func(:blob_read, data, DATA.length)
+            @dbh.func(:blob_export, data, '/tmp/pg_dbi_read_test')
+            assert_equal DATA, File.readlines('/tmp/pg_dbi_read_test').to_s
         end
     end
 

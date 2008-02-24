@@ -522,9 +522,9 @@ module DBI
           raise DBI::DatabaseError.new(err.message) 
         end
 
-        def __blob_create(mode=PGlarge::INV_READ)
+        def __blob_create(mode=PGconn::INV_READ)
           start_transaction unless @in_transaction
-          @connection.lo_create(mode)
+          @connection.lo_creat(mode)
           #if @attr['AutoCommit']
           #  _exec("COMMIT")
           #  @in_transaction = false
@@ -533,7 +533,7 @@ module DBI
           raise DBI::DatabaseError.new(err.message) 
         end
 
-        def __blob_open(oid, mode=PGlarge::INV_READ)
+        def __blob_open(oid, mode=PGconn::INV_READ)
           start_transaction unless @in_transaction
           @connection.lo_open(oid.to_i, mode)
           #if @attr['AutoCommit']
@@ -555,20 +555,33 @@ module DBI
           raise DBI::DatabaseError.new(err.message) 
         end
 
-        def __blob_read(oid, length=nil)
-          # TODO: do we really nead an open transaction for reading?
-          start_transaction unless @in_transaction
-          blob = @connection.lo_open(oid.to_i, PGlarge::INV_READ)
-          blob.open
-          if length.nil?
-            data = blob.read
-          else
-            data = blob.read(length)
-          end
-          blob.close
-          data
+        def __blob_read(oid, length)
+            blob = @connection.lo_open(oid.to_i, PGconn::INV_READ)
+
+            if length.nil?
+                data = @connection.lo_read(blob)
+            else
+                data = @connection.lo_read(blob, length)
+            end
+
+            # FIXME it doesn't like to close here either.
+            # @connection.lo_close(blob)
+            data
         rescue PGError => err
-          raise DBI::DatabaseError.new(err.message) 
+            raise DBI::DatabaseError.new(err.message) 
+        end
+        
+        def __blob_write(oid, value)
+            start_transaction unless @in_transaction
+            blob = @connection.lo_open(oid.to_i, PGconn::INV_WRITE)
+            res = @connection.lo_write(blob, value)
+            # FIXME not sure why PG doesn't like to close here -- seems to be
+            # working but we should make sure it's not eating file descriptors
+            # up before release.
+            # @connection.lo_close(blob)
+            return res
+        rescue PGError => err
+            raise DBI::DatabaseError.new(err.message)
         end
 
 	def __set_notice_processor(proc)
@@ -623,12 +636,9 @@ module DBI
           # replace DBI::Binary object by oid returned by lo_import 
           @bindvars.collect! do |var|
             if var.is_a? DBI::Binary then
-              blob = @db.__blob_create(PGlarge::INV_WRITE)
-              blob.open
-              blob.write(var.to_s)
-              oid = blob.oid
-              blob.close
-              oid
+              oid = @db.__blob_create(PGconn::INV_WRITE)
+              @db.__blob_write(oid, var.to_s)
+              oid 
             else
               var
             end
