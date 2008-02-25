@@ -599,7 +599,7 @@ module DBI
           # 
           # Fix this for now, but beware that we'll have to unfix this as
           # soon as they fix their end.
-          str = str.gsub(/\\([0-7]{3})/, "\\\\\1")
+          #str = str.gsub(/\\[0-7]{3}/) { |match| "\\#{match}" }
           @connection.escape_bytea(str)
         end
 
@@ -795,9 +795,23 @@ module DBI
             # Fix this for now, but beware that we'll have to unfix this as
             # soon as they fix their end.
             ret = PGconn.unescape_bytea(str)
-            ret.gsub!(/\\\\/, "\\")
-            ret.gsub!(/\\[0-7]{3}/) { |x| x[1..3].to_i(8).chr }
+
+            # XXX HACK XXX
+            # String#split does not properly create a full array if the the
+            # string ENDS in the split regex. 
+            #
+            # Another way of saying this:
+            # if foo = "foo\\\\\" and foo.split(/\\\\/), the result will be
+            # ["foo"]. You can add as many delimiters to the end of the string
+            # as you'd like - the result is no different.
+            #
+
+            ret += "A" # force the split to work
+
+            ret = ret.split(/\\\\/).collect { |x| x.length > 0 ? x.gsub(/\\[0-7]{3}/) { |y| y[1..3].oct.chr } : "" }.join("\\")
             ret.gsub!(/''/, "'")
+
+            ret.sub!(/A\z/, "") # remove our addition
             return ret
         end
 
