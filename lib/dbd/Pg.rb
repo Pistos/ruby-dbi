@@ -796,9 +796,9 @@ module DBI
             # soon as they fix their end.
             ret = PGconn.unescape_bytea(str)
 
-            # XXX HACK XXX
+            # XXX 
             # String#split does not properly create a full array if the the
-            # string ENDS in the split regex. 
+            # string ENDS in the split regex, unless this oddball -1 argument is supplied.
             #
             # Another way of saying this:
             # if foo = "foo\\\\\" and foo.split(/\\\\/), the result will be
@@ -806,12 +806,8 @@ module DBI
             # as you'd like - the result is no different.
             #
 
-            ret += "A" # force the split to work
-
-            ret = ret.split(/\\\\/).collect { |x| x.length > 0 ? x.gsub(/\\[0-7]{3}/) { |y| y[1..3].oct.chr } : "" }.join("\\")
+            ret = ret.split(/\\\\/, -1).collect { |x| x.length > 0 ? x.gsub(/\\[0-7]{3}/) { |y| y[1..3].oct.chr } : "" }.join("\\")
             ret.gsub!(/''/, "'")
-
-            ret.sub!(/A\z/, "") # remove our addition
             return ret
         end
 
