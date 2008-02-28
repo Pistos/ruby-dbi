@@ -52,7 +52,8 @@ class DBI
                     # return nil
                 end
 
-                def prepare(*params)
+                def prepare(stmt)
+                    # construct a statement and return it
                 end
 
                 def ping
@@ -61,9 +62,19 @@ class DBI
                 end
 
                 def do(stmt, *bindvars)
+
+                    # FIXME this *should* be building a statement handle and doing it that way.
+
+                    # call self.bind with the statement and bindvars to produce sql to send to the driver
+                    # XXX is there a binding API we can use instead?
+                    # run the check_sql routine to ensure there are no nulls 
+                    # send it to the database
+                    # if error, throw DBI::DatabaseError
                 end
 
-                def tables(*params)
+                def tables
+                    # select name from sqlite_master where type='table';
+                    # XXX does sqlite use views too? not sure, but they need to be included according to spec
                 end
 
                 def commit
