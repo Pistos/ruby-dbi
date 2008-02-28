@@ -212,10 +212,13 @@ class DBI
                 end
 
                 def fetch
-                    # line 689 XXX finish me
+                    # fetch each row 
+                    # if we have a result, convert it using the TYPE_CONV_MAP
+                    # stuff it into @rows. XXX I really think this is a bad idea. 
                 end
 
-                def fetch_scroll(*params)
+                def fetch_scroll(direction, offset)
+                    
                 end
 
                 def column_info(*params)
