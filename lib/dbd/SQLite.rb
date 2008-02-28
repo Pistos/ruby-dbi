@@ -8,6 +8,8 @@
 #
 ################################################################################
 
+raise "This class does not yet work - you should be using the C driver"
+
 class DBI
     class DBD
         class SQLite
@@ -124,7 +126,10 @@ class DBI
                     # FIXME jesus, this does nothing but toggle the value... I still can't find a place where this actually affects the library.
                 end
 
-                def columns(*params)
+                def columns(tablename)
+                    # execute PRAGMA table_info(tablename)
+                    # fill out the name, type_name, nullable, and default entries in an hash which is a part of array 
+                    # XXX it'd be nice if the spec was changed to do this k/v with the name as the key.
                 end
             end
 
@@ -164,7 +169,12 @@ class DBI
                     ret                       
                 end
 
-                def bind_param(*params)
+                def bind_param(param, value, attributes)
+                    # if param is a fixnum
+                        # set the value to the index in @params that param specifies.
+                    # else raise a DBI::InterfaceError with "Only ? parameters supported"
+
+                    # XXX I assume this means that named bound parameters do not work
                 end
 
                 def execute(*params)
