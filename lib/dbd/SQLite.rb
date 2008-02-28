@@ -178,15 +178,41 @@ class DBI
                 end
 
                 def execute(*params)
+                    # do what Database#do does (which should be moved here and #do calls this instead)
+                    # cache the column information for the selected columns (see Database#columns)
+                    # if full_column_names is not set, run this code:
+=begin
+                            col_name_occurences = Hash.new(0)                    
+                                                                                 
+                            @col_info.each do |n|                                
+                              col_name_occurences[n['name']] += 1                
+                            end                                                  
+                                                                                 
+                            col_name_occurences.each do |name, anz|              
+                              if anz > 1 then                                    
+                                @col_info.each do |c|                            
+                                  c['name'] = c['full_name'] if c['name'] == name
+                                end                                              
+                              end                                                
+                            end                                                  
+=end
+
+                    # XXX yes, that's my way of saying, "I have no fucking idea
+                    #     what this does, but it's probably important"
+                end
+                
+                def cancel
+                    # free all in-memory data relating to the result of the query
                 end
 
-                def finish(*params)
+                def finish
+                    # finish() differs from cancel in only that it resets the
+                    # row count and "rpc", which I'm not sure what that means in
+                    # this context.   
                 end
 
-                def cancel(*params)
-                end
-
-                def fetch(*params)
+                def fetch
+                    # line 689 XXX finish me
                 end
 
                 def fetch_scroll(*params)
