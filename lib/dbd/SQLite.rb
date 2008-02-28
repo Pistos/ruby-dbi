@@ -207,8 +207,7 @@ class DBI
 
                 def finish
                     # finish() differs from cancel in only that it resets the
-                    # row count and "rpc", which I'm not sure what that means in
-                    # this context.   
+                    # "rpc" (row processed count, verified) and "rows" (probably the row returned amount)
                 end
 
                 def fetch
@@ -218,16 +217,20 @@ class DBI
                 end
 
                 def fetch_scroll(direction, offset)
-                    
+                    # XXX this method is so poorly implemented it's disgusting. Replace completely.
                 end
 
-                def column_info(*params)
+                def column_info
+                    # accessor for @col_info
                 end
 
-                def rows(*params)
+                def rows
+                    # if rpc is not -1, return it as a Number
                 end
 
-                def quote(*params)
+                def quote(obj)
+                    # special (read: stupid) handling for Timestamps
+                    # otherwise call quote in the superclass
                 end
             end
         end
