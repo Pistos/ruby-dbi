@@ -6,6 +6,12 @@
 #
 # (c) 2008 Erik Hollensbe & Christopher Maujean.
 #
+# TODO
+#
+# fetch_scroll implementation?
+# columns and column_info differ too much and have too much copied code, refactor
+# there are probably some edge cases with transactions
+#
 ################################################################################
 
 begin
