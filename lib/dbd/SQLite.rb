@@ -34,8 +34,15 @@ module DBI
                 end
 
                 def connect(dbname, user, auth, attr_hash)
-                    # dbname should be a string
-                    # attr should be a hash
+
+                    # FIXME why isn't this crap being done in DBI?
+                    unless dbname.kind_of? String
+                        raise DBI::InterfaceError, "Database Name must be a string"
+                    end
+
+                    unless attr_hash.kind_of? Hash
+                        raise DBI::InterfaceError, "Attributes should be a hash"
+                    end
                     
                     # fill self with attributes according to the `sDatabase` struct in SQLite.c 
                     # turn autocommit and full_column_names off in the handle
