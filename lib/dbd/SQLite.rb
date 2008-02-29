@@ -269,9 +269,6 @@ module DBI
                         new_row.push col
                     end
 
-                    # XXX this is needed for fetch_scroll
-                    @rows.push new_row
-
                     return new_row
                 end
 
