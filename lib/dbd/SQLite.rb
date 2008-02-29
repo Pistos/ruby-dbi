@@ -88,12 +88,6 @@ module DBI
                     return !@db.closed?
                 end
 
-                def do(stmt, *bindvars)
-
-                    # FIXME this *should* be building a statement handle and doing it that way.
-
-                end
-
                 def tables
                     # select name from sqlite_master where type='table';
                     # XXX does sqlite use views too? not sure, but they need to be included according to spec
@@ -279,11 +273,6 @@ module DBI
 
                 def rows
                     return @dbh.db.changes
-                end
-
-                def quote(obj)
-                    # special (read: stupid) handling for Timestamps
-                    # otherwise call quote in the superclass
                 end
             end
         end

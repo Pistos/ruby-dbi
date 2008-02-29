@@ -22,6 +22,14 @@ class TestDatabase < Test::Unit::TestCase
         sth.finish
     end
 
+    def test_do
+        assert_equal 1, @dbh.do("insert into names (name, age) values (?, ?)", "Billy", 21)
+        sth = @dbh.prepare("select * from names where name = ?")
+        sth.execute("Billy")
+        assert_equal ["Billy", 21], sth.fetch
+        sth.finish
+    end
+
     def test_attrs
         # test defaults
         assert @dbh["AutoCommit"] # should be true
