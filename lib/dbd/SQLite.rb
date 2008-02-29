@@ -8,10 +8,16 @@
 #
 ################################################################################
 
-raise "This class does not yet work - you should be using the C driver"
+begin
+    require 'rubygems'
+    gem 'sqlite'
+rescue Exception => e
+end
 
-class DBI
-    class DBD
+require 'sqlite'
+
+module DBI
+    module DBD
         class SQLite
 
             USED_DBD_VERSION = "0.1"
@@ -20,7 +26,7 @@ class DBI
                 raise DBI::DatabaseError, "Bad SQL: SQL cannot contain nulls" if sql =~ /\0/
             end
 
-            class Driver
+            class Driver < DBI::BaseDriver
                 def initialize
                     # this may be wrong - see line 95 in SQLite.c and ruby's
                     # README.EXT
