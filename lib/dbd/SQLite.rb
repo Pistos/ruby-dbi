@@ -269,10 +269,6 @@ module DBI
                     return new_row
                 end
 
-                def fetch_scroll(direction, offset)
-                    # XXX this method is so poorly implemented it's disgusting. Replace completely.
-                end
-
                 def column_info
                     columns = [ ]
 
