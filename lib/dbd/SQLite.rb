@@ -193,12 +193,14 @@ module DBI
                     @rows      = [ ]
                 end
 
-                def bind_param(param, value, attributes)
-                    # if param is a fixnum
-                        # set the value to the index in @params that param specifies.
-                    # else raise a DBI::InterfaceError with "Only ? parameters supported"
+                def bind_param(param, value, attributes=nil)
+                    unless param.kind_of? Fixnum
+                        raise DBI::InterfaceError, "Only numeric parameters are supported"
+                    end
 
-                    # XXX I assume this means that named bound parameters do not work
+                    @params[param] = value
+
+                    # FIXME what to do with attributes? are they important in SQLite?
                 end
 
                 def execute(*params)

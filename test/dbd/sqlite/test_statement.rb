@@ -14,6 +14,35 @@ class TestStatement < Test::Unit::TestCase
         assert_equal([ ], sth.instance_variable_get("@params"))
         assert_nil(sth.instance_variable_get("@col_info"))
         assert_equal([ ], sth.instance_variable_get("@rows"))
+
+        sth = @dbh.prepare("select * from foo")
+
+        assert_kind_of DBI::StatementHandle, sth
+    end
+
+    def test_bind_param
+        sth = DBI::DBD::SQLite::Statement.new("select * from foo", @dbh.instance_variable_get("@handle"))
+
+        assert_raise(DBI::InterfaceError) do
+            sth.bind_param(:foo, "monkeys")
+        end
+
+        for test_sth in [sth, @dbh.prepare("select * from foo")] do
+            test_sth.bind_param(1, "monkeys", nil)
+
+            params = test_sth.instance_variable_get("@params") || test_sth.instance_variable_get("@handle").instance_variable_get("@params")
+
+            assert_equal "monkeys", params[1]
+
+            # set a bunch of stuff.
+            %w(I like monkeys).each_with_index { |x, i| test_sth.bind_param(i, x) }
+
+            params = test_sth.instance_variable_get("@params") || test_sth.instance_variable_get("@handle").instance_variable_get("@params")
+            
+            assert_equal %w(I like monkeys), params
+
+            # FIXME what to do with attributes? are they important in SQLite?
+        end
     end
 
     def setup
