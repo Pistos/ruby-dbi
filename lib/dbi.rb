@@ -71,6 +71,7 @@ module DBI
    SQL_TIME       = 10 # 92 
    SQL_TIMESTAMP  = 11 # 93 
    SQL_VARCHAR    = 12
+   SQL_BOOLEAN    = 13
    
    SQL_LONGVARCHAR   = -1
    SQL_BINARY        = -2
@@ -114,7 +115,9 @@ module DBI
       SQL_LONGVARBINARY     => 'LONG VARBINARY',
       SQL_BLOB              => 'BLOB',
       SQL_CLOB              => 'CLOB',
-      SQL_OTHER             => nil
+      SQL_OTHER             => nil,
+      SQL_BOOLEAN           => 'BOOLEAN',
+
    }
    
    #  Exceptions (borrowed by Python API 2.0)

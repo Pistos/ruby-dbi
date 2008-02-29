@@ -79,7 +79,19 @@ class TestStatement < Test::Unit::TestCase
         assert_kind_of Array, sth.column_info 
         assert_kind_of ColumnInfo, sth.column_info[0]
         assert_kind_of ColumnInfo, sth.column_info[1]
-        assert_equal [ { "name" => "name" }, {"name" => "age"} ], sth.column_info
+        assert_equal [ 
+            { 
+                "name" => "name",
+                "sql_type" => 12,
+                "precision" => 255,
+                "type_name" => "varchar"
+            }, 
+            { 
+                "name" => "age",
+                "sql_type" => 4,
+                "type_name" => "integer"
+            } 
+        ], sth.column_info
 
         sth.finish
     end
@@ -102,10 +114,13 @@ class TestStatement < Test::Unit::TestCase
             sth.execute("Bill", 22);
             sth.finish
         end
+    end
 
-        # test transactions
-=begin        
+    def test_execute_with_transactions
         @dbh["AutoCommit"] = false 
+        config = DBDConfig.get_config['sqlite']
+
+        # rollback 1 (the right way)
         sth = nil
         sth2 = nil
 
@@ -114,9 +129,77 @@ class TestStatement < Test::Unit::TestCase
             sth.execute("Billy", 23)
             sth2 = @dbh.prepare("select * from names where name = ?")
             sth2.execute("Billy")
-            sth.commit
         end
-=end
+        assert_equal ["Billy", 23 ], sth2.fetch
+        sth2.finish
+        sth.finish
+        assert_nothing_raised { @dbh.rollback }
+
+        sth = @dbh.prepare("select * from names where name = ?")
+        sth.execute("Billy")
+        assert_nil sth.fetch
+        sth.finish
+       
+        # rollback 2 (without closing statements first)
+
+        sth = nil
+        sth2 = nil
+
+        assert_nothing_raised do
+            sth = @dbh.prepare("insert into names (name, age) values (?, ?)")
+            sth.execute("Billy", 23)
+            sth2 = @dbh.prepare("select * from names where name = ?")
+            sth2.execute("Billy")
+        end
+
+        assert_equal ["Billy", 23], sth2.fetch
+        assert_raise(DBI::Warning) { @dbh.rollback }
+        sth2.finish
+        sth.finish
+        assert_nothing_raised { @dbh.rollback }
+        
+        sth = @dbh.prepare("select * from names where name = ?")
+        sth.execute("Billy")
+        assert_nil sth.fetch
+        sth.finish
+
+        # commit
+
+        sth = nil
+        sth2 = nil
+
+        assert_nothing_raised do
+            sth = @dbh.prepare("insert into names (name, age) values (?, ?)")
+            sth.execute("Billy", 23)
+            sth2 = @dbh.prepare("select * from names where name = ?")
+            sth2.execute("Billy")
+        end
+        assert_equal ["Billy", 23 ], sth2.fetch
+        sth2.finish
+        sth.finish
+        assert_nothing_raised { @dbh.commit }
+
+        sth = @dbh.prepare("select * from names where name = ?")
+        sth.execute("Billy")
+        assert_equal ["Billy", 23 ], sth.fetch
+        sth.finish
+    end
+
+    def test_fetch
+        sth = nil
+        assert_nothing_raised do 
+            sth = @dbh.prepare("select * from names order by age")
+            sth.execute
+        end
+
+        # this tests that we're getting the rows in the right order,
+        # and that the types are being converted. 
+        assert_equal ["Joe", 19], sth.fetch
+        assert_equal ["Bob", 21], sth.fetch
+        assert_equal ["Jim", 30], sth.fetch
+        assert_nil sth.fetch
+
+        sth.finish
     end
 
     def setup

@@ -18,6 +18,8 @@ class TestDatabase < Test::Unit::TestCase
 
         assert sth
         assert_kind_of DBI::StatementHandle, sth
+
+        sth.finish
     end
 
     def test_attrs
@@ -29,10 +31,23 @@ class TestDatabase < Test::Unit::TestCase
         assert !@dbh["AutoCommit"]
 
         # test committing an outstanding transaction
+        
+        sth = @dbh.prepare("insert into names (name, age) values (?, ?)")
+        sth.execute("Billy", 22)
+        sth.finish
+
+        assert @dbh["AutoCommit"] = true # should commit at this point
+        
+        sth = @dbh.prepare("select * from names where name = ?")
+        sth.execute("Billy")
+        assert_equal [ "Billy", 22 ], sth.fetch
+        sth.finish
     end
 
     def setup
         config = DBDConfig.get_config['sqlite']
+
+        system("sqlite #{config['dbname']} < dbd/sqlite/up.sql");
 
         # this will not be used in all tests
         @dbh = DBI.connect('dbi:SQLite:'+config['dbname'], nil, nil, { }) 

@@ -43,6 +43,7 @@ module DBI
 
                 attr_reader :db
                 attr_reader :attr_hash
+                attr_accessor :open_handles
 
                 def initialize(dbname, user, auth, attr_hash)
                     # FIXME why isn't this crap being done in DBI?
@@ -61,6 +62,7 @@ module DBI
                     # FIXME handle busy_timeout in SQLite driver
                     # FIXME handle SQLite pragmas in SQLite driver
                     @attr_hash = attr_hash
+                    @open_handles = 0
 
                     self["AutoCommit"] = true if self["AutoCommit"].nil?
 
@@ -73,6 +75,7 @@ module DBI
                 end
 
                 def disconnect
+                    rollback rescue nil
                     @db.close if @db and !@db.closed?
                     @db = nil
                 end
@@ -97,23 +100,15 @@ module DBI
                 end
 
                 def commit
-                    # if autocommit is 0
-                        # end the current transaction and start a new one.
-                        # raise a DBI::DatabaseError if we fail it
-                    # if autocommit is 1
-                        # warn that commit is ineffective while AutoCommit is on.
-
-                    # return nil
+                    @db.commit if @db.transaction_active?
                 end
 
                 def rollback
-                    # if autocommit is 0
-                        # rollback the current transaction and start a new one
-                        # raise a DBI::DatabaseError if we fail it
-                    # if autocommit is 1
-                        # warn that rollback is ineffective while AutoCommit is on
+                    if @open_handles > 0
+                        raise DBI::Warning, "Leaving unfinished select statement handles while rolling back a transaction can corrupt your database or crash your program"
+                    end
 
-                    # return nil
+                    @db.rollback if @db.transaction_active?
                 end
 
                 def [](key)
@@ -134,7 +129,7 @@ module DBI
                         # FIXME I still think this is a horrible way of handling this.
                         if value and !old_value
                             begin 
-                                @dbh.db.commit
+                                @dbh.commit
                             rescue Exception => e
                             end
                         end
@@ -154,37 +149,20 @@ module DBI
                 include DBI::SQL::BasicBind
                 include DBI::SQL::BasicQuote
 
-                #
-                # NOTE these three constants are taken directly out of the old
-                #      SQLite.c. Not sure of its utility yet.
-                #
-
-                TYPE_CONV_MAP = 
-                    [                                                                     
-                        [ /^INT(EGER)?$/i,            proc {|str, c| c.as_int(str) } ],     
-                        [ /^(OID|ROWID|_ROWID_)$/i,   proc {|str, c| c.as_int(str) }],      
-                        [ /^(FLOAT|REAL|DOUBLE)$/i,   proc {|str, c| c.as_float(str) }],    
-                        [ /^DECIMAL/i,                proc {|str, c| c.as_float(str) }],    
-                        [ /^(BOOL|BOOLEAN)$/i,        proc {|str, c| c.as_bool(str) }],     
-                        [ /^TIME$/i,                  proc {|str, c| c.as_time(str) }],     
-                        [ /^DATE$/i,                  proc {|str, c| c.as_date(str) }],     
-                        [ /^TIMESTAMP$/i,             proc {|str, c| c.as_timestamp(str) }] 
-                        # [ /^(VARCHAR|CHAR|TEXT)/i,    proc {|str, c| c.as_str(str).dup } ]  
-                    ]                                                                     
-
-                CONVERTER = DBI::SQL::BasicQuote::Coerce.new
-
-                # FIXME this definitely needs to be a private method
-                CONVERTER_PROC = proc do |tm, cv, val, typ|
-                    ret = val.dup             
-                    tm.each do |reg, pr|      
-                        if typ =~ reg           
-                            ret = pr.call(val, cv)
-                            break                 
-                        end                     
-                    end                       
-                    ret                       
-                end
+                DBI_TYPE_MAP = [
+                    [ /^INT(EGER)?$/i,          DBI::SQL_INTEGER ],
+                    [ /^(OID|ROWID|_ROWID_)$/i, DBI::SQL_OTHER   ],
+                    [ /^FLOAT$/i,               DBI::SQL_FLOAT   ],
+                    [ /^REAL$/i,                DBI::SQL_REAL    ],
+                    [ /^DOUBLE$/i,              DBI::SQL_DOUBLE  ],
+                    [ /^DECIMAL/i,              DBI::SQL_DECIMAL ],
+                    [ /^(BOOL|BOOLEAN)$/i,      DBI::SQL_BOOLEAN ], 
+                    [ /^TIME$/i,                DBI::SQL_TIME    ],
+                    [ /^DATE$/i,                DBI::SQL_DATE    ],
+                    [ /^TIMESTAMP$/i,           DBI::SQL_TIMESTAMP ], 
+                    [ /^(VARCHAR|TEXT)/i,       DBI::SQL_VARCHAR ],
+                    [ /^CHAR$/i,                DBI::SQL_CHAR    ],
+                ]
 
                 def initialize(stmt, dbh)
                     @dbh       = dbh
@@ -193,6 +171,7 @@ module DBI
                     @params    = [ ]
                     @rows      = [ ]
                     @result_set = nil
+                    @dbh.open_handles += 1
                 end
 
                 def bind_param(param, value, attributes=nil)
@@ -207,34 +186,65 @@ module DBI
 
                 def execute
                     sql = @statement.bind(@params)
-                    ::DBI::DBD::SQLite.check_sql(sql)
+                    DBI::DBD::SQLite.check_sql(sql)
                    
                     begin
-                        # XXX this is not AutoCommit-aware yet
-                        @dbh.db.transaction
+                        unless @dbh.db.transaction_active?
+                            @dbh.db.transaction 
+                        end
                         @result_set = @dbh.db.query(sql)
-                        @dbh.db.commit if @dbh["AutoCommit"]
+                        @dbh.commit if @dbh["AutoCommit"]
                     rescue Exception => e
                         raise DBI::DatabaseError, e.message
                     end
                 end
-                
-                def cancel
-                    # this should probably rollback the transaction?
-                end
+               
+                alias :finish :cancel
 
                 def finish
-                    # this should probably:
-                    # close the transactions (what's the spec say here, rollback or commit?)
                     # nil out the result set
                     @result_set.close if @result_set
                     @result_set = nil
+                    @rows = nil
+                    @dbh.open_handles -= 1
                 end
 
                 def fetch
-                    # fetch each row 
-                    # if we have a result, convert it using the TYPE_CONV_MAP
-                    # stuff it into @rows. XXX I really think this is a bad idea. 
+                    return nil if @result_set.eof?
+                    
+                    row = @result_set.next
+                    return nil unless row
+                   
+                    # convert types. FIXME this should *really* not be done in the driver
+
+                    coerce  = DBI::SQL::BasicQuote::Coerce.new
+
+                    columns = column_info
+                    new_row = []
+
+                    row.each_with_index do |col, i|
+                        case columns[i]["sql_type"]
+                        when SQL_BOOLEAN
+                            col = coerce.as_bool(col)
+                        when SQL_FLOAT, SQL_REAL, SQL_DOUBLE
+                            col = coerce.as_float(col)
+                        when SQL_INTEGER
+                            col = coerce.as_int(col)
+                        when SQL_TIME
+                            col = coerce.as_time(col)
+                        when SQL_TIMESTAMP
+                            col = coerce.as_timestamp(col)
+                        when SQL_DATE
+                            col = coerce.as_date(col)
+                        end
+
+                        new_row.push col
+                    end
+
+                    # XXX this is needed for fetch_scroll
+                    @rows.push new_row
+
+                    return new_row
                 end
 
                 def fetch_scroll(direction, offset)
@@ -242,8 +252,29 @@ module DBI
                 end
 
                 def column_info
-                    # FIXME type mapping
-                    return @result_set.columns.collect { |x| { "name" => x } }
+                    columns = [ ]
+
+                    # FIXME this shit should *really* be abstracted into DBI
+                    # FIXME this still doesn't handle nullable/unique/default stuff.
+                    @result_set.columns.each_with_index do |name, i|
+                        columns[i] = { } unless columns[i]
+                        columns[i]["name"] = name
+                        type_name = @result_set.types[i]
+
+                        m = type_name.match(/^([^\(]+)(\((\d+)(,(\d+))?\))?$/)
+                        
+                        columns[i]["type_name"] = m[1]
+                        columns[i]["precision"] = m[3].to_i if m[3]
+                        columns[i]["scale"]     = m[5].to_i if m[5]
+                        DBI_TYPE_MAP.each do |map|
+                            if columns[i]["type_name"] =~ map[0]
+                                columns[i]["sql_type"] = map[1]
+                                break
+                            end
+                        end
+                    end
+                   
+                    return columns
                 end
 
                 def rows
