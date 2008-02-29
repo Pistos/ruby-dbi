@@ -103,7 +103,20 @@ class TestStatement < Test::Unit::TestCase
             sth.finish
         end
 
-        # FIXME test transactions
+        # test transactions
+=begin        
+        @dbh["AutoCommit"] = false 
+        sth = nil
+        sth2 = nil
+
+        assert_nothing_raised do
+            sth = @dbh.prepare("insert into names (name, age) values (?, ?)")
+            sth.execute("Billy", 23)
+            sth2 = @dbh.prepare("select * from names where name = ?")
+            sth2.execute("Billy")
+            sth.commit
+        end
+=end
     end
 
     def setup

@@ -20,6 +20,17 @@ class TestDatabase < Test::Unit::TestCase
         assert_kind_of DBI::StatementHandle, sth
     end
 
+    def test_attrs
+        # test defaults
+        assert @dbh["AutoCommit"] # should be true
+
+        # test setting
+        assert !(@dbh["AutoCommit"] = false)
+        assert !@dbh["AutoCommit"]
+
+        # test committing an outstanding transaction
+    end
+
     def setup
         config = DBDConfig.get_config['sqlite']
 

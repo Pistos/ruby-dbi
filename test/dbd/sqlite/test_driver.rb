@@ -54,7 +54,7 @@ class TestDriver < Test::Unit::TestCase
         end
        
         assert dbh
-        assert dbh.instance_variable_get("@autocommit")
+        assert dbh.instance_variable_get("@attr_hash")
         assert_kind_of SQLite::Database, dbh.instance_variable_get("@db")
 
         assert File.exists?(config['dbname'])

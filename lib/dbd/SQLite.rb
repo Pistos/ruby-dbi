@@ -42,6 +42,7 @@ module DBI
                 include DBI::SQL::BasicBind
 
                 attr_reader :db
+                attr_reader :attr_hash
 
                 def initialize(dbname, user, auth, attr_hash)
                     # FIXME why isn't this crap being done in DBI?
@@ -58,8 +59,10 @@ module DBI
                     end
 
                     # FIXME handle busy_timeout in SQLite driver
-                    @autocommit = false
-                    @autocommit = true        if attr_hash["AutoCommit"]
+                    # FIXME handle SQLite pragmas in SQLite driver
+                    @attr_hash = attr_hash
+
+                    self["AutoCommit"] = true if self["AutoCommit"].nil?
 
                     # open the database
                     begin
@@ -114,30 +117,30 @@ module DBI
                 end
 
                 def [](key)
-                    # check the key to ensure it's a string
-
-                    # if the key is non-nil:
-                        # if requested, coerce the autocommit value to true/false FIXME not sure if this is the best idea
-                        # if requested, coerce sqlite_full_column_names to t/f FIXME not even sure if this is necessary.
-                    # else return nil
-
-                    # XXX this whole routine might be pointless.
+                    return @attr_hash[key]
                 end
 
                 def []=(key, value)
-                    # check the key to ensure it's a string
-                    
-                    # if our key is AutoCommit
-                    # and our value is true
-                        # turn AutoCommit on
-                        # immediately commit the transaction XXX I think this is a *horrible* handling of this. 
-                        # raise a DBI::DatabaseError if this fails
-                    # else, if our value is false 
-                        # start a transaction
-                        # raise a DBI::DatabaseError if this fails 
 
-                    # if our key is "sqlite_full_column_names"
-                    # FIXME jesus, this does nothing but toggle the value... I still can't find a place where this actually affects the library.
+                    old_value = @attr_hash[key]
+
+                    @attr_hash[key] = value
+
+                    # special handling of settings
+                    case key
+                    when "AutoCommit"
+                        # if the value being set is true and the previous value is false,
+                        # commit the current transaction (if any)
+                        # FIXME I still think this is a horrible way of handling this.
+                        if value and !old_value
+                            begin 
+                                @dbh.db.commit
+                            rescue Exception => e
+                            end
+                        end
+                    end
+
+                    return @attr_hash[key]
                 end
 
                 def columns(tablename)
@@ -203,7 +206,6 @@ module DBI
                 end
 
                 def execute
-                    # FIXME find out what attrs we need to support and how we support them.
                     sql = @statement.bind(@params)
                     ::DBI::DBD::SQLite.check_sql(sql)
                    
@@ -211,7 +213,7 @@ module DBI
                         # XXX this is not AutoCommit-aware yet
                         @dbh.db.transaction
                         @result_set = @dbh.db.query(sql)
-                        @dbh.db.commit
+                        @dbh.db.commit if @dbh["AutoCommit"]
                     rescue Exception => e
                         raise DBI::DatabaseError, e.message
                     end
@@ -223,7 +225,7 @@ module DBI
 
                 def finish
                     # this should probably:
-                    # close the transactions (what's the spec say here?)
+                    # close the transactions (what's the spec say here, rollback or commit?)
                     # nil out the result set
                     @result_set.close if @result_set
                     @result_set = nil
