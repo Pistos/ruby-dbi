@@ -32,7 +32,14 @@ module DBI
                 end
 
                 def connect(dbname, user, auth, attr_hash)
+                    return Database.new(dbname, user, auth, attr_hash)
+                end
+            end
 
+            class Database < DBI::BaseDatabase
+                include DBI::SQL::BasicBind
+
+                def initialize(dbname, user, auth, attr_hash)
                     # FIXME why isn't this crap being done in DBI?
                     unless dbname.kind_of? String
                         raise DBI::InterfaceError, "Database Name must be a string"
@@ -56,17 +63,11 @@ module DBI
                     rescue Exception => e
                         raise DBI::OperationalError, "Couldn't open database #{dbname}: #{e.message}"
                     end
-
-                    return self
                 end
-            end
-
-            class Database
-                include DBI::SQL::BasicBind
 
                 def disconnect
-                    # disconnect the sqlite database
-                    # return nil
+                    @db.close if @db
+                    @db = nil
                 end
 
                 def prepare(stmt)
@@ -74,8 +75,7 @@ module DBI
                 end
 
                 def ping
-                    return true # FIXME we could check if the file exists and
-                                # the db is opened... I think there's more we can do here.
+                    return !@db.closed?
                 end
 
                 def do(stmt, *bindvars)

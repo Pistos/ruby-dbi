@@ -36,20 +36,24 @@ class TestDriver < Test::Unit::TestCase
         end
 
         dbh = nil
+        driver = nil
         assert_nothing_raised do
-            dbh = DBI::DBD::SQLite::Driver.new
-            dbh.connect(config['dbname'], nil, nil, { })
+            driver = DBI::DBD::SQLite::Driver.new
+            dbh = driver.connect(config['dbname'], nil, nil, { })
         end
 
-        assert_kind_of DBI::DBD::SQLite::Driver, dbh
+        assert_kind_of DBI::DBD::SQLite::Driver, driver
+        assert_kind_of DBI::DBD::SQLite::Database, dbh
 
         assert !dbh.instance_variable_get("@autocommit")
 
+        dbh = nil 
+        driver = nil
         assert_nothing_raised do
-            dbh = DBI::DBD::SQLite::Driver.new
-            dbh.connect(config['dbname'], nil, nil, { "AutoCommit" => true, "sqlite_full_column_names" => true })
+            dbh = DBI::DBD::SQLite::Driver.new.connect(config['dbname'], nil, nil, { "AutoCommit" => true, "sqlite_full_column_names" => true })
         end
-        
+       
+        assert dbh
         assert dbh.instance_variable_get("@autocommit")
         assert_kind_of SQLite::Database, dbh.instance_variable_get("@db")
 
