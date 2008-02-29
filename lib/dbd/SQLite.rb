@@ -66,12 +66,12 @@ module DBI
                 end
 
                 def disconnect
-                    @db.close if @db
+                    @db.close if @db and !@db.closed?
                     @db = nil
                 end
 
                 def prepare(stmt)
-                    # construct a statement and return it
+                    return Statement.new(stmt, self)
                 end
 
                 def ping
@@ -148,7 +148,7 @@ module DBI
                 end
             end
 
-            class Statement 
+            class Statement < DBI::BaseStatement
                 include DBI::SQL::BasicBind
                 include DBI::SQL::BasicQuote
 
@@ -182,6 +182,15 @@ module DBI
                         end                     
                     end                       
                     ret                       
+                end
+
+                def initialize(stmt, dbh)
+                    @dbh       = dbh
+                    @statement = stmt
+                    @attr      = { }
+                    @params    = [ ]
+                    @col_info  = nil
+                    @rows      = [ ]
                 end
 
                 def bind_param(param, value, attributes)
