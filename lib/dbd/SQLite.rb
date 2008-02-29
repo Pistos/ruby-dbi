@@ -1,4 +1,4 @@
-################################################################################
+###############################################################################
 #
 # DBD::SQLite - a DBD for SQLite for versions < 3
 #
@@ -28,8 +28,6 @@ module DBI
 
             class Driver < DBI::BaseDriver
                 def initialize
-                    # this may be wrong - see line 95 in SQLite.c and ruby's
-                    # README.EXT
                     super USED_DBD_VERSION
                 end
 
@@ -40,22 +38,26 @@ module DBI
                         raise DBI::InterfaceError, "Database Name must be a string"
                     end
 
+                    unless dbname.length > 0
+                        raise DBI::InterfaceError, "Database Name needs to be length > 0"
+                    end
+
                     unless attr_hash.kind_of? Hash
                         raise DBI::InterfaceError, "Attributes should be a hash"
                     end
-                    
-                    # fill self with attributes according to the `sDatabase` struct in SQLite.c 
-                    # turn autocommit and full_column_names off in the handle
-                    # turn autocommit on if attr_hash has the key AutoCommit set
-                    # if "sqlite_full_column_names" is set, turn full_column_names on in the handle
-                 
-                    # connect to sqlite (open the dbfile)
-                    # if we fail, raise a DBI::OperationalError with the error message returned by the handle
 
-                    # if autocommit is off, start a transaction
-                    # if not ok, throw a DBI::DatabaseError with the error string.
+                    # FIXME handle busy_timeout in SQLite driver
+                    @autocommit = false
+                    @autocommit = true        if attr_hash["AutoCommit"]
 
-                    # turn full_column_names on unconditionally (wtf? see above)
+                    # open the database
+                    begin
+                        @db = ::SQLite::Database.new(dbname)
+                    rescue Exception => e
+                        raise DBI::OperationalError, "Couldn't open database #{dbname}: #{e.message}"
+                    end
+
+                    return self
                 end
             end
 
