@@ -28,6 +28,10 @@ module DBI
                 raise DBI::DatabaseError, "Bad SQL: SQL cannot contain nulls" if sql =~ /\0/
             end
 
+            def self.parse_type(type_name)
+                type_name.match(/^([^\(]+)(\((\d+)(,(\d+))?\))?$/)
+            end
+
             class Driver < DBI::BaseDriver
                 def initialize
                     super USED_DBD_VERSION
@@ -137,8 +141,28 @@ module DBI
                 end
 
                 def columns(tablename)
-                    # execute PRAGMA table_info(tablename)
-                    # fill out the name, type_name, nullable, and default entries in an hash which is a part of array 
+                    return nil unless tablename and tablename.kind_of? String
+
+                    sth = prepare("PRAGMA table_info(?)")
+                    sth.bind_param(1, tablename)
+                    sth.execute
+                    columns = [ ]
+                    while row = sth.fetch
+                        column = { }
+                        column["name"] = row[1]
+
+                        m = DBI::DBD::SQLite.parse_type(row[2])
+                        column["type_name"] = m[1]
+                        column["precision"] = m[3].to_i if m[3]
+                        column["scale"]     = m[5].to_i if m[5]
+
+                        column["nullable"]  = !row[3]
+                        column["default"]   = row[4]
+                        columns.push column
+                    end
+
+                    sth.finish
+                    return columns
                     # XXX it'd be nice if the spec was changed to do this k/v with the name as the key.
                 end
             end
@@ -259,15 +283,17 @@ module DBI
                         columns[i]["name"] = name
                         type_name = @result_set.types[i]
 
-                        m = type_name.match(/^([^\(]+)(\((\d+)(,(\d+))?\))?$/)
-                        
-                        columns[i]["type_name"] = m[1]
-                        columns[i]["precision"] = m[3].to_i if m[3]
-                        columns[i]["scale"]     = m[5].to_i if m[5]
-                        DBI_TYPE_MAP.each do |map|
-                            if columns[i]["type_name"] =~ map[0]
-                                columns[i]["sql_type"] = map[1]
-                                break
+                        if type_name
+                            m = DBI::DBD::SQLite.parse_type(type_name)
+                            
+                            columns[i]["type_name"] = m[1]
+                            columns[i]["precision"] = m[3].to_i if m[3]
+                            columns[i]["scale"]     = m[5].to_i if m[5]
+                            DBI_TYPE_MAP.each do |map|
+                                if columns[i]["type_name"] =~ map[0]
+                                    columns[i]["sql_type"] = map[1]
+                                    break
+                                end
                             end
                         end
                     end

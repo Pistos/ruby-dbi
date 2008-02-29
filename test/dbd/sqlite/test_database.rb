@@ -34,6 +34,24 @@ class TestDatabase < Test::Unit::TestCase
         assert_equal ["names"], @dbh.tables
     end
 
+    def test_columns
+        assert_equal [
+            {
+                "name"      => "name",
+                "default"   => nil,
+                "nullable"  => false,
+                "precision" => 255,
+                "type_name" => "varchar"
+            },
+            {
+                "name"      => "age",
+                "default"   => nil,
+                "nullable"  => false,
+                "type_name" => "integer"
+            }
+        ], @dbh.columns("names")  
+    end
+
     def test_attrs
         # test defaults
         assert @dbh["AutoCommit"] # should be true
