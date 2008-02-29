@@ -22,6 +22,8 @@ module DBI
 
             USED_DBD_VERSION = "0.1"
 
+            # XXX I'm starting to think this is less of a problem with SQLite
+            # and more with the old C DBD
             def self.check_sql(sql)
                 raise DBI::DatabaseError, "Bad SQL: SQL cannot contain nulls" if sql =~ /\0/
             end
@@ -38,6 +40,8 @@ module DBI
 
             class Database < DBI::BaseDatabase
                 include DBI::SQL::BasicBind
+
+                attr_reader :db
 
                 def initialize(dbname, user, auth, attr_hash)
                     # FIXME why isn't this crap being done in DBI?
@@ -82,11 +86,6 @@ module DBI
 
                     # FIXME this *should* be building a statement handle and doing it that way.
 
-                    # call self.bind with the statement and bindvars to produce sql to send to the driver
-                    # XXX is there a binding API we can use instead?
-                    # run the check_sql routine to ensure there are no nulls 
-                    # send it to the database
-                    # if error, throw DBI::DatabaseError
                 end
 
                 def tables
@@ -153,7 +152,7 @@ module DBI
                 include DBI::SQL::BasicQuote
 
                 #
-                # NOTE these two constants are taken directly out of the old
+                # NOTE these three constants are taken directly out of the old
                 #      SQLite.c. Not sure of its utility yet.
                 #
 
@@ -186,11 +185,11 @@ module DBI
 
                 def initialize(stmt, dbh)
                     @dbh       = dbh
-                    @statement = stmt
+                    @statement = DBI::SQL::PreparedStatement.new(@dbh, stmt)
                     @attr      = { }
                     @params    = [ ]
-                    @col_info  = nil
                     @rows      = [ ]
+                    @result_set = nil
                 end
 
                 def bind_param(param, value, attributes=nil)
@@ -198,42 +197,36 @@ module DBI
                         raise DBI::InterfaceError, "Only numeric parameters are supported"
                     end
 
-                    @params[param] = value
+                    @params[param-1] = value
 
                     # FIXME what to do with attributes? are they important in SQLite?
                 end
 
-                def execute(*params)
-                    # do what Database#do does (which should be moved here and #do calls this instead)
-                    # cache the column information for the selected columns (see Database#columns)
-                    # if full_column_names is not set, run this code:
-=begin
-                            col_name_occurences = Hash.new(0)                    
-                                                                                 
-                            @col_info.each do |n|                                
-                              col_name_occurences[n['name']] += 1                
-                            end                                                  
-                                                                                 
-                            col_name_occurences.each do |name, anz|              
-                              if anz > 1 then                                    
-                                @col_info.each do |c|                            
-                                  c['name'] = c['full_name'] if c['name'] == name
-                                end                                              
-                              end                                                
-                            end                                                  
-=end
-
-                    # XXX yes, that's my way of saying, "I have no fucking idea
-                    #     what this does, but it's probably important"
+                def execute
+                    # FIXME find out what attrs we need to support and how we support them.
+                    sql = @statement.bind(@params)
+                    ::DBI::DBD::SQLite.check_sql(sql)
+                   
+                    begin
+                        # XXX this is not AutoCommit-aware yet
+                        @dbh.db.transaction
+                        @result_set = @dbh.db.query(sql)
+                        @dbh.db.commit
+                    rescue Exception => e
+                        raise DBI::DatabaseError, e.message
+                    end
                 end
                 
                 def cancel
-                    # free all in-memory data relating to the result of the query
+                    # this should probably rollback the transaction?
                 end
 
                 def finish
-                    # finish() differs from cancel in only that it resets the
-                    # "rpc" (row processed count, verified) and "rows" (probably the row returned amount)
+                    # this should probably:
+                    # close the transactions (what's the spec say here?)
+                    # nil out the result set
+                    @result_set.close if @result_set
+                    @result_set = nil
                 end
 
                 def fetch
@@ -247,11 +240,11 @@ module DBI
                 end
 
                 def column_info
-                    # accessor for @col_info
+                    @result_set.columns
                 end
 
                 def rows
-                    # if rpc is not -1, return it as a Number
+                    raise "Not implemented yet"
                 end
 
                 def quote(obj)
