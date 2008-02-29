@@ -89,8 +89,12 @@ module DBI
                 end
 
                 def tables
-                    # select name from sqlite_master where type='table';
-                    # XXX does sqlite use views too? not sure, but they need to be included according to spec
+                    sth = prepare("select name from sqlite_master where type='table'")
+                    sth.execute
+                    tables = sth.fetch_all.flatten
+                    sth.finish
+                    return tables
+                    # FIXME does sqlite use views too? not sure, but they need to be included according to spec
                 end
 
                 def commit

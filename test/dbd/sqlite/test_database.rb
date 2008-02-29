@@ -30,6 +30,10 @@ class TestDatabase < Test::Unit::TestCase
         sth.finish
     end
 
+    def test_tables
+        assert_equal ["names"], @dbh.tables
+    end
+
     def test_attrs
         # test defaults
         assert @dbh["AutoCommit"] # should be true
