@@ -45,6 +45,45 @@ class TestStatement < Test::Unit::TestCase
         end
     end
 
+    def test_rows
+        sth = nil
+
+        assert_nothing_raised do
+            sth = @dbh.prepare("insert into names (name, age) values (?, ?)")
+            sth.execute("Bill", 22);
+        end
+
+        assert 1, sth.rows
+
+        sth.finish
+        sth = nil
+
+        assert_nothing_raised do
+            sth = @dbh.prepare("delete from names where name = ?")
+            sth.execute("Bill");
+        end
+
+        assert 1, sth.rows
+
+        sth.finish
+    end
+
+    def test_column_info
+        sth = nil
+        
+        assert_nothing_raised do 
+            sth = @dbh.prepare("select * from names")
+            sth.execute
+        end
+
+        assert_kind_of Array, sth.column_info 
+        assert_kind_of ColumnInfo, sth.column_info[0]
+        assert_kind_of ColumnInfo, sth.column_info[1]
+        assert_equal [ { "name" => "name" }, {"name" => "age"} ], sth.column_info
+
+        sth.finish
+    end
+
     def test_execute
         assert_nothing_raised do 
             sth = @dbh.prepare("select * from names")
@@ -63,6 +102,8 @@ class TestStatement < Test::Unit::TestCase
             sth.execute("Bill", 22);
             sth.finish
         end
+
+        # FIXME test transactions
     end
 
     def setup

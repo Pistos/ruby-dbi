@@ -240,11 +240,12 @@ module DBI
                 end
 
                 def column_info
-                    @result_set.columns
+                    # FIXME type mapping
+                    return @result_set.columns.collect { |x| { "name" => x } }
                 end
 
                 def rows
-                    raise "Not implemented yet"
+                    return @dbh.db.changes
                 end
 
                 def quote(obj)
