@@ -26,7 +26,8 @@ class TestPostgresByteA < Test::Unit::TestCase
     end
 
     def test_encode_decode
-        encoder = DBI::DBD::Pg::Database.new('rubytest', 'erikh', 'monkeys', {})
+        config = DBDConfig.get_config['postgresql']
+        encoder = DBI::DBD::Pg::Database.new(config['dbname'], config['username'], config['password'], {})
         decoder = DBI::DBD::Pg::PgCoerce.new
         
         # some specific cases that were failing intermittenly
