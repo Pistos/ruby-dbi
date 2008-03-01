@@ -125,8 +125,12 @@
    Depends on distributed Ruby (DRb), part of the Ruby standard library.
 
 == DBD::SQLite
-   SQLite
-   Depends on the sqlite package, available on the RAA.
+   SQLite (versions 2.x and earlier)
+   Depends on the sqlite-ruby package, available on rubyforge.
+
+== DBD::SQLite
+   SQLite 3.x
+   Depends on the sqlite3-ruby package, available on rubyforge.
 
 == DBD::SQLRelay
    SQLRelay
@@ -184,6 +188,10 @@
    (General Public License).
 
 = Contributors
+
+   Jun Mukai <mukai@jmuk.org>
+      Contributed initial SQLite3 DBD.
+
    John J. Fox IV
       Lots of help testing on multiple platforms.
 
