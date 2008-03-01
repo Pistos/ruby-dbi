@@ -45,7 +45,7 @@ class Installer
 		'dbd_interbase' => 'InterBase', 'dbd_oracle' => 'Oracle',
 		'dbd_db2' => 'DB2', 'dbd_ado' => 'ADO', 'dbd_pg' => 'Pg',
 		'dbd_proxy' => 'Proxy', 'dbd_odbc' => 'ODBC', 'dbd_sqlrelay' => 'SQLRelay',
-		'dbd_frontbase' => 'FrontBase'
+		'dbd_frontbase' => 'FrontBase', 'dbd_sqlite3' => 'SQLite3', 'dbd_sqlite' => 'SQLite'
 	}
 
   def initialize( argv )
