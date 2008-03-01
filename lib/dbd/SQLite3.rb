@@ -2,6 +2,7 @@
 # DBD::SQLite3
 # 
 # copyright (c) 2005 Jun Mukai <mukai@jmuk.org>
+# Compatibility patches by Erik Hollensbe <erik@hollensbe.org>
 # 
 # All rights reserved.
 #
@@ -44,6 +45,11 @@ module DBI
 
       VERSION = ::SQLite3::Version::STRING
       USED_DBD_VERSION='0.2'
+     
+      # FIXME plucked from SQLite driver, this needs to be in DBI proper 
+      def self.parse_type(type_name)
+          type_name.match(/^([^\(]+)(\((\d+)(,(\d+))?\))?$/)
+      end
 
       class Driver < DBI::BaseDriver
         def initialize
@@ -51,6 +57,9 @@ module DBI
         end
 
         def connect(dbname, user, auth, attr)
+          raise DBI::InterfaceError, "dbname must be a string" unless dbname.kind_of? String
+          raise DBI::InterfaceError, "dbname must have some length" unless dbname.length > 0
+          raise DBI::InterfaceError, "attrs must be a hash" unless attr.kind_of? Hash
           db = Database.new(dbname, attr)
           @dbs.push(db)
           db
@@ -114,8 +123,12 @@ module DBI
 
         def rollback()
           if @db.transaction_active?
-            @db.rollback
-            @db.transaction
+            begin 
+                @db.rollback 
+                @db.transaction
+            rescue Exception => e
+                raise DBI::Warning, "Statements were not closed prior to rollback"
+            end
           else
             raise DBI::ProgrammingError.new("No active transaction.")
           end
@@ -135,22 +148,28 @@ EOS
         def columns(table)
           @db.type_translation = false
           ret =
-            @db.table_info(table).map do |cid, name, type, nullable, default|
-            { 'name' => name,
-              'type_name' => type,
-              'type' => begin
-                          DBI.const_get('SQL_'+type.upcase)
-                        rescue NameError
-                          DBI::SQL_OTHER
-                        end,
-              'nullable' => (nullable == '0'),
-              'default' => if @attr['type_translation'] && (not default) then
-                             @db.translator.translate(type, default)
-                           else
-                             default
-                           end
-            }
-          end
+            @db.table_info(table).map do |hash|
+              m = DBI::DBD::SQLite3.parse_type(hash['type'])
+              h = { 'name' => hash['name'],
+                'type_name' => m[1],
+                'sql_type' => begin
+                            DBI.const_get('SQL_'+hash['type'].upcase)
+                          rescue NameError
+                            DBI::SQL_OTHER
+                          end,
+                'nullable' => (hash['notnull'] == '0'),
+                'default' => if @attr['type_translation'] && (not hash['dflt_value']) then
+                               @db.translator.translate(hash['type'], hash['dflt_value'])
+                             else
+                               hash['dflt_value'] 
+                             end
+              }
+
+              h['precision'] = m[3].to_i if m[3]
+              h['scale']     = m[5].to_i if m[5]
+
+              h
+            end
           @db.type_translation = @attr['type_translation']
           ret
         end
@@ -180,6 +199,7 @@ EOS
             else
               @db.transaction unless @db.transaction_active?
             end
+            @attr[attr] = value
           when 'auto_vacuum', 'cache_size', 'count_changes',
               'default_cache_size', 'encoding', 'full_column_names',
               'page_size', 'short_column_names', 'synchronous',
@@ -198,6 +218,8 @@ EOS
           else
             raise NotSupportedError
           end
+
+          return value
         end
       end
 
@@ -207,46 +229,49 @@ EOS
           @db = db
           @stmt = db.prepare(sql)
           @result = nil
-          @rpc = nil
         rescue ::SQLite3::Exception, RuntimeError => err
           raise DBI::ProgrammingError.new(err.message)
         end
 
-        def bind_param(param, value, attribs)
+        def bind_param(param, value, attribs=nil)
+          raise DBI::InterfaceError, "Bound parameter must be an integer" unless param.kind_of? Fixnum 
+
           @stmt.bind_param(param, value)
         end
 
         def execute()
           @result = @stmt.execute
-          @rpc = 0
         end
 
         def finish()
-          @stmt.close unless @stmt.closed?
+          @stmt.close rescue nil
           @result = nil
-          @rpc = nil
         end
 
         def fetch()
-          @rpc += 1
           @result.next
         end
 
         def column_info()
           @stmt.columns.zip(@stmt.types).map{|name, type_name|
-            { 'name' => name,
-              'type_name' => type_name,
+            m = DBI::DBD::SQLite3.parse_type(type_name)
+            h = { 
+              'name' => name,
+              'type_name' => m[1],
               'sql_type' => begin
-                              DBI.const_get('SQL_'+type_name.upcase)
+                              DBI.const_get('SQL_'+m[1].upcase)
                             rescue NameError
                               DBI::SQL_OTHER
                             end,
             }
+            h['precision'] = m[3].to_i if m[3]
+            h['scale']     = m[5].to_i if m[5]
+            h
           }
         end
 
         def rows()
-          @rpc
+            @db.changes
         end
 
         def bind_params(*bindvars)
