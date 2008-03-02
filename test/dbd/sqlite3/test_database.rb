@@ -1,7 +1,6 @@
-require 'test/unit'
-require 'fileutils'
+require File.join(File.dirname(__FILE__), 'base')
 
-class TestDatabase < Test::Unit::TestCase
+class TestDatabase < SQLite3UnitBase
     def test_disconnect
         assert_nil @dbh.disconnect
         assert_nil @dbh.instance_variable_get("@db")
@@ -74,22 +73,5 @@ class TestDatabase < Test::Unit::TestCase
         sth.execute("Billy")
         assert_equal [ "Billy", 22 ], sth.fetch
         sth.finish
-    end
-
-    def setup
-        config = DBDConfig.get_config['sqlite3']
-
-        system("sqlite3 #{config['dbname']} < dbd/sqlite3/up.sql");
-
-        # this will not be used in all tests
-        @dbh = DBI.connect('dbi:SQLite3:'+config['dbname'], nil, nil, { }) 
-    end
-
-    def teardown
-        # XXX obviously, this comes with its problems as some of this is being
-        # tested here.
-        @dbh.disconnect if @dbh.connected?
-        config = DBDConfig.get_config['sqlite3']
-        FileUtils.rm_f(config['dbname'])
     end
 end

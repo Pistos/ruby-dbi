@@ -1,6 +1,6 @@
-require 'test/unit'
+require File.join(File.dirname(__FILE__), 'base')
 
-class TestPostgresTransaction < Test::Unit::TestCase
+class TestPostgresTransaction < PGUnitBase
     def test_rollback
         dbh = get_dbh
         dbh["AutoCommit"] = false
@@ -56,15 +56,5 @@ class TestPostgresTransaction < Test::Unit::TestCase
     def get_dbh
         config = DBDConfig.get_config
         DBI.connect("dbi:Pg:#{config['postgresql']['dbname']}", config['postgresql']['username'], config['postgresql']['password'])
-    end
-
-    def setup
-        config = DBDConfig.get_config
-        system "psql #{config['postgresql']['dbname']} < dbd/postgresql/dump.sql >>sql.log"
-    end
-
-    def teardown
-        config = DBDConfig.get_config
-        system "psql #{config['postgresql']['dbname']} < dbd/postgresql/drop_tables.sql >>sql.log"
     end
 end

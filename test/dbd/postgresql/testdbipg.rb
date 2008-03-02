@@ -1,14 +1,11 @@
-#!/usr/bin/env ruby
-# Ruby Unit Tests
-
-require 'test/unit'
+require File.join(File.dirname(__FILE__), 'base')
 require 'dbd/Pg'
 
 ######################################################################
 # Test the PostgreSql DBD driver.  This test exercises options
 # difficult to test through the standard DBI interface.
 #
-class TestDbdPostgres < Test::Unit::TestCase
+class TestDbdPostgres < PGUnitBase
 
     # FIXME this is a feature that should be there, but currently isn't.
 #   def test_connect
@@ -116,16 +113,6 @@ class TestDbdPostgres < Test::Unit::TestCase
   def get_dbi
       config = DBDConfig.get_config
       DBI.connect("dbi:Pg:#{config['postgresql']['dbname']}", config['postgresql']['username'], config['postgresql']['password'])
-  end
-
-  def setup
-      config = DBDConfig.get_config
-      system "psql #{config['postgresql']['dbname']} < dbd/postgresql/dump.sql >>sql.log"
-  end
-
-  def teardown
-      config = DBDConfig.get_config
-      system "psql #{config['postgresql']['dbname']} < dbd/postgresql/drop_tables.sql >>sql.log"
   end
 
   def get_dbd

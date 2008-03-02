@@ -1,6 +1,6 @@
-require 'test/unit'
+require File.join(File.dirname(__FILE__), 'base')
 
-class TestPostgresBlob < Test::Unit::TestCase
+class TestPostgresBlob < PGUnitBase
     DATA = "this is my new binary object"
 
     def test_insert
@@ -31,17 +31,5 @@ class TestPostgresBlob < Test::Unit::TestCase
         end
 
         assert_equal 3, index
-    end
-
-    def setup
-        config = DBDConfig.get_config['postgresql']
-        system "psql #{config['dbname']} < dbd/postgresql/dump.sql >>sql.log"
-        @dbh = DBI.connect("dbi:Pg:#{config['dbname']}", config['username'], config['password'])
-    end
-
-    def teardown
-        config = DBDConfig.get_config['postgresql']
-        @dbh.disconnect
-        system "psql #{config['dbname']}< dbd/postgresql/drop_tables.sql >>sql.log"
     end
 end

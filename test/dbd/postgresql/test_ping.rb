@@ -1,6 +1,6 @@
-require 'test/unit'
+require File.join(File.dirname(__FILE__), 'base')
 
-class TestPostgresPing < Test::Unit::TestCase
+class TestPostgresPing < PGUnitBase
     def test_ping
         config = DBDConfig.get_config['postgresql']
         dbh = DBI.connect("dbi:Pg:#{config['dbname']}", config['username'], config['password'])
@@ -8,5 +8,11 @@ class TestPostgresPing < Test::Unit::TestCase
         assert dbh.ping
         dbh.disconnect
         assert_raise(DBI::InterfaceError) { dbh.ping }
+    end
+
+    def setup
+    end
+
+    def teardown
     end
 end

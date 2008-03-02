@@ -1,7 +1,6 @@
-require 'test/unit'
-require 'fileutils'
+require File.join(File.dirname(__FILE__), 'base')
 
-class TestDriver < Test::Unit::TestCase
+class TestDriver < SQLite3UnitBase
     def test_require
         require 'dbd/SQLite3'
         assert_kind_of Module, DBI
@@ -58,6 +57,9 @@ class TestDriver < Test::Unit::TestCase
         assert_kind_of SQLite3::Database, dbh.instance_variable_get("@db")
 
         assert File.exists?(config['dbname'])
+    end
+
+    def setup
     end
 
     def teardown

@@ -1,5 +1,4 @@
-require 'test/unit'
-
+require File.join(File.dirname(__FILE__), 'base')
 require 'dbd/Pg'
 
 begin
@@ -12,7 +11,7 @@ require 'pg'
 
 LEN = 50
 
-class TestPostgresByteA < Test::Unit::TestCase
+class TestPostgresByteA < PGUnitBase
     # FIXME the 'pg' module is broken and doesn't encode/decode properly.
     # this test should prove that the 'pg' module works so we can back out our
     # hacks.
@@ -74,5 +73,11 @@ class TestPostgresByteA < Test::Unit::TestCase
         end
 
         return str
+    end
+
+    def setup
+    end
+
+    def teardown
     end
 end
