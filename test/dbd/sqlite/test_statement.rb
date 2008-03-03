@@ -1,5 +1,3 @@
-require File.join(File.dirname(__FILE__), 'base')
-
 class TestSQLiteStatement < SQLiteUnitBase
     def test_constructor
         sth = DBI::DBD::SQLite::Statement.new("select * from foo", @dbh.instance_variable_get("@handle"))

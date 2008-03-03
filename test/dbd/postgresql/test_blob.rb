@@ -1,5 +1,3 @@
-require File.join(File.dirname(__FILE__), 'base')
-
 class TestPostgresBlob < PGUnitBase
     DATA = "this is my new binary object"
 

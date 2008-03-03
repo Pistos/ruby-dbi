@@ -1,5 +1,3 @@
-require File.join(File.dirname(__FILE__), 'base')
-
 class TestPostgresTransaction < PGUnitBase
     def test_rollback
         dbh = get_dbh

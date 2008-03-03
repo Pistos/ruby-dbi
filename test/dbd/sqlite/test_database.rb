@@ -1,5 +1,3 @@
-require File.join(File.dirname(__FILE__), 'base')
-
 class TestSQLiteDatabase < SQLiteUnitBase 
     def test_disconnect
         assert_nil @dbh.disconnect

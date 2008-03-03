@@ -1,5 +1,3 @@
-require File.join(File.dirname(__FILE__), 'base')
-
 class TestPostgresPing < PGUnitBase
     def test_ping
         config = DBDConfig.get_config['postgresql']

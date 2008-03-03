@@ -1,5 +1,3 @@
-require File.join(File.dirname(__FILE__), 'base')
-
 class TestDriver < SQLite3UnitBase
     def test_require
         require 'dbd/SQLite3'

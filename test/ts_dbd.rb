@@ -25,7 +25,9 @@ if __FILE__ == $0
 
     if config
         config["dbtypes"].each do |dbtype|
-            Dir["dbd/#{dbtype}/*.rb"].collect { |file| require file }
+            # base.rb is special, see DBD_TESTS
+            require "dbd/#{dbtype}/base.rb"
+            Dir["dbd/#{dbtype}/*.rb"].collect { |file| require file unless File.basename(file) == "base.rb" }
         end
     end
 end
