@@ -1,30 +1,18 @@
-require "dbi"
+class TestMySQLBlob < DBDConfig.testbase(:mysql)
+    def test_blob_round_trip
+        data =(0..255).collect{|n| n.chr}.join("")
+        sql = "INSERT INTO blob_test (name, data) VALUES (?, ?)"
 
-DATA = (0..255).collect{|n| n.chr}.join("")
-SQL  = "INSERT INTO blob_test (name, data) VALUES (?, ?)"
+        @dbh.do(sql, 'test1', DBI::Binary.new(data)) 
+        @dbh.do(sql, 'test2', data) 
 
-DBI.connect("dbi:mysql:michael", "michael", "michael") do |dbh|
-  dbh.do("DROP TABLE blob_test") rescue nil
-  dbh.do("CREATE TABLE blob_test (name VARCHAR(30), data BLOB)")
+        @dbh.prepare(sql) do |sth|
+            sth.execute('test3', DBI::Binary.new(data))
+            sth.execute('test4', data)
+        end
 
-  dbh.do(SQL, 'test1', DBI::Binary.new(DATA)) 
-  dbh.do(SQL, 'test2', DATA) 
-
-
-  dbh.prepare(SQL) do |sth|
-    sth.execute('test3', DBI::Binary.new(DATA))
-    sth.execute('test4', DATA)
-  end
-
-  dbh.select_all("SELECT name, data FROM blob_test") do |name, data|
-    print name, ": "
-    if data == DATA
-      print "ok\n"
-    else
-      print "wrong\n"
+        @dbh.select_all("SELECT name, data FROM blob_test") do |name, fetch_data|
+            assert_equal fetch_data, data
+        end
     end
-  end
 end
-
-
-
