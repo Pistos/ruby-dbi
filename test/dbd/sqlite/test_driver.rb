@@ -1,4 +1,4 @@
-class TestSQLiteDriver < SQLiteUnitBase 
+class TestSQLiteDriver < DBDConfig.testbase(:sqlite)
     def test_require
         require 'dbd/SQLite'
         assert_kind_of Module, DBI

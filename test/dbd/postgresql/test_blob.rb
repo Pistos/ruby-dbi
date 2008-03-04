@@ -1,4 +1,4 @@
-class TestPostgresBlob < PGUnitBase
+class TestPostgresBlob < DBDConfig.testbase(:postgresql)
     DATA = "this is my new binary object"
 
     def test_insert

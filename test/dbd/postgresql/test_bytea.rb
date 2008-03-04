@@ -10,7 +10,7 @@ require 'pg'
 
 LEN = 50
 
-class TestPostgresByteA < PGUnitBase
+class TestPostgresByteA < DBDConfig.testbase(:postgresql)
     # FIXME the 'pg' module is broken and doesn't encode/decode properly.
     # this test should prove that the 'pg' module works so we can back out our
     # hacks.

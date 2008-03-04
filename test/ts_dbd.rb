@@ -2,6 +2,8 @@
 require 'yaml'
 
 module DBDConfig
+    @testbase = { }
+
     def self.get_config
         config = nil
 
@@ -11,6 +13,14 @@ module DBDConfig
         end
 
         return config
+    end
+
+    def self.testbase(klass_name)
+        return @testbase[klass_name]
+    end
+
+    def self.set_testbase(klass_name, klass)
+        @testbase[klass_name] = klass
     end
 end
 
@@ -27,7 +37,7 @@ if __FILE__ == $0
         config["dbtypes"].each do |dbtype|
             # base.rb is special, see DBD_TESTS
             require "dbd/#{dbtype}/base.rb"
-            Dir["dbd/#{dbtype}/*.rb"].collect { |file| require file unless File.basename(file) == "base.rb" }
+            Dir["dbd/#{dbtype}/test_*.rb"].collect { |file| require file }
         end
     end
 end

@@ -1,4 +1,4 @@
-class TestSQLiteDatabase < SQLiteUnitBase 
+class TestSQLiteDatabase < DBDConfig.testbase(:sqlite)
     def test_disconnect
         assert_nil @dbh.disconnect
         assert_nil @dbh.instance_variable_get("@db")

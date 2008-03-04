@@ -1,4 +1,4 @@
-class TestSQLiteStatement < SQLiteUnitBase
+class TestSQLiteStatement < DBDConfig.testbase(:sqlite)
     def test_constructor
         sth = DBI::DBD::SQLite::Statement.new("select * from foo", @dbh.instance_variable_get("@handle"))
 

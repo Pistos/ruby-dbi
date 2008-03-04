@@ -1,4 +1,4 @@
-class TestPostgresTransaction < PGUnitBase
+class TestPostgresTransaction < DBDConfig.testbase(:postgresql)
     def test_rollback
         dbh = get_dbh
         dbh["AutoCommit"] = false
