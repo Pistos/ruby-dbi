@@ -19,6 +19,35 @@ class TestDbdPostgres < PGUnitBase
 #      dbd.disconnect if dbd
 #   end
 
+    def test_columns
+        [
+            {
+                    "name"=>"name",
+                    "default"=>nil,
+                    "primary"=>nil,
+                    "scale"=>nil,
+                    "sql_type"=>12,
+                    "nullable"=>false,
+                    "indexed"=>false,
+                    "precision"=>255,
+                    "type_name"=>"character varying",
+                    "unique"=>nil
+            },
+            {
+                    "name"=>"age",
+                    "default"=>nil,
+                    "primary"=>nil,
+                    "scale"=>nil,
+                    "sql_type"=>4,
+                    "nullable"=>false,
+                    "indexed"=>false,
+                    "precision"=>4,
+                    "type_name"=>"integer",
+                    "unique"=>nil
+            }
+        ], @dbh.columns("names")
+    end
+
   def test_connect_errors
     dbd = nil
     ex = assert_raise(DBI::OperationalError) {

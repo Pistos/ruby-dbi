@@ -3,6 +3,7 @@ require 'yaml'
 
 module DBDConfig
     @testbase = { }
+    @current_dbtype = nil
 
     def self.get_config
         config = nil
@@ -13,6 +14,14 @@ module DBDConfig
         end
 
         return config
+    end
+
+    def self.current_dbtype
+        @current_dbtype
+    end
+
+    def self.current_dbtype=(setting)
+        @current_dbtype = setting
     end
 
     def self.testbase(klass_name)
@@ -38,6 +47,9 @@ if __FILE__ == $0
             # base.rb is special, see DBD_TESTS
             require "dbd/#{dbtype}/base.rb"
             Dir["dbd/#{dbtype}/test_*.rb"].collect { |file| require file }
+            # run the general tests
+            DBDConfig.current_dbtype = dbtype.to_sym
+            Dir["dbd/general/test_*.rb"].collect { |file| load file }
         end
     end
 end

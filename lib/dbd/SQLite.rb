@@ -99,7 +99,7 @@ module DBI
                 end
 
                 def tables
-                    sth = prepare("select name from sqlite_master where type='table'")
+                    sth = prepare("select name from sqlite_master where type in ('table', 'view')")
                     sth.execute
                     tables = sth.fetch_all.flatten
                     sth.finish
@@ -162,7 +162,7 @@ module DBI
                         column["precision"] = m[3].to_i if m[3]
                         column["scale"]     = m[5].to_i if m[5]
 
-                        column["nullable"]  = !row[3]
+                        column["nullable"]  = row[3].to_i == 0
                         column["default"]   = row[4]
                         columns.push column
                     end
