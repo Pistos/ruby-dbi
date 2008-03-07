@@ -270,7 +270,7 @@ class Database < DBI::BaseDatabase
   # - coercion method
 
   TYPE_MAP = {}
-  MysqlField.constants.grep(/^TYPE_/).each do |const|
+  ::Mysql::Field.constants.grep(/^TYPE_/).each do |const|
     mysql_type = MysqlField.const_get(const)  # numeric type code
     coercion_method = :as_str                 # default coercion method
     case const
@@ -599,7 +599,7 @@ class Statement < DBI::BaseStatement
         if SQL_TINYINT == info['sql_type'] and 1 == info['precision']
           :as_bool
         else
-          Database::TYPE_MAP[type][1] || :as_str
+          Database::TYPE_MAP[type][1] || :as_str rescue :as_str
         end
       row[index] = @coerce.coerce(type_symbol, value)
     }
@@ -656,7 +656,7 @@ class Statement < DBI::BaseStatement
     # is set only by mysql_list_fields()
 
     @res_handle.fetch_fields.each {|col| 
-      mysql_type_name = Database::TYPE_MAP[col.type][0]
+      mysql_type_name = Database::TYPE_MAP[col.type][0] rescue nil
       xopen_info = Database::MYSQL_to_XOPEN[mysql_type_name] ||
                    Database::MYSQL_to_XOPEN[nil]
       sql_type = xopen_info[0]
