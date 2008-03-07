@@ -241,7 +241,8 @@ module DBI
       # 'dbi:driver:' format.
       def available_drivers
          drivers = []
-         path = File.dirname(File.dirname(__FILE__)) + "/" + DBD::DIR
+         #path = File.dirname(File.dirname(__FILE__)) + "/" + DBD::DIR
+         path = File.dirname(__FILE__) + "/" + DBD::DIR
          Find.find(path){ |f|
             if File.file?(f)
                driver = File.basename(f, ".rb")

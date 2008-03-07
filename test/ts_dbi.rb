@@ -14,3 +14,5 @@ require 'dbi/tc_sqlquote'
 require 'dbi/tc_statementhandle'
 require 'dbi/tc_time'
 require 'dbi/tc_timestamp'
+
+DBI::DBD::DIR = "dbd"
