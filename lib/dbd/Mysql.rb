@@ -435,6 +435,10 @@ class Database < DBI::BaseDatabase
       "'#{@handle.quote(value)}'"
     when DBI::Binary
       "'#{@handle.quote(value.to_s)}'"
+    when TrueClass
+      "'1'"
+    when FalseClass
+      "'0'"
     else
       super
     end
@@ -589,8 +593,14 @@ class Statement < DBI::BaseStatement
     return nil if rowdata.nil?
     row = []
     rowdata.each_with_index { |value, index|
-      type = @column_info[index]['mysql_type']
-      type_symbol = Database::TYPE_MAP[type][1] || :as_str
+      info = @column_info[index]
+      type = info['mysql_type']
+      type_symbol =
+        if SQL_TINYINT == info['sql_type'] and 1 == info['precision']
+          :as_bool
+        else
+          Database::TYPE_MAP[type][1] || :as_str
+        end
       row[index] = @coerce.coerce(type_symbol, value)
     }
     row

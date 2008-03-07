@@ -39,9 +39,9 @@ module SQL
       end
 
       def as_bool(str)
-        if str == "t"
+        if str == "t" or str == "1"
           true
-        elsif str == "f"
+        elsif str == "f" or str == "0"
           false
         else
           nil
