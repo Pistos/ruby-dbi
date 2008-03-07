@@ -1,4 +1,4 @@
-Class.new(DBDConfig.testbase(DBDConfig.current_dbtype)) do
+@class = Class.new(DBDConfig.testbase(DBDConfig.current_dbtype)) do
     def test_rows
         sth = nil
 

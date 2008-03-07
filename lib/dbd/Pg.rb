@@ -478,6 +478,7 @@ module DBI
             when 'int8', 'int4', 'int2'    then :as_int
             when 'varchar'                   then :as_str
             when 'float4','float8'          then :as_float
+            when 'time', 'timetz'           then :as_time
             when 'timestamp', 'timestamptz' then :as_timestamp
             when 'date'                      then :as_date
             when 'bytea'                     then :as_bytea

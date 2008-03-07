@@ -17,3 +17,5 @@ create or replace function test_insert (varchar(255), integer)
     as 'insert into names (name, age) values ($1, $2); select age from names where name = $1';
 
 create table boolean_test (num integer, mybool boolean);
+
+create table time_test (mytime time);

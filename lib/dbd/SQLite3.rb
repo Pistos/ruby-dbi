@@ -249,7 +249,9 @@ EOS
         end
 
         def fetch()
-          @result.next
+            ret = @result.next
+            return ret unless ret
+            cast_types([ret]).flatten
         end
 
         def column_info()
@@ -289,8 +291,9 @@ EOS
             ret = []
             cnt.times{ ret.push(@result.next()) }
             ret.compact!
+            cast_types(ret)
           end
-          ret
+          nil
         end
 
         def fetch_all()
@@ -298,8 +301,21 @@ EOS
           if @result then
             ret = []
             @result.each{|row| ret.push(row)}
+            return cast_types(ret)
           end
-          ret
+          nil 
+        end
+
+        private
+
+        def cast_types(ary)
+            moo = ary.collect do |row|
+                if row
+                    row = row.collect { |x| x.kind_of?(::Time) ? DBI::Time.new(x) : x }
+                end
+                row
+            end
+            moo
         end
       end
     end

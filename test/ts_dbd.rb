@@ -41,6 +41,10 @@ module DBDConfig
     def self.set_testbase(klass_name, klass)
         @testbase[klass_name] = klass
     end
+
+    def self.suite
+        @suite ||= []
+    end
 end
 
 if __FILE__ == $0
@@ -56,10 +60,10 @@ if __FILE__ == $0
         config["dbtypes"].each do |dbtype|
             # base.rb is special, see DBD_TESTS
             require "dbd/#{dbtype}/base.rb"
-            Dir["dbd/#{dbtype}/test_*.rb"].collect { |file| require file }
+            Dir["dbd/#{dbtype}/test_*.rb"].each { |file| require file }
             # run the general tests
             DBDConfig.current_dbtype = dbtype.to_sym
-            Dir["dbd/general/test_*.rb"].collect { |file| load file }
+            Dir["dbd/general/test_*.rb"].each { |file| load file; DBDConfig.suite << @class }
         end
     end
 end

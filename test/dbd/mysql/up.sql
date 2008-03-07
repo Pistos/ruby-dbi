@@ -16,4 +16,6 @@ create view view_names as select * from names;
 --    language sql 
 --    as 'insert into names (name, age) values ($1, $2); select age from names where name = $1';
 
-create table boolean_test (num integer, mybool boolean);
+create table boolean_test (num integer, mybool boolean) Engine=InnoDB;
+
+create table time_test (mytime time) Engine=InnoDB;
