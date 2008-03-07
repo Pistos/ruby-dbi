@@ -69,5 +69,4 @@ class TestSQLiteStatement < DBDConfig.testbase(:sqlite)
 
         sth.finish
     end
-
 end

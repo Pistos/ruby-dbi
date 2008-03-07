@@ -2,6 +2,10 @@ require 'test/unit'
 require 'fileutils'
 
 DBDConfig.set_testbase(:sqlite3, Class.new(Test::Unit::TestCase) do
+        def dbtype 
+            "sqlite3"
+        end
+
         def test_base
             assert true
         end

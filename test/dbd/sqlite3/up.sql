@@ -7,3 +7,5 @@ insert into names (name, age) values ("Jim", 30);
 create view view_names as select * from names;
 
 create table blob_test (name varchar(255));
+
+create table boolean_test (num integer, mybool boolean);

@@ -1,4 +1,8 @@
 DBDConfig.set_testbase(:mysql, Class.new(Test::Unit::TestCase) do
+        def dbtype 
+            "mysql"
+        end
+
         def test_base
             assert true
         end

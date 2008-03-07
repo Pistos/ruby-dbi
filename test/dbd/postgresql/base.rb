@@ -2,6 +2,11 @@ require 'test/unit'
 require 'fileutils'
 
 DBDConfig.set_testbase(:postgresql, Class.new(Test::Unit::TestCase) do
+        
+        def dbtype
+            "postgresql"
+        end
+
         def test_base
             assert true
         end

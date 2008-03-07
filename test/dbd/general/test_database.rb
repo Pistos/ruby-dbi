@@ -23,7 +23,7 @@ Class.new(DBDConfig.testbase(DBDConfig.current_dbtype)) do
     end
 
     def test_tables
-        assert_equal %w(blob_test names view_names), @dbh.tables.sort
+        assert_equal %w(blob_test boolean_test names view_names), @dbh.tables.sort
     end
 
 
@@ -47,5 +47,32 @@ Class.new(DBDConfig.testbase(DBDConfig.current_dbtype)) do
         sth.execute("Billy")
         assert_equal [ "Billy", 22 ], sth.fetch
         sth.finish
+    end
+
+    def test_boolean_return
+        sth = nil
+
+        assert_nothing_raised do
+            sth = @dbh.prepare("insert into boolean_test (num, mybool) values (?, ?)")
+            sth.execute(1, true)
+            sth.execute(2, false)
+            sth.finish
+        end
+
+        assert_nothing_raised do
+            sth = @dbh.prepare("select * from boolean_test order by num")
+            sth.execute
+
+            pairs = sth.fetch_all
+
+            assert_equal(
+                [
+                             [1, true],
+                             [2, false],
+                ], pairs
+            )
+
+            sth.finish
+        end
     end
 end

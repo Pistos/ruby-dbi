@@ -1,5 +1,15 @@
 # figure out what tests to run
 require 'yaml'
+require 'test/unit'
+
+module Test::Unit::Assertions
+    def build_message(head, template=nil, *arguments)
+        template += "\n" + "DATABASE: " + dbtype
+        template &&= template.chomp
+        #head = DBDConfig.current_dbtype.to_s + "\n" + (head || "")
+        return AssertionMessage.new(head, template, arguments)
+    end
+end
 
 module DBDConfig
     @testbase = { }
