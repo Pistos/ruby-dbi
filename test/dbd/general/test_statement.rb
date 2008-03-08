@@ -1,4 +1,16 @@
 @class = Class.new(DBDConfig.testbase(DBDConfig.current_dbtype)) do
+    def skip_quoting # FIXME breaks sqlite-ruby to a segfault - research
+        sth = nil
+
+        assert_nothing_raised do
+            sth = @dbh.prepare("select '\\'") #wrong
+            sth.execute
+            row = sth.fetch
+            assert_equal ['\\'], row
+            sth.finish
+        end
+    end
+
     def test_rows
         sth = nil
 
