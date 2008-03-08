@@ -26,8 +26,10 @@
             sth.execute
         end
 
-        assert 0, sth.rows
+        assert_equal 0, sth.rows
         assert sth.fetchable?
+        assert sth.any?
+        assert sth.rows.zero?
         sth.finish
     end
 

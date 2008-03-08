@@ -241,6 +241,7 @@ EOS
 
         def execute()
           @result = @stmt.execute
+          @rows = DBI::SQL.query?(@sql) ? 0 : @db.changes
         end
 
         def finish()
@@ -273,7 +274,7 @@ EOS
         end
 
         def rows()
-            @db.changes
+            @rows
         end
 
         def bind_params(*bindvars)

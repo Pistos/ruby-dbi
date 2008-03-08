@@ -577,7 +577,7 @@ class Statement < DBI::BaseStatement
       @column_info = self.column_info
       @coerce = DBI::SQL::BasicQuote::Coerce.new
       @current_row = 0
-      @rows = @handle.affected_rows
+      @rows = DBI::SQL.query?(sql) ? 0 : @handle.affected_rows 
     }
   rescue MyError => err
     error(err)
