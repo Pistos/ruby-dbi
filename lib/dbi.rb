@@ -37,6 +37,8 @@ require "dbi/utils"
 require "dbi/sql"
 require "dbi/columninfo"
 require "date"
+require "thread"
+require 'monitor'
 
 module DBI
    VERSION = "0.1.2"
@@ -204,9 +206,10 @@ module DBI
    DEFAULT_TRACE_OUTPUT = STDERR
    
    # TODO: Is using class variables within a module such a wise idea? - Dan B.
-   @@driver_map   = Hash.new 
-   @@trace_mode   = DEFAULT_TRACE_MODE
-   @@trace_output = DEFAULT_TRACE_OUTPUT
+   @@driver_map     = Hash.new
+   @@driver_monitor = ::Monitor.new()
+   @@trace_mode     = DEFAULT_TRACE_MODE
+   @@trace_output   = DEFAULT_TRACE_OUTPUT
    
    class << self
       
@@ -276,92 +279,94 @@ module DBI
       # case insensitive DBD names
       # 
       def load_driver(driver_name)
-         if @@driver_map[driver_name].nil?
-            
-            dc = driver_name.downcase
-            
-            # caseless look for drivers already loaded
-            found = @@driver_map.keys.find {|key| key.downcase == dc}
-            return found if found
-            
-            if $SAFE >= 1
-               # case-sensitive in safe mode
-               require "#{DBD::DIR}/#{driver_name}/#{driver_name}"
-            else
-                # FIXME this whole require scheme is so horribly stupid I
-                # can't even begin to think about how much I'd enjoy what
-                # was smoked when this was thought up.
-                #
-                # Here's a hack to get tests to work.
-               # try a quick load and then a caseless scan
-               begin
-                   begin
-                       require "dbd/#{driver_name}"
-                   rescue LoadError 
-                       require "#{DBD::DIR}/#{driver_name}/#{driver_name}"
-                   end
-               rescue LoadError
-                  $LOAD_PATH.each do |dir|
-                     path = "#{dir}/dbd"
-                     if FileTest.directory?(path)
-                         require "#{path}/#{driver_name}"
-                         break
-                     end
+          @@driver_monitor.synchronize do
+              if @@driver_map[driver_name].nil?
 
-                     path = "#{dir}/#{DBD::DIR}"
-                     next unless FileTest.directory?(path)
-                     found = Dir.entries(path).find {|e| e.downcase == dc}
-                     next unless found
+                  dc = driver_name.downcase
 
-                     require "#{path}/#{found}/#{found}"
-                     break
+                  # caseless look for drivers already loaded
+                  found = @@driver_map.keys.find {|key| key.downcase == dc}
+                  return found if found
+
+                  if $SAFE >= 1
+                      # case-sensitive in safe mode
+                      require "#{DBD::DIR}/#{driver_name}/#{driver_name}"
+                  else
+                      # FIXME this whole require scheme is so horribly stupid I
+                      # can't even begin to think about how much I'd enjoy what
+                      # was smoked when this was thought up.
+                      #
+                      # Here's a hack to get tests to work.
+                      # try a quick load and then a caseless scan
+                      begin
+                          begin
+                              require "dbd/#{driver_name}"
+                          rescue LoadError 
+                              require "#{DBD::DIR}/#{driver_name}/#{driver_name}"
+                          end
+                      rescue LoadError
+                          $LOAD_PATH.each do |dir|
+                              path = "#{dir}/dbd"
+                              if FileTest.directory?(path)
+                                  require "#{path}/#{driver_name}"
+                                  break
+                              end
+
+                              path = "#{dir}/#{DBD::DIR}"
+                              next unless FileTest.directory?(path)
+                              found = Dir.entries(path).find {|e| e.downcase == dc}
+                              next unless found
+
+                              require "#{path}/#{found}/#{found}"
+                              break
+                          end
+                      end
                   end
-               end
-            end
-            
-            found ||= driver_name
-            
-            # On a filesystem that is not case-sensitive (e.g., HFS+ on Mac OS X),
-            # the initial require attempt that loads the driver may succeed even
-            # though the lettercase of driver_name doesn't match the actual
-            # filename. If that happens, const_get will fail and it become
-            # necessary to look though the list of constants and look for a
-            # caseless match.  The result of this match provides the constant
-            # with the proper lettercase -- which can be used to generate the
-            # driver handle.
-            
-            dr = nil
-            begin
-               dr = DBI::DBD.const_get(found.intern)
-            rescue NameError
-               # caseless look for constants to find actual constant
-               found = found.downcase
-               found = DBI::DBD.constants.find { |e| e.downcase == found }
-               dr = DBI::DBD.const_get(found.intern) unless found.nil?
-            end
-            
-            # If dr is nil at this point, it means the underlying driver
-            # failed to load.  This usually means it's not installed, but
-            # can fail for other reasons.
-            if dr.nil?
-               err = "Unable to load driver '#{driver_name}'"
-               raise DBI::InterfaceError, err
-            end
-            
-            dbd_dr = dr::Driver.new
-            drh = DBI::DriverHandle.new(dbd_dr)
-            drh.trace(@@trace_mode, @@trace_output)
-            @@driver_map[found] = [drh, dbd_dr]
-            return found
-         else
-            return driver_name
-         end
+
+                  found ||= driver_name
+
+                  # On a filesystem that is not case-sensitive (e.g., HFS+ on Mac OS X),
+                  # the initial require attempt that loads the driver may succeed even
+                  # though the lettercase of driver_name doesn't match the actual
+                  # filename. If that happens, const_get will fail and it become
+                  # necessary to look though the list of constants and look for a
+                  # caseless match.  The result of this match provides the constant
+                  # with the proper lettercase -- which can be used to generate the
+                  # driver handle.
+
+                  dr = nil
+                  begin
+                      dr = DBI::DBD.const_get(found.intern)
+                  rescue NameError
+                      # caseless look for constants to find actual constant
+                      found = found.downcase
+                      found = DBI::DBD.constants.find { |e| e.downcase == found }
+                      dr = DBI::DBD.const_get(found.intern) unless found.nil?
+                  end
+
+                  # If dr is nil at this point, it means the underlying driver
+                  # failed to load.  This usually means it's not installed, but
+                  # can fail for other reasons.
+                  if dr.nil?
+                      err = "Unable to load driver '#{driver_name}'"
+                      raise DBI::InterfaceError, err
+                  end
+
+                  dbd_dr = dr::Driver.new
+                  drh = DBI::DriverHandle.new(dbd_dr)
+                  drh.trace(@@trace_mode, @@trace_output)
+                  @@driver_map[found] = [drh, dbd_dr]
+                  return found
+              else
+                  return driver_name
+              end
+          end
       rescue LoadError, NameError
-         if $SAFE >= 1
-            raise InterfaceError, "Could not load driver (#{$!.message}). Note that in SAFE mode >= 1, driver URLs have to be case sensitive!"
-         else
-            raise InterfaceError, "Could not load driver (#{$!.message})"
-         end
+          if $SAFE >= 1
+              raise InterfaceError, "Could not load driver (#{$!.message}). Note that in SAFE mode >= 1, driver URLs have to be case sensitive!"
+          else
+              raise InterfaceError, "Could not load driver (#{$!.message})"
+          end
       end
       
       # Splits a DBI URL into two components - the database driver name

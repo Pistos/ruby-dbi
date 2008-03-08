@@ -20,6 +20,15 @@
         assert 1, sth.rows
 
         sth.finish
+
+        assert_nothing_raised do
+            sth = @dbh.prepare("select * from names")
+            sth.execute
+        end
+
+        assert 0, sth.rows
+        assert sth.fetchable?
+        sth.finish
     end
 
     def test_execute
