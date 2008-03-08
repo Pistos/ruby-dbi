@@ -130,4 +130,19 @@
 
         sth.finish
     end
+
+    def test_transaction_block
+        @dbh["AutoCommit"] = false
+        # this transaction should not fail because it called return early
+        @dbh.transaction do |dbh|
+            dbh.do('INSERT INTO names (name, age) VALUES (?, ?)', "Cooter", 69)
+            return 42
+        end 
+        sth = @dbh.prepare("select * from names where name = ?")
+        sth.execute("Cooter")
+        row = sth.fetch
+        assert row
+        assert_equal ["Cooter", 69], row
+        sth.finish
+    end
 end
