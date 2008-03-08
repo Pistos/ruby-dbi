@@ -10,3 +10,4 @@ create table blob_test (name varchar(255));
 
 create table boolean_test (num integer, mybool boolean);
 create table time_test (mytime time);
+create table bit_test (mybit bit);

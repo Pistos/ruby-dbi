@@ -3,3 +3,4 @@ drop table names;
 drop table blob_test;
 drop table boolean_test;
 drop table time_test;
+drop table bit_test;
