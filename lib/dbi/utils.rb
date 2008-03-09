@@ -155,7 +155,8 @@ module DBI
          string = sprintf("%04d-%02d-%02d %02d:%02d:%02d",
              @year, @month, @day, @hour, @minute, @second) 
 
-         string += "." + @fraction.to_s.split(".").last if @fraction
+         string += "." + "%06d" % (@fraction * 100000) if @fraction
+
          string
       end
 

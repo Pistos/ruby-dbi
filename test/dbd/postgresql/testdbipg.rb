@@ -150,7 +150,26 @@ class TestDbdPostgres < PGUnitBase
       result['AutoCommit'] = true
       result
   end
-  
+
+  def test_timestamp
+      ts = nil
+
+      assert_nothing_raised do
+          sth = @dbh.prepare("insert into time_test (mytimestamp) values (?)")
+          ts = DBI::Timestamp.new(Time.now)
+          ts.fraction = 1
+          sth.execute(ts)
+          sth.finish
+      end
+
+      assert_nothing_raised do
+          sth = @dbh.prepare("select * from time_test")
+          sth.execute
+          row = sth.fetch
+          sth.finish
+          assert_equal [nil, ts], row
+      end
+  end
 end
 
 # --------------------------------------------------------------------

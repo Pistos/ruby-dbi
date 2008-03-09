@@ -44,7 +44,7 @@ class TC_DBI_Date < Test::Unit::TestCase
 
    def test_to_s
       assert_respond_to(@dbi_ts, :to_s)
-      assert_equal("2006-01-31 10:23:22.45", @dbi_ts.to_s)
+      assert_equal("2006-01-31 10:23:22.4500000", @dbi_ts.to_s)
       assert_equal("0000-00-00 00:00:00", DBI::Timestamp.new.to_s)
    end
 
