@@ -150,6 +150,17 @@ class TC_DBI < Test::Unit::TestCase
    def test_parse_url_expected_errors
       assert_raises(DBI::InterfaceError){ DBI.send(:parse_url, 'dbi') }
       assert_raises(DBI::InterfaceError){ DBI.send(:parse_url, 'dbi::foo') }
+
+      # XXX we're looking for a specific exception message here
+      assert_nothing_raised do
+          begin 
+              DBI.send(:parse_url, 'dbi:blah')
+          rescue DBI::InterfaceError => e
+              assert true
+              assert_kind_of DBI::InterfaceError, e
+              assert_equal "Invalid Data Source Name", e.message
+          end
+      end
    end
 
    def test_available_drivers

@@ -56,6 +56,12 @@ class TestDbdPostgres < PGUnitBase
     ex = assert_raise(DBI::OperationalError) {
       dbd = DBI::DBD::Pg::Database.new('bad_db_name', 'jim', nil, {})
     }
+
+    # this corresponds to the test_parse_url_expected_errors test in tc_dbi.rb
+    assert_nothing_raised do
+        DBI.connect("dbi:Pg").disconnect
+    end
+
   ensure
     dbd.disconnect if dbd
   end
