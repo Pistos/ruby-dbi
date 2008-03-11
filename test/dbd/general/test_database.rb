@@ -23,7 +23,7 @@
     end
 
     def test_tables
-        assert_equal %w(bit_test blob_test boolean_test names time_test view_names), @dbh.tables.sort
+        assert_equal %w(bit_test blob_test boolean_test names time_test timestamp_test view_names), @dbh.tables.sort
     end
 
 

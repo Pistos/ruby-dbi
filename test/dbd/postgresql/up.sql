@@ -19,4 +19,5 @@ create or replace function test_insert (varchar(255), integer)
 create table boolean_test (num integer, mybool boolean);
 
 create table time_test (mytime time);
+create table timestamp_test (mytimestamp timestamp);
 create table bit_test (mybit bit);

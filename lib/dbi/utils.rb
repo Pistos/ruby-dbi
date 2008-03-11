@@ -103,8 +103,8 @@ module DBI
       #
       # Creates and returns a new DBI::Timestamp object.  This is similar to
       # a Time object in the standard library, but it also contains fractional
-      # seconds.  In addition, the constructor accepts either a Date or Time
-      # object.
+      # seconds, expressed in nanoseconds.  In addition, the constructor
+      # accepts either a Date or Time object.
       def initialize(year=0, month=0, day=0, hour=0, min=0, sec=0, fraction=nil)
          case year
             when ::Time
@@ -155,7 +155,11 @@ module DBI
          string = sprintf("%04d-%02d-%02d %02d:%02d:%02d",
              @year, @month, @day, @hour, @minute, @second) 
 
-         string += "." + @fraction.to_s.split(".").last if @fraction
+         if @fraction
+            string += ("%.9f" % (@fraction.to_i / 1e9)).
+                        to_s[1..-1].gsub(/0{1,8}$/, "")
+         end
+
          string
       end
 

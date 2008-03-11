@@ -19,4 +19,5 @@ create view view_names as select * from names;
 create table boolean_test (num integer, mybool boolean) Engine=InnoDB;
 
 create table time_test (mytime time) Engine=InnoDB;
+create table timestamp_test (mytimestamp datetime) Engine=InnoDB;
 create table bit_test (mybit bit) Engine=InnoDB;
