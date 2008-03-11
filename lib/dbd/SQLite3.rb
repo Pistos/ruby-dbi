@@ -75,6 +75,9 @@ module DBI
           @db = ::SQLite3::Database.new(dbname)
 
           @db.type_translation = true
+          @db.translator.add_translator("timestamp") do |type, value|
+              ::Time.parse(value)
+          end
           @db.translator.add_translator(nil) do |type, value|
             # autodetect numbers in typeless columns
             case value
@@ -310,13 +313,27 @@ EOS
         private
 
         def cast_types(ary)
-            moo = ary.collect do |row|
+            tmp = []
+            col_info = column_info
+            ary.each do |row|
+                tmp2 = []
+                tmp.push tmp2
                 if row
-                    row = row.collect { |x| x.kind_of?(::Time) ? DBI::Time.new(x) : x }
+                    row = row.each_with_index do |x, i| 
+                        tmp2.push   case col_info[i]["sql_type"]
+                                    when DBI::SQL_TIMESTAMP
+                                        DBI::Timestamp.new(x)
+                                    when DBI::SQL_TIME
+                                        DBI::Time.new(x)
+                                    when DBI::SQL_DATE
+                                        DBI::Date.new(x)
+                                    else
+                                        x
+                                    end
+                    end
                 end
-                row
             end
-            moo
+            return tmp
         end
       end
     end
