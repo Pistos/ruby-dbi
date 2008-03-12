@@ -295,7 +295,8 @@ class Database < DBI::BaseDatabase
                               coercion_method = :as_date
     when 'TYPE_TIME':         mysql_type_name = 'TIME'
                               coercion_method = :as_time
-    when 'TYPE_DATETIME':     mysql_type_name = 'DATETIME'
+    when 'TYPE_DATETIME', 
+         'TYPE_TIMESTAMP':    mysql_type_name = 'DATETIME'
                               coercion_method = :as_timestamp
     when 'TYPE_CHAR':         mysql_type_name = 'TINYINT'    # questionable?
     when 'TYPE_TINY_BLOB':    mysql_type_name = 'TINYBLOB'   # questionable?
@@ -303,7 +304,6 @@ class Database < DBI::BaseDatabase
     when 'TYPE_LONG_BLOB':    mysql_type_name = 'LONGBLOB'   # questionable?
     when 'TYPE_GEOMETRY':     mysql_type_name = 'BLOB'       # questionable?
     when 'TYPE_YEAR',
-         'TYPE_TIMESTAMP',
          'TYPE_DECIMAL',                                     # questionable?
          'TYPE_BLOB',                                        # questionable?
          'TYPE_ENUM',
