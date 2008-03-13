@@ -33,17 +33,18 @@ module DBDConfig
         # this way we can still manually import the file, but use it with our
         # drivers for client-independent injection.
         File.open(file).read.split(/\n*---\n*/, -1).collect { |x| x.gsub!(/\n/, ''); x.sub(/;\z/, '') }.each do |stmt|
-            tmp = IO.for_fd(2, 'w') 
-            STDERR.reopen("sql.log", 'a')
+            tmp = STDERR.dup
+            STDERR.reopen('sql.log', 'a')
             begin
                 dbh.commit rescue nil
                 dbh["AutoCommit"] = true rescue nil
                 dbh.do(stmt)
-                dbh.commit
+                dbh.commit unless dbtype == 'sqlite3'
             rescue Exception => e
                 tmp.puts "Error injecting '#{stmt}' into for db #{dbtype}"
                 tmp.puts "Error: #{e.message}"
             end
+            STDERR.reopen(tmp)
         end
     end
 
