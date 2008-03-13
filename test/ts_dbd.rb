@@ -41,7 +41,7 @@ module DBDConfig
                 dbh.do(stmt)
                 dbh.commit unless dbtype == 'sqlite3'
             rescue Exception => e
-                tmp.puts "Error injecting '#{stmt}' into for db #{dbtype}"
+                tmp.puts "Error injecting '#{stmt}' for db #{dbtype}"
                 tmp.puts "Error: #{e.message}"
             end
             STDERR.reopen(tmp)
