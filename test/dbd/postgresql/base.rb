@@ -8,19 +8,19 @@ DBDConfig.set_testbase(:postgresql, Class.new(Test::Unit::TestCase) do
         end
 
         def test_base
-            assert true
+            assert true 
         end
 
         def setup
             config = DBDConfig.get_config['postgresql']
-            system "psql #{config['dbname']} < dbd/postgresql/up.sql >>sql.log 2>&1"
             @dbh = DBI.connect("dbi:Pg:#{config['dbname']}", config['username'], config['password'])
+            DBDConfig.inject_sql(@dbh, dbtype, "dbd/postgresql/up.sql")
         end
 
         def teardown
             config = DBDConfig.get_config['postgresql']
+            DBDConfig.inject_sql(@dbh, dbtype, "dbd/postgresql/down.sql")
             @dbh.disconnect
-            system "psql #{config['dbname']}< dbd/postgresql/down.sql >>sql.log 2>&1"
         end
     end
 )

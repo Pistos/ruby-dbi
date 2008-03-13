@@ -1,12 +1,12 @@
 # figure out what tests to run
 require 'yaml'
-require 'test/unit'
+require 'test/unit/testsuite'
+require 'test/unit/ui/console/testrunner'
 
 module Test::Unit::Assertions
     def build_message(head, template=nil, *arguments)
         template += "\n" + "DATABASE: " + dbtype
         template &&= template.chomp
-        #head = DBDConfig.current_dbtype.to_s + "\n" + (head || "")
         return AssertionMessage.new(head, template, arguments)
     end
 end
@@ -21,9 +21,30 @@ module DBDConfig
         begin
             config = YAML.load_file(File.join(ENV["HOME"], ".ruby-dbi.test-config.yaml"))
         rescue Exception => e
+            config = { }
+            config["dbtypes"] = [ ]
         end
 
         return config
+    end
+
+    def self.inject_sql(dbh, dbtype, file)
+        # splits by --- in the file, strips newlines and the semicolons.
+        # this way we can still manually import the file, but use it with our
+        # drivers for client-independent injection.
+        File.open(file).read.split(/\n*---\n*/, -1).collect { |x| x.gsub!(/\n/, ''); x.sub(/;\z/, '') }.each do |stmt|
+            tmp = IO.for_fd(2, 'w') 
+            STDERR.reopen("sql.log", 'a')
+            begin
+                dbh.commit rescue nil
+                dbh["AutoCommit"] = true rescue nil
+                dbh.do(stmt)
+                dbh.commit
+            rescue Exception => e
+                tmp.puts "Error injecting '#{stmt}' into for db #{dbtype}"
+                tmp.puts "Error: #{e.message}"
+            end
+        end
     end
 
     def self.current_dbtype
