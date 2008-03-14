@@ -815,7 +815,8 @@ module DBI
         def as_timestamp(str)
           return super unless m = /\.\d+(?=(?:[-+]\d+)?$)/.match(str)
           # ".12345" => 123456000 nanoseconds
-          (t = super $` + $').fraction = m.to_s[1..9].ljust(9, "0").to_i
+          num = m.to_s[1..9].ljust(9, "0")
+          (t = super $` + $').fraction = num.to_i
           t
         end
       end

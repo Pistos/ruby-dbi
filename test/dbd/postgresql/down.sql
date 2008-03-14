@@ -13,3 +13,7 @@ drop table timestamp_test;
 drop table bit_test;
 ---
 drop table field_types_test;
+---
+drop schema schema1 cascade;
+---
+drop schema schema2 cascade;

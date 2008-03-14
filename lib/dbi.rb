@@ -377,7 +377,7 @@ module DBI
       # the proper format for the URL.  If it isn't correct, an Interface
       # error is raised.
       def parse_url(driver_url)
-         if driver_url =~ /^(DBI|dbi):([^:]+)(:(.*))?$/ 
+         if driver_url =~ /^(DBI|dbi):([^:]+)(:(.*))$/ 
             [$2, $4]
          else
             raise InterfaceError, "Invalid Data Source Name"

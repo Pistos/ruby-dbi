@@ -3,6 +3,26 @@ class TestPostgresTimestamp < DBDConfig.testbase(:postgresql)
         DBI::Timestamp.new(2008, 3, 8, 10, 39, 1, 12300000)
     end
 
+    def test_timestamp_altered_fraction
+        ts = nil
+
+        assert_nothing_raised do
+            sth = @dbh.prepare("insert into timestamp_test (mytimestamp) values (?)")
+            ts = DBI::Timestamp.new(Time.now)
+            ts.fraction = 22200000
+            sth.execute(ts)
+            sth.finish
+        end
+
+        assert_nothing_raised do
+            sth = @dbh.prepare("select * from timestamp_test")
+            sth.execute
+            row = sth.fetch
+            sth.finish
+            assert_equal ts.fraction, row[0].fraction
+        end
+    end
+
     def test_current_timestamp
         assert @dbh
          # syntax db-specific (e.g., "from dual", "...timestamp()", etc.)

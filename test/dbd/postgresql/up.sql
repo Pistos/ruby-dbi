@@ -27,3 +27,11 @@ create table timestamp_test (mytimestamp timestamp);
 create table bit_test (mybit bit);
 ---
 create table field_types_test (foo integer not null primary key default 1);
+---
+create schema schema1;
+---
+create schema schema2;
+---
+create table schema1.tbl (foo integer);
+---
+create table schema2.tbl (bar integer);

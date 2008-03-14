@@ -156,8 +156,9 @@ module DBI
              @year, @month, @day, @hour, @minute, @second) 
 
          if @fraction
-            string += ("%.9f" % (@fraction.to_i / 1e9)).
+            fraction = ("%.9f" % (@fraction.to_i / 1e9)).
                         to_s[1..-1].gsub(/0{1,8}$/, "")
+            string += fraction
          end
 
          string

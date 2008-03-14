@@ -1,11 +1,10 @@
-require File.join(File.dirname(__FILE__), 'base')
 require 'dbd/Pg'
 
 ######################################################################
 # Test the PostgreSql DBD driver.  This test exercises options
 # difficult to test through the standard DBI interface.
 #
-class TestDbdPostgres < PGUnitBase
+class TestDbdPostgres < DBDConfig.testbase(:postgresql)
 
     # FIXME this is a feature that should be there, but currently isn't.
 #   def test_connect
@@ -20,32 +19,39 @@ class TestDbdPostgres < PGUnitBase
 #   end
 
     def test_columns
-        [
-            {
-                    "name"=>"name",
-                    "default"=>nil,
-                    "primary"=>nil,
-                    "scale"=>nil,
-                    "sql_type"=>12,
-                    "nullable"=>false,
-                    "indexed"=>false,
-                    "precision"=>255,
-                    "type_name"=>"character varying",
-                    "unique"=>nil
-            },
-            {
-                    "name"=>"age",
-                    "default"=>nil,
-                    "primary"=>nil,
-                    "scale"=>nil,
-                    "sql_type"=>4,
-                    "nullable"=>false,
-                    "indexed"=>false,
-                    "precision"=>4,
-                    "type_name"=>"integer",
-                    "unique"=>nil
-            }
-        ], @dbh.columns("names")
+        assert_equal(
+            [
+                {
+                        "name"=>"age",
+                        "default"=>nil,
+                        "primary"=>nil,
+                        "scale"=>nil,
+                        "sql_type"=>4,
+                        "nullable"=>false,
+                        "indexed"=>false,
+                        "precision"=>4,
+                        "type_name"=>"integer",
+                        "unique"=>nil
+                },
+                {
+                        "name"=>"name",
+                        "default"=>nil,
+                        "primary"=>nil,
+                        "scale"=>nil,
+                        "sql_type"=>12,
+                        "nullable"=>false,
+                        "indexed"=>false,
+                        "precision"=>255,
+                        "type_name"=>"character varying",
+                        "unique"=>nil
+                }
+        ], @dbh.columns("names").sort_by { |x| x["name"] })
+
+        assert_equal(1, @dbh.columns('tbl').size);
+        assert_equal(
+            [
+                { }
+        ], @dbh.columns('tbl'))
     end
 
   def test_connect_errors
@@ -58,7 +64,7 @@ class TestDbdPostgres < PGUnitBase
     }
 
     # this corresponds to the test_parse_url_expected_errors test in tc_dbi.rb
-    assert_nothing_raised do
+    assert_raise(DBI::InterfaceError) do
         DBI.connect("dbi:Pg").disconnect
     end
 
@@ -128,7 +134,7 @@ class TestDbdPostgres < PGUnitBase
     dbd = get_dbd
     res = dbd.prepare("SELECT name, age FROM names WHERE age > 20;")
 
-    expected_list = ['Bob', 'Charlie']
+    expected_list = ['Jim', 'Bob', 'Charlie']
     res.execute
     while row=res.fetch
       expected = expected_list.shift
@@ -155,26 +161,6 @@ class TestDbdPostgres < PGUnitBase
       result = DBI::DBD::Pg::Database.new(config['dbname'], config['username'], config['password'], {})
       result['AutoCommit'] = true
       result
-  end
-
-  def test_timestamp
-      ts = nil
-
-      assert_nothing_raised do
-          sth = @dbh.prepare("insert into time_test (mytimestamp) values (?)")
-          ts = DBI::Timestamp.new(Time.now)
-          ts.fraction = 1
-          sth.execute(ts)
-          sth.finish
-      end
-
-      assert_nothing_raised do
-          sth = @dbh.prepare("select * from time_test")
-          sth.execute
-          row = sth.fetch
-          sth.finish
-          assert_equal [nil, ts], row
-      end
   end
 end
 
