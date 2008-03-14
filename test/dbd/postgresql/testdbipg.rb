@@ -18,6 +18,81 @@ class TestDbdPostgres < DBDConfig.testbase(:postgresql)
 #      dbd.disconnect if dbd
 #   end
 
+    def test_tables
+        assert_equal(
+        [
+            "bit_test",
+            "blob_test",
+            "boolean_test",
+            "field_types_test",
+            "names",
+            "pg_aggregate",
+            "pg_am",
+            "pg_amop",
+            "pg_amproc",
+            "pg_attrdef",
+            "pg_attribute",
+            "pg_auth_members",
+            "pg_authid",
+            "pg_autovacuum",
+            "pg_cast",
+            "pg_class",
+            "pg_constraint",
+            "pg_conversion",
+            "pg_database",
+            "pg_depend",
+            "pg_description",
+            "pg_group",
+            "pg_index",
+            "pg_indexes",
+            "pg_inherits",
+            "pg_language",
+            "pg_largeobject",
+            "pg_listener",
+            "pg_locks",
+            "pg_namespace",
+            "pg_opclass",
+            "pg_operator",
+            "pg_pltemplate",
+            "pg_prepared_xacts",
+            "pg_proc",
+            "pg_rewrite",
+            "pg_roles",
+            "pg_rules",
+            "pg_settings",
+            "pg_shadow",
+            "pg_shdepend",
+            "pg_stat_activity",
+            "pg_stat_all_indexes",
+            "pg_stat_all_tables",
+            "pg_stat_database",
+            "pg_stat_sys_indexes",
+            "pg_stat_sys_tables",
+            "pg_stat_user_indexes",
+            "pg_stat_user_tables",
+            "pg_statio_all_indexes",
+            "pg_statio_all_sequences",
+            "pg_statio_all_tables",
+            "pg_statio_sys_indexes",
+            "pg_statio_sys_sequences",
+            "pg_statio_sys_tables",
+            "pg_statio_user_indexes",
+            "pg_statio_user_sequences",
+            "pg_statio_user_tables",
+            "pg_statistic",
+            "pg_stats",
+            "pg_tables",
+            "pg_tablespace",
+            "pg_trigger",
+            "pg_type",
+            "pg_user",
+            "pg_views",
+            "time_test",
+            "timestamp_test",
+            "view_names"
+        ], @dbh.tables.sort)
+    end
+
     def test_columns
         assert_equal(
             [
@@ -47,11 +122,32 @@ class TestDbdPostgres < DBDConfig.testbase(:postgresql)
                 }
         ], @dbh.columns("names").sort_by { |x| x["name"] })
 
+        assert_equal(2, @dbh.columns("names").size) # make sure this works before the search path change
+
+        assert_equal(0, @dbh.columns("tbl").size) # tbl doesn't exist in public
+
+        @dbh.do('SET search_path TO schema1,schema2,"$user",public')
+
         assert_equal(1, @dbh.columns('tbl').size);
         assert_equal(
             [
-                { }
-        ], @dbh.columns('tbl'))
+                {
+                    "name"=>"foo",
+                    "default"=>nil,
+                    "primary"=>nil,
+                    "scale"=>nil,
+                    "sql_type"=>4,
+                    "nullable"=>true,
+                    "indexed"=>false,
+                    "precision"=>4,
+                    "type_name"=>"integer",
+                    "unique"=>nil
+        
+                }
+            ], 
+            @dbh.columns('tbl')
+        )
+                                
     end
 
   def test_connect_errors

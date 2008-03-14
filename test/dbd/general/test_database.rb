@@ -23,7 +23,15 @@
     end
 
     def test_tables
-        assert_equal %w(bit_test blob_test boolean_test field_types_test names time_test timestamp_test view_names), @dbh.tables.sort
+        tables = @dbh.tables.sort
+
+        # since this is a general test, let's prune the system tables
+        case dbtype 
+        when "postgresql"
+            tables.reject! { |x| x =~ /^pg_/ }
+        end
+
+        assert_equal %w(bit_test blob_test boolean_test field_types_test names time_test timestamp_test view_names), tables
     end
 
     def test_attrs

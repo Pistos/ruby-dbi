@@ -141,7 +141,7 @@ module DBI
         end
 
         def tables
-          stmt = execute("SELECT c.relname FROM pg_catalog.pg_class c LEFT JOIN pg_catalog.pg_namespace n ON n.oid = c.relnamespace WHERE c.relkind IN ('r','v') AND n.nspname NOT IN ('pg_catalog', 'pg_toast') AND pg_catalog.pg_table_is_visible(c.oid)")
+          stmt = execute("SELECT c.relname FROM pg_catalog.pg_class c WHERE c.relkind IN ('r','v') and pg_catalog.pg_table_is_visible(c.oid)")
           res = stmt.fetch_all.collect {|row| row[0]} 
           stmt.finish
           res
@@ -153,26 +153,32 @@ module DBI
         def columns(table)
           sql1 = %[
             SELECT a.attname, i.indisprimary, i.indisunique 
-                   FROM pg_class bc, pg_class ic, pg_index i, pg_attribute a 
-            WHERE bc.relkind = 'r' AND bc.relname = ? AND i.indrelid = bc.oid AND 
-                  i.indexrelid = ic.oid AND ic.oid = a.attrelid
+                   FROM pg_catalog.pg_class bc, pg_index i, pg_attribute a 
+            WHERE bc.relkind in ('r', 'v') AND bc.relname = ? AND i.indrelid = bc.oid AND 
+                  i.indexrelid = bc.oid AND bc.oid = a.attrelid
+            AND bc.relkind IN ('r','v')
+            AND pg_catalog.pg_table_is_visible(bc.oid)
           ]
 
           sql2 = %[
             SELECT a.attname, a.atttypid, a.attnotnull, a.attlen, format_type(a.atttypid, a.atttypmod) 
-                   FROM pg_class c, pg_attribute a, pg_type t 
+                   FROM pg_catalog.pg_class c, pg_attribute a, pg_type t 
             WHERE a.attnum > 0 AND a.attrelid = c.oid AND a.atttypid = t.oid AND c.relname = ?
+            AND c.relkind IN ('r','v')
+            AND pg_catalog.pg_table_is_visible(c.oid)
           ]
 
           # by Michael Neumann (get default value)
           # corrected by Joseph McDonald
           sql3 = %[
             SELECT pg_attrdef.adsrc, pg_attribute.attname 
-                   FROM pg_attribute, pg_attrdef, pg_class
-            WHERE pg_class.relname = ? AND 
-                  pg_attribute.attrelid = pg_class.oid AND
-                  pg_attrdef.adrelid = pg_class.oid AND
+                   FROM pg_attribute, pg_attrdef, pg_catalog.pg_class
+            WHERE pg_catalog.pg_class.relname = ? AND 
+                  pg_attribute.attrelid = pg_catalog.pg_class.oid AND
+                  pg_attrdef.adrelid = pg_catalog.pg_class.oid AND
                   pg_attrdef.adnum = pg_attribute.attnum
+                  AND pg_catalog.pg_class.relkind IN ('r','v')
+                  AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid)
           ]
 
           dbh = DBI::DatabaseHandle.new(self)
