@@ -1,3 +1,114 @@
+== 0.2.0
+
+=== Summary
+
+ * SQLite (2.x) driver rewritten in ruby
+ * SQLite (3.x) driver provided by Jun Mukai
+ * Migrated DBD::Pg to 'pg' low-level library
+ * bytea and LOB support for DBD::Pg
+ * New DBD Test suite
+ * Tons of bug fixes
+
+commit 7bc29dd74badd75daa99b4c1f2c97e93dbc6a405
+Author: Erik Hollensbe <erik@hollensbe.org>
+Date:   Fri Mar 14 11:13:48 2008 -0700
+
+     * Fixed two bugs in the Pg driver (thanks again Mike Pomraning):
+      * A tables bug where the system tables were not being sent back.
+      * A columns bug where the columns were not properly selected when the schema search path was altered.
+
+commit eaf228bdf1c992cd8c523872057e5d2e1901eb6d
+Author: Erik Hollensbe <erikh@speyside.(none)>
+Date:   Wed Mar 12 15:35:08 2008 -0700
+
+     * Fix for timestamp type handling under mysql
+
+commit ce4c59e0a60f0dc4bbd66cc84c1b2a50df17c6ca
+Author: Erik Hollensbe <erik@hollensbe.org>
+Date:   Tue Mar 11 10:58:18 2008 -0700
+
+     * Some fixes for timestamp handling for SQLite3
+
+commit beb4c5b31b355180761df024c6933e1b67a2f59c
+Author: Erik Hollensbe <erik@hollensbe.org>
+Date:   Tue Mar 11 09:09:37 2008 -0700
+
+     * Patch provided by Mike Pomraning that gets timestamps in a sane fashion!
+
+commit a6d70ffb23bb0493cd73ebe38dd413a9d86173bd
+Author: Erik Hollensbe <erikh@speyside.(none)>
+Date:   Sat Mar 8 19:05:58 2008 -0800
+
+     * Fixed a DBI::Timestamp#to_s error
+
+commit 48690de14c144ac030b12a2a627db611a0ca257c
+Author: Erik Hollensbe <erikh@speyside.(none)>
+Date:   Sat Mar 8 01:19:42 2008 -0800
+
+     * Fix for #3916 - sth.any? and sth.rows.zero? not consistent across DBDs
+
+commit 55f118d3e54dc546b133083271d80caccf00ab53
+Author: Erik Hollensbe <erikh@speyside.(none)>
+Date:   Sat Mar 8 00:34:51 2008 -0800
+
+     * Peter Schiller's thread-safety patch
+     * Some more tests surrounding the row count and fetchable?
+
+commit b496e0d981891fad6291dc49161963a15f05472a
+Author: Erik Hollensbe <erikh@speyside.(none)>
+Date:   Thu Mar 6 22:55:07 2008 -0800
+
+     * Plenty of DBI::Time fixes (based on a patch from #7710 and tests that were written as generals)
+
+commit 679bde33924ee368322f7ece4509822e07e68955
+Author: Erik Hollensbe <erikh@speyside.(none)>
+Date:   Thu Mar 6 21:42:00 2008 -0800
+
+     * #6965 Fix and test (not ideal, but it does work)
+
+commit 3819bd468b941465abaffd6b7adc5afa1ddd0406
+Author: Erik Hollensbe <erikh@speyside.(none)>
+Date:   Thu Mar 6 21:11:06 2008 -0800
+
+     * #4727 integrated
+
+commit 32c0e5e6fea308cd52891bf6dac589ad84b29ba4
+Author: Erik Hollensbe <erikh@speyside.(none)>
+Date:   Thu Mar 6 20:57:00 2008 -0800
+
+     * Applied patch from ticket #7711
+
+commit 34286112df17fbdb7588f45b176a42fb3a77aaae
+Author: Erik Hollensbe <erikh@speyside.(none)>
+Date:   Sun Feb 24 12:56:35 2008 -0800
+
+     * Fixed bug #10466
+
+commit 1f19663fd9b31b0f2f0a111f227220d5ee8cbe1d
+Author: Erik Hollensbe <erikh@speyside.(none)>
+Date:   Sun Feb 24 12:09:44 2008 -0800
+
+     * Fixed #1082
+
+commit f3e6e077e4073c892d8449ec6e1912ffe9f76f95
+Author: Erik Hollensbe <erikh@speyside.(none)>
+Date:   Sun Feb 24 12:02:23 2008 -0800
+
+     * ByteA fixes!
+
+commit 8668eb0c1561b49b144f4a56c3edc2bce90bc2a0
+Author: Erik Hollensbe <erikh@speyside.(none)>
+Date:   Sun Feb 24 00:29:00 2008 -0800
+
+     * Fixed most of the LOB support (yay!)
+
+commit 32ac057631b16429051c90fa9aab3ed1bb560e32
+Author: Erik Hollensbe <erikh@speyside.(none)>
+Date:   Sat Feb 23 23:35:19 2008 -0800
+
+     * Initial porting attempt from ruby-postgres to ruby-pg
+     * Test fixes and additions
+
 == 0.1.2 - 02-Sep-2006
 
 === General
