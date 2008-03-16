@@ -73,6 +73,7 @@ Rake::PackageTask.new(spec.name, spec.version) do |p|
     p.package_files.include("./lib/**/*")
     p.package_files.include("./ext/**/*")
     p.package_files.include("./test/**/*")
+    p.package_files.exclude("./test/sql.log")
     p.package_files.include("./README")
     p.package_files.include("./LICENSE")
     p.package_files.include("./ChangeLog")
