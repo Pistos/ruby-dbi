@@ -49,7 +49,7 @@ spec = Gem::Specification.new do |gem|
     gem.description = 'A vendor independent interface for accessing databases'
     gem.test_file   = 'test/ts_dbi.rb'
     gem.has_rdoc    = true
-    gem.extensions  += [ 'ext/dbd_sqlite/extconf.rb', 'ext/dbd_sybase/extconf.rb' ]
+    gem.extensions  += [ 'ext/dbd_sybase/extconf.rb' ]
     gem.files       = Dir['examples/**/*'] + Dir['ext/**/*'] + Dir['lib/**/*'] + Dir['test/*'] + Dir['README'] + Dir['LICENSE'] + Dir['ChangeLog']
     gem.extra_rdoc_files = ['./README']
     gem.required_ruby_version = '>= 1.8.0'
