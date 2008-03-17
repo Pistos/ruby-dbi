@@ -12,6 +12,29 @@ DBD_PACKAGES = {
     'mysql'    => ['Mysql', 'MySQL DBD for Ruby/DBI'],
 }
 
+DEFAULT_TASKS = [:clobber_package, :package, :gem]
+
+#
+# some inlines
+#
+
+# creates a number of tasks like dbi:task_name, dbd_mysql:task_name, so on.
+# Builds these out into an array that can be used as a prereq for other tasks.
+def map_task(task_name)
+    namespaces = (['dbi'] + DBD_PACKAGES.keys.collect { |x| dbd_namespace(x) }).flatten
+    namespaces.collect { |x| [x, task_name].join(":") }
+end
+
+# builds a dbd namespace from the DBD_PACKAGES hash
+def dbd_namespace(shortname)
+    "dbd-" + shortname.to_s
+end
+
+def gem_files(code_files)
+    (code_files + DOC_FILES).collect { |x| Dir[x] }.reject { |x| EXCLUSIONS.include? x }.flatten
+end
+
+
 #
 # basic tasks
 #
@@ -21,8 +44,8 @@ task :distclean => [:clobber_package, :clobber_rdoc]
 task :clean     => [:distclean]
 task :default   => [:test, :dist]
 
-task :package         => (['dbi'] + DBD_PACKAGES.keys.collect { |x| 'dbd_' + x }).flatten.collect { |x| [x + ":gem", x + ":package"] }.flatten
-task :clobber_package => (['dbi'] + DBD_PACKAGES.keys.collect { |x| 'dbd_' + x }).flatten.collect { |x| x + ":clobber_package" }.flatten
+task :package         => (map_task("package") + map_task("gem"))
+task :clobber_package => map_task("clobber_package")
 
 #
 # Documentation
@@ -59,7 +82,6 @@ EXCLUSIONS = %w(test/sql.log)
 #
 
 gem = Gem::Specification.new 
-gem.version     = DBI::VERSION
 gem.authors     = ['Erik Hollensbe', 'Christopher Maujean']
 gem.email       = 'ruby-dbi-users@rubyforge.org'
 gem.homepage    = 'http://www.rubyforge.org/projects/ruby-dbi'
@@ -69,15 +91,16 @@ gem.extra_rdoc_files = DOC_FILES
 gem.required_ruby_version = '>= 1.8.0'
 gem.rubyforge_project = 'ruby-dbi'
 
-task :dbi => [:clobber_package, :package, :gem].collect { |x| "dbi:#{x.to_s}" }
+task :dbi => DEFAULT_TASKS.collect { |x| "dbi:#{x.to_s}" }
 
 namespace :dbi do
     code_files = %w(examples/**/* bin/**/* Rakefile lib/dbi.rb lib/dbi/* test/ts_dbi.rb test/dbi/*)
 
     spec = gem.dup
     spec.name        = 'dbi'
+    spec.version     = DBI::VERSION
     spec.test_file   = 'test/ts_dbi.rb'
-    spec.files       = (code_files + DOC_FILES).collect { |x| Dir[x] }.reject { |x| EXCLUSIONS.include? x }.flatten
+    spec.files       = gem_files(code_files)
     spec.summary     = 'A vendor independent interface for accessing databases, similar to Perl\'s DBI'
     spec.description = 'A vendor independent interface for accessing databases, similar to Perl\'s DBI'
 
@@ -99,13 +122,14 @@ namespace :dbi do
 end
 
 DBD_PACKAGES.each_key do |dbd|
+    my_namespace = dbd_namespace(dbd)
 
-    my_namespace = 'dbd-' + dbd
-
-    task my_namespace => [:clobber_package, :package, :gem].collect { |x| "#{my_namespace}:#{x.to_s}" }
+    task my_namespace => DEFAULT_TASKS.collect { |x| "#{my_namespace}:#{x.to_s}" }
     namespace my_namespace do
 
-        task :default => [:clobber_package, :package, :gem]
+        require "dbd/#{DBD_PACKAGES[dbd][0]}"
+
+        task :default => DEFAULT_TASKS
 
         code_files = [
             "test/dbd/general/**", 
@@ -116,8 +140,9 @@ DBD_PACKAGES.each_key do |dbd|
 
         spec = gem.dup
         spec.name        = my_namespace
+        spec.version     = DBI::DBD.const_get(DBD_PACKAGES[dbd][0]).const_get("VERSION")
         spec.test_file   = 'test/ts_dbd.rb'
-        spec.files       = (code_files + DOC_FILES).collect { |x| Dir[x] }.reject { |x| EXCLUSIONS.include? x }.flatten
+        spec.files       = gem_files(code_files) 
         spec.summary     = DBD_PACKAGES[dbd][1] 
         spec.description = DBD_PACKAGES[dbd][1]
 
