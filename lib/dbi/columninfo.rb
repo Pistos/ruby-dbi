@@ -9,10 +9,17 @@ class ColumnInfo < Hash
    def initialize(hash=nil)
       self.update(hash) if hash
    end
+    
+    def self_value( key )
+      v = self[ key.to_sym ]
+      if v.nil?
+        self[ key.to_s ]
+      end
+    end
    
    # Returns the column's name.
    def name
-      self['name']
+      self[ :name ] || self['name']
    end
    
    # Sets the column's name.
@@ -45,7 +52,7 @@ class ColumnInfo < Hash
    # SQL_TINYINT       = -6
    #
    def sql_type
-      self['sql_type']
+      self[ :sql_type ] || self['sql_type']
    end
    
    # Sets the integer representation for the column's type.
@@ -55,7 +62,7 @@ class ColumnInfo < Hash
    
    # A string representation of the column's type, e.g. 'date'.
    def type_name
-      self['type_name']
+      self[ :type_name ] || self['type_name']
    end
    
    # Sets the representation for the column's type.
@@ -65,7 +72,7 @@ class ColumnInfo < Hash
    
    # Returns the precision, i.e. number of bytes or digits.
    def precision
-      self['precision']
+      self[ :precision ] || self['precision']
    end
    
    # Sets the precision, i.e. number of bytes or digits.
@@ -75,7 +82,7 @@ class ColumnInfo < Hash
    
    # Returns the number of digits from right.
    def scale
-      self['scale']
+      self[ :scale ] || self['scale']
    end
    
    # Sets the number of digits from right.
@@ -84,18 +91,18 @@ class ColumnInfo < Hash
    end
    
    # Returns the default value for the column, or nil if not set.
-   def default
-      self['default']
+   def default_value( arg = nil )
+      self_value 'default_value'
    end
    
    # Sets the default value for the column.
-   def default=(val)
-      self['default'] = val
+   def default_value=(val)
+      self['default_value'] = val
    end
    
    # Returns whether or not the column is may contain a NULL.
    def nullable
-      self['nullable']
+      self_value 'nullable'
    end
    
    # Sets whether or not the column may contain a NULL.
@@ -105,7 +112,7 @@ class ColumnInfo < Hash
    
    # Returns whether or not the column is indexed.
    def indexed
-      self['indexed']
+      self_value 'indexed'
    end
    
    # Sets whether or not the column is indexed.
@@ -115,7 +122,7 @@ class ColumnInfo < Hash
    
    # Returns whether or not the column is a primary key.
    def primary
-      self['primary']
+      self_value 'primary'
    end
    
    # Sets whether or not the column is a primary key.
@@ -125,7 +132,7 @@ class ColumnInfo < Hash
    
    # Returns whether or not data in the column must be unique.
    def unique
-      self['unique']
+      self_value 'unique'
    end
    
    # Sets whether or not data in the column must be unique.
@@ -136,6 +143,7 @@ class ColumnInfo < Hash
    # Aliases
    alias nullable? nullable
    alias is_nullable? nullable
+   alias can_be_null? nullable
 
    alias indexed? indexed
    alias is_indexed? indexed
