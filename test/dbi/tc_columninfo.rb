@@ -20,13 +20,13 @@ class TC_DBI_ColumnInfo < Test::Unit::TestCase
          "type_name" => "test_type_name",
          "precision" => 2,
          "scale"     => 2,
-         "default"   => 100.00,
+         "default_value"   => 100.00,
          "nullable"  => false,
          "indexed"   => true,
          "primary"   => true,
          "unique"    => false
       )
-      @keys = %w/name sql_type type_name precision scale default nullable
+      @keys = %w/name sql_type type_name precision scale default_value nullable
          indexed primary unique
       /
    end
@@ -92,14 +92,14 @@ class TC_DBI_ColumnInfo < Test::Unit::TestCase
       assert_equal(2, @colinfo.scale)
    end
 
-   def test_default_basic
-      assert_respond_to(@colinfo, :default)
-      assert_respond_to(@colinfo, :default=)
+   def test_default_value_basic
+      assert_respond_to(@colinfo, :default_value)
+      assert_respond_to(@colinfo, :default_value=)
    end
 
-   def test_default
-      assert_equal(100.00, @colinfo["default"])
-      assert_equal(100.00, @colinfo.default)
+   def test_default_value
+      assert_equal(100.00, @colinfo[ 'default_value' ])
+      assert_equal(100.00, @colinfo.default_value)
    end
 
    def test_nullable_basic
