@@ -61,7 +61,6 @@ class TestPostgresByteA < DBDConfig.testbase(:postgresql)
 
             assert_equal str, decoded
         end
-
     end
 
     def generate_random_string

@@ -5,6 +5,7 @@ DBDConfig.set_testbase(:mysql, Class.new(Test::Unit::TestCase) do
 
         def test_base
             assert_equal(@dbh.driver_name, "Mysql")
+            assert_kind_of(DBI::DBD::Mysql::Database, @dbh.instance_variable_get(:@handle))
         end
 
         def setup

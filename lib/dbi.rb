@@ -501,6 +501,7 @@ module DBI
            raise InterfaceError, "Database connection was already closed!" if @handle.nil?
            sth = StatementHandle.new(@handle.prepare(stmt), false)
            sth.trace(@trace_mode, @trace_output)
+           sth.dbh = self
 
            if block_given?
                begin
@@ -517,6 +518,7 @@ module DBI
            raise InterfaceError, "Database connection was already closed!" if @handle.nil?
            sth = StatementHandle.new(@handle.execute(stmt, *conv_param(*bindvars)), true, false)
            sth.trace(@trace_mode, @trace_output)
+           sth.dbh = self
 
            if block_given?
                begin
@@ -617,6 +619,8 @@ module DBI
 
        include Enumerable
        include DBI::Utils::ConvParam
+
+       attr_accessor :dbh
 
        def initialize(handle, fetchable=false, prepared=true)
            super(handle)
