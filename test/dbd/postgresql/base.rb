@@ -8,7 +8,7 @@ DBDConfig.set_testbase(:postgresql, Class.new(Test::Unit::TestCase) do
         end
 
         def test_base
-            assert true 
+            assert_equal(@dbh.driver_name, "Pg")
         end
 
         def setup

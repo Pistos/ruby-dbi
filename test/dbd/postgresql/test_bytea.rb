@@ -73,10 +73,4 @@ class TestPostgresByteA < DBDConfig.testbase(:postgresql)
 
         return str
     end
-
-    def setup
-    end
-
-    def teardown
-    end
 end

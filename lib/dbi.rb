@@ -354,6 +354,7 @@ module DBI
 
                   dbd_dr = dr::Driver.new
                   drh = DBI::DriverHandle.new(dbd_dr)
+                  drh.driver_name = driver_name
                   drh.trace(@@trace_mode, @@trace_output)
                   @@driver_map[found] = [drh, dbd_dr]
                   return found
@@ -429,615 +430,618 @@ module DBI
    end
    
    class DriverHandle < Handle
-      
-      def connect(db_args, user, auth, params)
-         
-         user = @handle.default_user[0] if user.nil?
-         auth = @handle.default_user[1] if auth.nil?
-         
-         # TODO: what if only one of them is nil?
-         #if user.nil? and auth.nil? then
-         #  user, auth = @handle.default_user
-         #end
-         
-         params ||= {}
-         new_params = @handle.default_attributes
-         params.each {|k,v| new_params[k] = v} 
-         
-         
-         db = @handle.connect(db_args, user, auth, new_params)
-         dbh = DatabaseHandle.new(db)
-         dbh.trace(@trace_mode, @trace_output)
-         
-         if block_given?
-            begin
-               yield dbh
-            ensure  
-               dbh.disconnect if dbh.connected?
-            end  
-         else
-            return dbh
-         end
-      end
-      
-      def data_sources
-         @handle.data_sources
-      end
-      
-      def disconnect_all
-         @handle.disconnect_all
-      end
+
+       attr_writer :driver_name
+
+       def connect(db_args, user, auth, params)
+
+           user = @handle.default_user[0] if user.nil?
+           auth = @handle.default_user[1] if auth.nil?
+
+           # TODO: what if only one of them is nil?
+           #if user.nil? and auth.nil? then
+           #  user, auth = @handle.default_user
+           #end
+
+           params ||= {}
+           new_params = @handle.default_attributes
+           params.each {|k,v| new_params[k] = v} 
+
+
+           db = @handle.connect(db_args, user, auth, new_params)
+           dbh = DatabaseHandle.new(db)
+           dbh.trace(@trace_mode, @trace_output)
+           dbh.driver_name = @driver_name
+
+           if block_given?
+               begin
+                   yield dbh
+               ensure  
+                   dbh.disconnect if dbh.connected?
+               end  
+           else
+               return dbh
+           end
+       end
+
+       def data_sources
+           @handle.data_sources
+       end
+
+       def disconnect_all
+           @handle.disconnect_all
+       end
    end
-   
+
    class DatabaseHandle < Handle
-      
-      include DBI::Utils::ConvParam
-      
-      def connected?
-         not @handle.nil?
-      end
-      
-      def disconnect
-         raise InterfaceError, "Database connection was already closed!" if @handle.nil?
-         @handle.disconnect
-         @handle = nil
-      end
-      
-      def prepare(stmt)
-         raise InterfaceError, "Database connection was already closed!" if @handle.nil?
-         sth = StatementHandle.new(@handle.prepare(stmt), false)
-         sth.trace(@trace_mode, @trace_output)
-         
-         if block_given?
-            begin
-               yield sth
-            ensure
-               sth.finish unless sth.finished?
-            end
-         else
-            return sth
-         end 
-      end
-      
-      def execute(stmt, *bindvars)
-         raise InterfaceError, "Database connection was already closed!" if @handle.nil?
-         sth = StatementHandle.new(@handle.execute(stmt, *conv_param(*bindvars)), true, false)
-         sth.trace(@trace_mode, @trace_output)
-         
-         if block_given?
-            begin
-               yield sth
-            ensure
-               sth.finish unless sth.finished?
-            end
-         else
-            return sth
-         end 
-      end
-      
-      def do(stmt, *bindvars)
-            raise InterfaceError, "Database connection was already closed!" if @handle.nil?
-            @handle.do(stmt, *conv_param(*bindvars))
-         end
-         
-         def select_one(stmt, *bindvars)
-            raise InterfaceError, "Database connection was already closed!" if @handle.nil?
-            row = nil
-            execute(stmt, *bindvars) do |sth|
-               row = sth.fetch 
-            end
-            row
-         end
-         
-         def select_all(stmt, *bindvars, &p)
-            raise InterfaceError, "Database connection was already closed!" if @handle.nil?
-            rows = nil
-            execute(stmt, *bindvars) do |sth|
-               if block_given?
-                  sth.each(&p)
-               else
-                  rows = sth.fetch_all 
+
+       include DBI::Utils::ConvParam
+
+       def driver_name
+           return @driver_name.dup if @driver_name
+           return nil
+       end
+
+       def driver_name=(name)
+           @driver_name = name
+           @driver_name.freeze
+       end
+
+       def connected?
+           not @handle.nil?
+       end
+
+       def disconnect
+           raise InterfaceError, "Database connection was already closed!" if @handle.nil?
+           @handle.disconnect
+           @handle = nil
+       end
+
+       def prepare(stmt)
+           raise InterfaceError, "Database connection was already closed!" if @handle.nil?
+           sth = StatementHandle.new(@handle.prepare(stmt), false)
+           sth.trace(@trace_mode, @trace_output)
+
+           if block_given?
+               begin
+                   yield sth
+               ensure
+                   sth.finish unless sth.finished?
                end
-            end
-            return rows
-         end
-         
-         def tables
-            raise InterfaceError, "Database connection was already closed!" if @handle.nil?
-            @handle.tables
-         end
-         
-         def columns( table )
-            raise InterfaceError, "Database connection was already closed!" if @handle.nil?
-            @handle.columns( table ).collect {|col| ColumnInfo.new(col) }
-         end
-         
-         def ping
-            raise InterfaceError, "Database connection was already closed!" if @handle.nil?
-            @handle.ping
-         end
-         
-         def quote(value)
-            raise InterfaceError, "Database connection was already closed!" if @handle.nil?
-            @handle.quote(value)
-         end
-         
-         def commit
-            raise InterfaceError, "Database connection was already closed!" if @handle.nil?
-            @handle.commit
-         end
-         
-         def rollback
-            raise InterfaceError, "Database connection was already closed!" if @handle.nil?
-            @handle.rollback
-         end
-         
-         def transaction
-            raise InterfaceError, "Database connection was already closed!" if @handle.nil?
-            raise InterfaceError, "No block given" unless block_given?
-            
-            commit
-            begin
+           else
+               return sth
+           end 
+       end
+
+       def execute(stmt, *bindvars)
+           raise InterfaceError, "Database connection was already closed!" if @handle.nil?
+           sth = StatementHandle.new(@handle.execute(stmt, *conv_param(*bindvars)), true, false)
+           sth.trace(@trace_mode, @trace_output)
+
+           if block_given?
+               begin
+                   yield sth
+               ensure
+                   sth.finish unless sth.finished?
+               end
+           else
+               return sth
+           end 
+       end
+
+       def do(stmt, *bindvars)
+           raise InterfaceError, "Database connection was already closed!" if @handle.nil?
+           @handle.do(stmt, *conv_param(*bindvars))
+       end
+
+       def select_one(stmt, *bindvars)
+           raise InterfaceError, "Database connection was already closed!" if @handle.nil?
+           row = nil
+           execute(stmt, *bindvars) do |sth|
+               row = sth.fetch 
+           end
+           row
+       end
+
+       def select_all(stmt, *bindvars, &p)
+           raise InterfaceError, "Database connection was already closed!" if @handle.nil?
+           rows = nil
+           execute(stmt, *bindvars) do |sth|
+               if block_given?
+                   sth.each(&p)
+               else
+                   rows = sth.fetch_all 
+               end
+           end
+           return rows
+       end
+
+       def tables
+           raise InterfaceError, "Database connection was already closed!" if @handle.nil?
+           @handle.tables
+       end
+
+       def columns( table )
+           raise InterfaceError, "Database connection was already closed!" if @handle.nil?
+           @handle.columns( table ).collect {|col| ColumnInfo.new(col) }
+       end
+
+       def ping
+           raise InterfaceError, "Database connection was already closed!" if @handle.nil?
+           @handle.ping
+       end
+
+       def quote(value)
+           raise InterfaceError, "Database connection was already closed!" if @handle.nil?
+           @handle.quote(value)
+       end
+
+       def commit
+           raise InterfaceError, "Database connection was already closed!" if @handle.nil?
+           @handle.commit
+       end
+
+       def rollback
+           raise InterfaceError, "Database connection was already closed!" if @handle.nil?
+           @handle.rollback
+       end
+
+       def transaction
+           raise InterfaceError, "Database connection was already closed!" if @handle.nil?
+           raise InterfaceError, "No block given" unless block_given?
+
+           commit
+           begin
                yield self
                commit
-            rescue Exception
+           rescue Exception
                rollback
                raise
-            end
-         end
-         
-         
-         def [] (attr)
-            raise InterfaceError, "Database connection was already closed!" if @handle.nil?
-            @handle[attr]
-         end
-         
-         def []= (attr, val)
-            raise InterfaceError, "Database connection was already closed!" if @handle.nil?
-            @handle[attr] = val
-         end
-         
-      end
-      
-      class StatementHandle < Handle
-         
-         include Enumerable
-         include DBI::Utils::ConvParam
-         
-         def initialize(handle, fetchable=false, prepared=true)
-            super(handle)
-            @fetchable = fetchable
-            @prepared  = prepared     # only false if immediate execute was used
-            @cols = nil
-            
-            # TODO: problems with other DB's?
-            #@row = DBI::Row.new(column_names,nil)
-            if @fetchable
+           end
+       end
+
+
+       def [] (attr)
+           raise InterfaceError, "Database connection was already closed!" if @handle.nil?
+           @handle[attr]
+       end
+
+       def []= (attr, val)
+           raise InterfaceError, "Database connection was already closed!" if @handle.nil?
+           @handle[attr] = val
+       end
+
+   end
+
+   class StatementHandle < Handle
+
+       include Enumerable
+       include DBI::Utils::ConvParam
+
+       def initialize(handle, fetchable=false, prepared=true)
+           super(handle)
+           @fetchable = fetchable
+           @prepared  = prepared     # only false if immediate execute was used
+           @cols = nil
+
+           # TODO: problems with other DB's?
+           #@row = DBI::Row.new(column_names,nil)
+           if @fetchable
                @row = DBI::Row.new(column_names,nil)
-            else
+           else
                @row = nil
-            end
-         end
-         
-         def finished?
-            @handle.nil?
-         end
-         
-         def fetchable?
-            @fetchable
-         end
-         
-         def bind_param(param, value, attribs=nil)
-            raise InterfaceError, "Statement was already closed!" if @handle.nil?
-            raise InterfaceError, "Statement wasn't prepared before." unless @prepared
-            @handle.bind_param(param, conv_param(value)[0], attribs)
-         end
-         
-         def execute(*bindvars)
-            cancel     # cancel before 
-            raise InterfaceError, "Statement was already closed!" if @handle.nil?
-            raise InterfaceError, "Statement wasn't prepared before." unless @prepared
-            @handle.bind_params(*conv_param(*bindvars))
-            @handle.execute
-            @fetchable = true
-            
-            # TODO:?
-            #if @row.nil?
-            @row = DBI::Row.new(column_names,nil)
-            #end
-            return nil
-         end
-         
-         def finish
-            raise InterfaceError, "Statement was already closed!" if @handle.nil?
-            @handle.finish
-            @handle = nil
-         end
-         
-         def cancel
-            raise InterfaceError, "Statement was already closed!" if @handle.nil?
-            @handle.cancel if @fetchable
-            @fetchable = false
-         end
-         
-         def column_names
-            raise InterfaceError, "Statement was already closed!" if @handle.nil?
-            return @cols unless @cols.nil?
-            @cols = @handle.column_info.collect {|col| col['name'] }
-         end
-         
-         def column_info
-            raise InterfaceError, "Statement was already closed!" if @handle.nil?
-            @handle.column_info.collect {|col| ColumnInfo.new(col) }
-         end
-         
-         def rows
-            raise InterfaceError, "Statement was already closed!" if @handle.nil?
-            @handle.rows
-         end
-         
-         
-         def fetch(&p)
-            raise InterfaceError, "Statement was already closed!" if @handle.nil?
-            
-            if block_given? 
+           end
+       end
+
+       def finished?
+           @handle.nil?
+       end
+
+       def fetchable?
+           @fetchable
+       end
+
+       def bind_param(param, value, attribs=nil)
+           raise InterfaceError, "Statement was already closed!" if @handle.nil?
+           raise InterfaceError, "Statement wasn't prepared before." unless @prepared
+           @handle.bind_param(param, conv_param(value)[0], attribs)
+       end
+
+       def execute(*bindvars)
+           cancel     # cancel before 
+           raise InterfaceError, "Statement was already closed!" if @handle.nil?
+           raise InterfaceError, "Statement wasn't prepared before." unless @prepared
+           @handle.bind_params(*conv_param(*bindvars))
+           @handle.execute
+           @fetchable = true
+
+           # TODO:?
+           #if @row.nil?
+           @row = DBI::Row.new(column_names,nil)
+           #end
+           return nil
+       end
+
+       def finish
+           raise InterfaceError, "Statement was already closed!" if @handle.nil?
+           @handle.finish
+           @handle = nil
+       end
+
+       def cancel
+           raise InterfaceError, "Statement was already closed!" if @handle.nil?
+           @handle.cancel if @fetchable
+           @fetchable = false
+       end
+
+       def column_names
+           raise InterfaceError, "Statement was already closed!" if @handle.nil?
+           return @cols unless @cols.nil?
+           @cols = @handle.column_info.collect {|col| col['name'] }
+       end
+
+       def column_info
+           raise InterfaceError, "Statement was already closed!" if @handle.nil?
+           @handle.column_info.collect {|col| ColumnInfo.new(col) }
+       end
+
+       def rows
+           raise InterfaceError, "Statement was already closed!" if @handle.nil?
+           @handle.rows
+       end
+
+
+       def fetch(&p)
+           raise InterfaceError, "Statement was already closed!" if @handle.nil?
+
+           if block_given? 
                while (res = @handle.fetch) != nil
-                  @row.set_values(res)
-                  yield @row
+                   @row.set_values(res)
+                   yield @row
                end
                @handle.cancel
                @fetchable = false
                return nil
-            else
+           else
                res = @handle.fetch
                if res.nil?
-                  @handle.cancel
-                  @fetchable = false
+                   @handle.cancel
+                   @fetchable = false
                else
-                  @row.set_values(res)
-                  res = @row
+                   @row.set_values(res)
+                   res = @row
                end
                return res
-            end
-         end
-         
-         def each(&p)
-            raise InterfaceError, "Statement was already closed!" if @handle.nil?
-            raise InterfaceError, "Statement must first be executed" unless @fetchable
-            raise InterfaceError, "No block given" unless block_given?
-            
-            fetch(&p)
-         end
-         
-         def fetch_array
-            raise InterfaceError, "Statement was already closed!" if @handle.nil?
-            raise InterfaceError, "Statement must first be executed" unless @fetchable
-            
-            if block_given? 
+           end
+       end
+
+       def each(&p)
+           raise InterfaceError, "Statement was already closed!" if @handle.nil?
+           raise InterfaceError, "Statement must first be executed" unless @fetchable
+           raise InterfaceError, "No block given" unless block_given?
+
+           fetch(&p)
+       end
+
+       def fetch_array
+           raise InterfaceError, "Statement was already closed!" if @handle.nil?
+           raise InterfaceError, "Statement must first be executed" unless @fetchable
+
+           if block_given? 
                while (res = @handle.fetch) != nil
-                  yield res
+                   yield res
                end
                @handle.cancel
                @fetchable = false
                return nil
-            else
+           else
                res = @handle.fetch
                if res.nil?
-                  @handle.cancel
-                  @fetchable = false
+                   @handle.cancel
+                   @fetchable = false
                end
                return res
-            end
-         end
-         
-         def fetch_hash
-            raise InterfaceError, "Statement was already closed!" if @handle.nil?
-            raise InterfaceError, "Statement must first be executed" unless @fetchable
-            
-            cols = column_names
-            
-            if block_given? 
+           end
+       end
+
+       def fetch_hash
+           raise InterfaceError, "Statement was already closed!" if @handle.nil?
+           raise InterfaceError, "Statement must first be executed" unless @fetchable
+
+           cols = column_names
+
+           if block_given? 
                while (row = @handle.fetch) != nil
-                  hash = {}
-                  row.each_with_index {|v,i| hash[cols[i]] = v} 
-                  yield hash
+                   hash = {}
+                   row.each_with_index {|v,i| hash[cols[i]] = v} 
+                   yield hash
                end
                @handle.cancel
                @fetchable = false
                return nil
-            else
+           else
                row = @handle.fetch
                if row.nil?
-                  @handle.cancel
-                  @fetchable = false
-                  return nil
+                   @handle.cancel
+                   @fetchable = false
+                   return nil
                else
-                  hash = {}
-                  row.each_with_index {|v,i| hash[cols[i]] = v} 
-                  return hash
+                   hash = {}
+                   row.each_with_index {|v,i| hash[cols[i]] = v} 
+                   return hash
                end
-            end
-         end
-         
-         def fetch_many(cnt)
-            raise InterfaceError, "Statement was already closed!" if @handle.nil?
-            raise InterfaceError, "Statement must first be executed" unless @fetchable
-            
-            cols = column_names
-            rows = @handle.fetch_many(cnt)
-            if rows.nil?
+           end
+       end
+
+       def fetch_many(cnt)
+           raise InterfaceError, "Statement was already closed!" if @handle.nil?
+           raise InterfaceError, "Statement must first be executed" unless @fetchable
+
+           cols = column_names
+           rows = @handle.fetch_many(cnt)
+           if rows.nil?
                @handle.cancel
                @fetchable = false
                return []
-            else
+           else
                return rows.collect{|r| Row.new(cols, r)}
-            end
-         end
-         
-         def fetch_all
-            raise InterfaceError, "Statement was already closed!" if @handle.nil?
-            raise InterfaceError, "Statement must first be executed" unless @fetchable
-            
-            cols = column_names
-            rows = @handle.fetch_all
-            if rows.nil?
+           end
+       end
+
+       def fetch_all
+           raise InterfaceError, "Statement was already closed!" if @handle.nil?
+           raise InterfaceError, "Statement must first be executed" unless @fetchable
+
+           cols = column_names
+           rows = @handle.fetch_all
+           if rows.nil?
                @handle.cancel
                @fetchable = false
                return []
-            else
+           else
                return rows.collect{|r| Row.new(cols, r)}
-            end
-         end
-         
-         def fetch_scroll(direction, offset=1)
-            raise InterfaceError, "Statement was already closed!" if @handle.nil?
-            raise InterfaceError, "Statement must first be executed" unless @fetchable
-            
-            row = @handle.fetch_scroll(direction, offset)
-            if row.nil?
+           end
+       end
+
+       def fetch_scroll(direction, offset=1)
+           raise InterfaceError, "Statement was already closed!" if @handle.nil?
+           raise InterfaceError, "Statement must first be executed" unless @fetchable
+
+           row = @handle.fetch_scroll(direction, offset)
+           if row.nil?
                #@handle.cancel
                #@fetchable = false
                return nil
-            else
+           else
                @row.set_values(row)
                return @row
-            end
-         end
-         
-         def [] (attr)
-            raise InterfaceError, "Statement was already closed!" if @handle.nil?
-            @handle[attr]
-         end
-         
-         def []= (attr, val)
-            raise InterfaceError, "Statement was already closed!" if @handle.nil?
-            @handle[attr] = val
-         end
-         
-      end # class StatementHandle
+           end
+       end
+
+       def [] (attr)
+           raise InterfaceError, "Statement was already closed!" if @handle.nil?
+           @handle[attr]
+       end
+
+       def []= (attr, val)
+           raise InterfaceError, "Statement was already closed!" if @handle.nil?
+           @handle[attr] = val
+       end
+
+   end # class StatementHandle
       
-      
-      
-      
-      
-      #----------------------------------------------------
-      #  Fallback classes
-      #----------------------------------------------------
-      
-      
-      ##
-      # Fallback classes for default behavior of DBD driver
-      # must be inherited by the DBD driver classes
-      #
-      
-      class Base
-      end
-      
-      
-      class BaseDriver < Base
-         
-         def initialize(dbd_version)
-            major, minor = dbd_version.split(".")
-            unless major.to_i == DBD::API_VERSION.split(".")[0].to_i
+   #----------------------------------------------------
+   #  Fallback classes
+   #----------------------------------------------------
+
+
+   ##
+   # Fallback classes for default behavior of DBD driver
+   # must be inherited by the DBD driver classes
+   #
+
+   class Base
+   end
+
+   class BaseDriver < Base
+
+       def initialize(dbd_version)
+           major, minor = dbd_version.split(".")
+           unless major.to_i == DBD::API_VERSION.split(".")[0].to_i
                raise InterfaceError, "Wrong DBD API version used"
-            end
-         end
-         
-         def connect(dbname, user, auth, attr)
-            raise NotImplementedError
-         end
-         
-         def default_user
-            ['', '']
-         end
-         
-         def default_attributes
-            {}
-         end
-         
-         def data_sources
-            []
-         end
-         
-         def disconnect_all
-            raise NotImplementedError
-         end
-         
-      end # class BaseDriver
-      
-      class BaseDatabase < Base
-         
-         def initialize(handle, attr)
-            @handle = handle
-            @attr   = {}
-            attr.each {|k,v| self[k] = v} 
-         end
-         
-         def disconnect
-            raise NotImplementedError
-         end
-         
-         def ping
-            raise NotImplementedError
-         end
-         
-         def prepare(statement)
-            raise NotImplementedError
-         end
-         
-         #============================================
-         # OPTIONAL
-         #============================================
-         
-         def commit
-            raise NotSupportedError
-         end
-         
-         def rollback
-            raise NotSupportedError
-         end
-         
-         def tables
-            []
-         end
-         
-         def columns(table)
-            []
-         end
-         
-         
-         def execute(statement, *bindvars)
-            stmt = prepare(statement)
-            stmt.bind_params(*bindvars)
-            stmt.execute
-            stmt
-         end
-         
-         def do(statement, *bindvars)
-               stmt = execute(statement, *bindvars)
-               res = stmt.rows
-               stmt.finish
-               return res
-            end
-            
-            # includes quote
-            include DBI::SQL::BasicQuote
-            
-            def [](attr)
-               @attr[attr]
-            end
-            
-            def []=(attr, value)
+           end
+       end
+
+       def connect(dbname, user, auth, attr)
+           raise NotImplementedError
+       end
+
+       def default_user
+           ['', '']
+       end
+
+       def default_attributes
+           {}
+       end
+
+       def data_sources
+           []
+       end
+
+       def disconnect_all
+           raise NotImplementedError
+       end
+
+   end # class BaseDriver
+
+   class BaseDatabase < Base
+
+       def initialize(handle, attr)
+           @handle = handle
+           @attr   = {}
+           attr.each {|k,v| self[k] = v} 
+       end
+
+       def disconnect
+           raise NotImplementedError
+       end
+
+       def ping
+           raise NotImplementedError
+       end
+
+       def prepare(statement)
+           raise NotImplementedError
+       end
+
+       #============================================
+       # OPTIONAL
+       #============================================
+
+       def commit
+           raise NotSupportedError
+       end
+
+       def rollback
+           raise NotSupportedError
+       end
+
+       def tables
+           []
+       end
+
+       def columns(table)
+           []
+       end
+
+
+       def execute(statement, *bindvars)
+           stmt = prepare(statement)
+           stmt.bind_params(*bindvars)
+           stmt.execute
+           stmt
+       end
+
+       def do(statement, *bindvars)
+           stmt = execute(statement, *bindvars)
+           res = stmt.rows
+           stmt.finish
+           return res
+       end
+
+       # includes quote
+       include DBI::SQL::BasicQuote
+
+       def [](attr)
+           @attr[attr]
+       end
+
+       def []=(attr, value)
+           raise NotSupportedError
+       end
+
+   end # class BaseDatabase
+
+   class BaseStatement < Base
+
+       def initialize(attr=nil)
+           @attr = attr || {}
+       end
+
+
+
+       def bind_param(param, value, attribs)
+           raise NotImplementedError
+       end
+
+       def execute
+           raise NotImplementedError
+       end
+
+       def finish
+           raise NotImplementedError
+       end
+
+       def fetch
+           raise NotImplementedError
+       end
+
+       ##
+       # returns result-set column information as array
+       # of hashs, where each hash represents one column
+       def column_info
+           raise NotImplementedError
+       end
+
+       #============================================
+       # OPTIONAL
+       #============================================
+
+       def bind_params(*bindvars)
+           bindvars.each_with_index {|val,i| bind_param(i+1, val, nil) }
+           self
+       end
+
+       def cancel
+       end
+
+       def fetch_scroll(direction, offset)
+           case direction
+           when SQL_FETCH_NEXT
+               return fetch
+           when SQL_FETCH_LAST
+               last_row = nil
+               while (row=fetch) != nil
+                   last_row = row
+               end
+               return last_row
+           when SQL_FETCH_RELATIVE
+               raise NotSupportedError if offset <= 0
+               row = nil
+               offset.times { row = fetch; break if row.nil? }
+               return row
+           else
                raise NotSupportedError
-            end
-            
-         end # class BaseDatabase
-         
-         
-         class BaseStatement < Base
-            
-            def initialize(attr=nil)
-               @attr = attr || {}
-            end
-            
-            
-            
-            def bind_param(param, value, attribs)
-               raise NotImplementedError
-            end
-            
-            def execute
-               raise NotImplementedError
-            end
-            
-            def finish
-               raise NotImplementedError
-            end
-            
-            def fetch
-               raise NotImplementedError
-            end
-            
-            ##
-            # returns result-set column information as array
-            # of hashs, where each hash represents one column
-            def column_info
-               raise NotImplementedError
-            end
-            
-            #============================================
-            # OPTIONAL
-            #============================================
-            
-            def bind_params(*bindvars)
-               bindvars.each_with_index {|val,i| bind_param(i+1, val, nil) }
-               self
-            end
-            
-            def cancel
-            end
-            
-            def fetch_scroll(direction, offset)
-               case direction
-               when SQL_FETCH_NEXT
-                  return fetch
-               when SQL_FETCH_LAST
-                  last_row = nil
-                  while (row=fetch) != nil
-                     last_row = row
-                  end
-                  return last_row
-               when SQL_FETCH_RELATIVE
-                  raise NotSupportedError if offset <= 0
-                  row = nil
-                  offset.times { row = fetch; break if row.nil? }
-                  return row
-               else
-                  raise NotSupportedError
-               end
-            end
-            
-            def fetch_many(cnt)
-               rows = []
-               cnt.times do
-                  row = fetch
-                  break if row.nil?
-                  rows << row.dup
-               end
-               
-               if rows.empty?
-                  nil
-               else
-                  rows
-               end
-            end
-            
-            def fetch_all
-               rows = []
-               loop do
-                  row = fetch
-                  break if row.nil?
-                  rows << row.dup
-               end
-               
-               if rows.empty?
-                  nil
-               else
-                  rows
-               end
-            end
-            
-            def [](attr)
-               @attr[attr]
-            end
-            
-            def []=(attr, value)
-               raise NotSupportedError
-            end
-            
-         end # class BaseStatement
-         
-         
-      end # module DBI
-      
-      
+           end
+       end
+
+       def fetch_many(cnt)
+           rows = []
+           cnt.times do
+               row = fetch
+               break if row.nil?
+               rows << row.dup
+           end
+
+           if rows.empty?
+               nil
+           else
+               rows
+           end
+       end
+
+       def fetch_all
+           rows = []
+           loop do
+               row = fetch
+               break if row.nil?
+               rows << row.dup
+           end
+
+           if rows.empty?
+               nil
+           else
+               rows
+           end
+       end
+
+       def [](attr)
+           @attr[attr]
+       end
+
+       def []=(attr, value)
+           raise NotSupportedError
+       end
+
+   end # class BaseStatement
+end # module DBI

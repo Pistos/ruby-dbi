@@ -4,7 +4,7 @@ DBDConfig.set_testbase(:mysql, Class.new(Test::Unit::TestCase) do
         end
 
         def test_base
-            assert true
+            assert_equal(@dbh.driver_name, "Mysql")
         end
 
         def setup

@@ -2,7 +2,7 @@ require 'time'
 
 module DBI
     class TypeUtil
-        @@conversions = { } # old perl habits die hard
+        @@conversions = { }
 
         def self.register_conversion(klass, &block)
             raise "Not a class" unless klass.kind_of? Class
