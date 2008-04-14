@@ -4,15 +4,14 @@ module DBI
     class TypeUtil
         @@conversions = { }
 
-        def self.register_conversion(klass, &block)
-            raise "Not a class" unless klass.kind_of? Class
+        def self.register_conversion(driver_name, &block)
             raise "Must provide a block" unless block_given?
-            @@conversions[klass] = block
+            @@conversions[driver_name] = block
         end
 
         def self.convert(sth, obj)
-            package = Object.const_get(sth.name.split(/::/)[0..2].join("::"))
-            return @@conversions[package].call(obj)
+            driver_name = sth.dbh.driver_name
+            return @@conversions[driver_name].call(obj)
         end
     end
 
@@ -49,7 +48,7 @@ module DBI
                 when Time
                     return obj
                 else
-                    return Time.parse(obj.to_s) if obj.respond_to? :to_s
+                    return Time.parse(obj.to_s)   if obj.respond_to? :to_s
                     return Time.parse(obj.to_str) if obj.respond_to? :to_str
                     return obj
                 end
