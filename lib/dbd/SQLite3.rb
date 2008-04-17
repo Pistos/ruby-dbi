@@ -39,6 +39,8 @@ end
 require 'sqlite3'
 require 'sqlite3/version'
 
+
+
 module DBI
   module DBD
     module SQLite3
@@ -74,21 +76,21 @@ module DBI
         def initialize(dbname, attr)
           @db = ::SQLite3::Database.new(dbname)
 
-          @db.type_translation = true
-          @db.translator.add_translator("timestamp") do |type, value|
-              ::Time.parse(value)
-          end
-          @db.translator.add_translator(nil) do |type, value|
-            # autodetect numbers in typeless columns
-            case value
-            when /\A-?[0-9]+\z/
-              value.to_i
-            when /\A-?[0-9]+?\.[0-9]+\z/
-              value.to_f
-            else
-              value
-            end 
-          end
+          @db.type_translation = false
+#           @db.translator.add_translator("timestamp") do |type, value|
+#               ::Time.parse(value)
+#           end
+#           @db.translator.add_translator(nil) do |type, value|
+#             # autodetect numbers in typeless columns
+#             case value
+#             when /\A-?[0-9]+\z/
+#               value.to_i
+#             when /\A-?[0-9]+?\.[0-9]+\z/
+#               value.to_f
+#             else
+#               value
+#             end 
+#           end
 
           @attr = {'AutoCommit' => true}
           if attr then
@@ -264,6 +266,19 @@ EOS
             h = { 
               'name' => name,
               'type_name' => m[1],
+              'dbi_type' => 
+              case m[1]
+              when /int(eger)?/i
+                  DBI::Type::Integer
+              when /varchar/i
+                  DBI::Type::Varchar
+              when /float/i
+                  DBI::Type::Float
+              when /boo(lean)/i
+                  DBI::Type::Boolean
+              else
+                  DBI::Type::Varchar
+              end,
               'sql_type' => begin
                               DBI.const_get('SQL_'+m[1].upcase)
                             rescue NameError

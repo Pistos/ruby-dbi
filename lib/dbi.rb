@@ -629,11 +629,12 @@ module DBI
            @fetchable = fetchable
            @prepared  = prepared     # only false if immediate execute was used
            @cols = nil
+           @coltypes = nil
 
            # TODO: problems with other DB's?
            #@row = DBI::Row.new(column_names,nil)
            if @fetchable
-               @row = DBI::Row.new(column_names,nil)
+               @row = DBI::Row.new(column_names, column_types, nil)
            else
                @row = nil
            end
@@ -663,7 +664,7 @@ module DBI
 
            # TODO:?
            #if @row.nil?
-           @row = DBI::Row.new(column_names,nil)
+           @row = DBI::Row.new(column_names, column_types, nil)
            #end
            return nil
        end
@@ -686,6 +687,12 @@ module DBI
            @cols = @handle.column_info.collect {|col| col['name'] }
        end
 
+       def column_types
+           raise InterfaceError, "Statement was already closed!" if @handle.nil?
+           return @coltypes unless @coltypes.nil?
+           @coltypes = @handle.column_info.collect { |col| col['dbi_type'] }
+       end
+
        def column_info
            raise InterfaceError, "Statement was already closed!" if @handle.nil?
            @handle.column_info.collect {|col| ColumnInfo.new(col) }
@@ -695,7 +702,6 @@ module DBI
            raise InterfaceError, "Statement was already closed!" if @handle.nil?
            @handle.rows
        end
-
 
        def fetch(&p)
            raise InterfaceError, "Statement was already closed!" if @handle.nil?
@@ -790,7 +796,7 @@ module DBI
                @fetchable = false
                return []
            else
-               return rows.collect{|r| Row.new(cols, r)}
+               return rows.collect{|r| Row.new(cols, column_types, r)}
            end
        end
 
@@ -805,7 +811,7 @@ module DBI
                @fetchable = false
                return []
            else
-               return rows.collect{|r| Row.new(cols, r)}
+               return rows.collect{|r| Row.new(cols, column_types, r)}
            end
        end
 

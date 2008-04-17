@@ -10,17 +10,22 @@ module DBI
    class Row < DelegateClass(Array)
       attr_reader :column_names
 
-      # DBI::Row.new(columns, size_or_array=nil)
+      # DBI::Row.new(columns, column_types, size_or_array=nil)
       #
       # Returns a new DBI::Row object using +columns+.  The +size_or_array+
       # argument may either be an Integer or an Array.  If it is not provided,
       # it defaults to the length of +columns+.
       #
+      # Column types is a corresponding Array of Class/Module objects that
+      # conform to the DBI::Type interface. These will be used to convert types
+      # as they are returned.
+      #
       # DBI::Row is a delegate of the Array class, so all of the Array
       # instance methods are available to your DBI::Row object (keeping in
       # mind that initialize, [], and []= have been explicitly overridden).
       #
-      def initialize(columns, size_or_array=nil)
+      def initialize(columns, column_types, size_or_array=nil)
+         @column_types = column_types
          size_or_array ||= columns.size 
 
          case size_or_array
@@ -41,9 +46,22 @@ module DBI
          super(@arr)
       end
 
+      # converts the types in the array to their specified representation from @col_types
+      def convert_types(arr)
+          if arr.size != @column_types.size
+              raise TypeError, "Type mapping is not consistent with result"
+          end
+          new_arr = []
+          arr.each_with_index do |item, i|
+              new_arr.push(@column_types[i].parse(item))
+          end
+
+          return new_arr
+      end
+
       # Replaces the contents of @arr with +new_values+
       def set_values(new_values)
-         @arr.replace(new_values)
+         @arr.replace(convert_types(new_values))
       end
       
       # Yields a column value by name (rather than index), along with the
@@ -53,7 +71,12 @@ module DBI
             yield v, @column_names[i]
          end 
       end
-      
+    
+      # returns the underlying array (duplicated)
+      def to_a
+          @arr.dup
+      end
+
       # Returns the Row object as a hash
       def to_h
          hash = {}
