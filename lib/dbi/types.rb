@@ -19,22 +19,31 @@ module DBI
 
     DBI::TypeUtil.register_conversion("default") do |obj|
           case obj
-          when NilClass
+          when ::NilClass
               'NULL'
-          when TrueClass
+          when ::TrueClass
               '1'
-          when FalseClass
+          when ::FalseClass
               '0'
           when ::Time, ::Date, ::DateTime
-              DateTime.parse(obj.to_s).strftime("%m/%d/%Y %H:%M:%S")
+              ::DateTime.parse(obj.to_s).strftime("%m/%d/%Y %H:%M:%S")
           else
               obj.to_s
           end
     end
 
     module Type
-        class Varchar < ::DBI::TypeUtil
+        class Null
             def self.parse(obj)
+                return nil if obj.to_s.match(/^null$/i)
+                return obj
+            end
+        end
+
+        class Varchar < Null
+            def self.parse(obj)
+                obj = super
+                return obj unless obj
                 return obj.to_s if obj.respond_to? :to_s
                 return obj.to_str if obj.respond_to? :to_str
                 return obj
@@ -55,8 +64,10 @@ module DBI
             end
         end
 
-        class Timestamp 
+        class Timestamp < Null
             def self.parse(obj)
+                obj = super
+                return obj unless obj
                 case obj.class
                 when ::DateTime
                     return obj

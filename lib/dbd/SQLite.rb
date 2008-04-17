@@ -247,33 +247,7 @@ module DBI
                     row = @result_set.next
                     return nil unless row
                    
-                    # convert types. FIXME this should *really* not be done in the driver
-
-                    coerce  = DBI::SQL::BasicQuote::Coerce.new
-
-                    columns = column_info
-                    new_row = []
-
-                    row.each_with_index do |col, i|
-                        case columns[i]["sql_type"]
-                        when SQL_BOOLEAN
-                            col = coerce.as_bool(col)
-                        when SQL_FLOAT, SQL_REAL, SQL_DOUBLE
-                            col = coerce.as_float(col)
-                        when SQL_INTEGER
-                            col = coerce.as_int(col)
-                        when SQL_TIME
-                            col = coerce.as_time(col)
-                        when SQL_TIMESTAMP
-                            col = coerce.as_timestamp(col)
-                        when SQL_DATE
-                            col = coerce.as_date(col)
-                        end
-
-                        new_row.push col
-                    end
-
-                    return new_row
+                    return row
                 end
 
                 def column_info
