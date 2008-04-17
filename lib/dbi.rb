@@ -356,7 +356,7 @@ module DBI
 
                   dbd_dr = dr::Driver.new
                   drh = DBI::DriverHandle.new(dbd_dr)
-                  drh.driver_name = driver_name
+                  drh.driver_name = dr.driver_name
                   drh.trace(@@trace_mode, @@trace_output)
                   @@driver_map[found] = [drh, dbd_dr]
                   return found
@@ -477,8 +477,6 @@ module DBI
 
    class DatabaseHandle < Handle
 
-       include DBI::Utils::ConvParam
-
        def driver_name
            return @driver_name.dup if @driver_name
            return nil
@@ -518,7 +516,7 @@ module DBI
 
        def execute(stmt, *bindvars)
            raise InterfaceError, "Database connection was already closed!" if @handle.nil?
-           sth = StatementHandle.new(@handle.execute(stmt, *conv_param(*bindvars)), true, false)
+           sth = StatementHandle.new(@handle.execute(stmt, *DBI::Utils::ConvParam.conv_param(driver_name, *bindvars)), true, false)
            sth.trace(@trace_mode, @trace_output)
            sth.dbh = self
 
@@ -535,7 +533,7 @@ module DBI
 
        def do(stmt, *bindvars)
            raise InterfaceError, "Database connection was already closed!" if @handle.nil?
-           @handle.do(stmt, *conv_param(*bindvars))
+           @handle.do(stmt, *DBI::Utils::ConvParam.conv_param(driver_name, *bindvars))
        end
 
        def select_one(stmt, *bindvars)
@@ -620,7 +618,6 @@ module DBI
    class StatementHandle < Handle
 
        include Enumerable
-       include DBI::Utils::ConvParam
 
        attr_accessor :dbh
 
@@ -651,14 +648,14 @@ module DBI
        def bind_param(param, value, attribs=nil)
            raise InterfaceError, "Statement was already closed!" if @handle.nil?
            raise InterfaceError, "Statement wasn't prepared before." unless @prepared
-           @handle.bind_param(param, conv_param(value)[0], attribs)
+           @handle.bind_param(param, DBI::Utils::ConvParam.conv_param(dbh.driver_name, value)[0], attribs)
        end
 
        def execute(*bindvars)
            cancel     # cancel before 
            raise InterfaceError, "Statement was already closed!" if @handle.nil?
            raise InterfaceError, "Statement wasn't prepared before." unless @prepared
-           @handle.bind_params(*conv_param(*bindvars))
+           @handle.bind_params(*DBI::Utils::ConvParam.conv_param(dbh.driver_name, *bindvars))
            @handle.execute
            @fetchable = true
 

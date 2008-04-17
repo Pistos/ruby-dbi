@@ -180,17 +180,8 @@ module DBI
 module Utils
 
   module ConvParam
-    def conv_param(*params)
-      params.collect do |p|
-        case p
-        when ::Date
-          DBI::Date.new(p)
-        when ::Time
-          DBI::Timestamp.new(p)
-        else
-          p
-        end
-      end
+    def self.conv_param(driver_name, *params)
+        params.collect { |param| DBI::TypeUtil.convert(driver_name, param) }
     end
   end
 

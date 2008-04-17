@@ -28,6 +28,10 @@ module DBI
 
             USED_DBD_VERSION = "0.1"
 
+            def self.driver_name
+                "sqlite"
+            end
+
             # XXX I'm starting to think this is less of a problem with SQLite
             # and more with the old C DBD
             def self.check_sql(sql)

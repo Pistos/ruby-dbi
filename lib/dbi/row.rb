@@ -202,6 +202,7 @@ module DBI
       private
 
       # Simple helper method to grab the proper value from @column_map
+      # NOTE this does something completely different than DBI::Utils::ConvParam
       def conv_param(arg)
          case arg
             when String, Symbol

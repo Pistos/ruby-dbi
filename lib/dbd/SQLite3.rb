@@ -47,7 +47,11 @@ module DBI
 
       VERSION = ::SQLite3::Version::STRING
       USED_DBD_VERSION='0.2'
-     
+
+      def self.driver_name
+          "sqlite3"
+      end
+
       # FIXME plucked from SQLite driver, this needs to be in DBI proper 
       def self.parse_type(type_name)
           type_name.match(/^([^\(]+)(\((\d+)(,(\d+))?\))?$/)

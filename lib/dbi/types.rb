@@ -9,10 +9,25 @@ module DBI
             @@conversions[driver_name] = block
         end
 
-        def self.convert(sth, obj)
-            driver_name = sth.dbh.driver_name
-            return @@conversions[driver_name].call(obj)
+        def self.convert(driver_name, obj)
+            if @@conversions[driver_name]
+                obj = @@conversions[driver_name].call(obj)
+            end
+            return @@conversions["default"].call(obj)
         end
+    end
+
+    DBI::TypeUtil.register_conversion("default") do |obj|
+          case obj
+          when NilClass
+              'NULL'
+          when TrueClass
+              '1'
+          when FalseClass
+              '0'
+          else
+              obj.to_s
+          end
     end
 
     module Type
