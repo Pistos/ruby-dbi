@@ -25,6 +25,8 @@ module DBI
               '1'
           when FalseClass
               '0'
+          when ::Time, ::Date, ::DateTime
+              DateTime.parse(obj.to_s).strftime("%m/%d/%Y %H:%M:%S")
           else
               obj.to_s
           end
@@ -56,15 +58,15 @@ module DBI
         class Timestamp 
             def self.parse(obj)
                 case obj.class
-                when DateTime
-                    return obj.to_time
-                when Date
-                    return Time.parse(obj.to_s)
-                when Time
+                when ::DateTime
                     return obj
+                when ::Date
+                    return ::DateTime.parse(obj.to_s)
+                when ::Time
+                    return ::DateTime.parse(obj.to_s)
                 else
-                    return Time.parse(obj.to_s)   if obj.respond_to? :to_s
-                    return Time.parse(obj.to_str) if obj.respond_to? :to_str
+                    return ::DateTime.parse(obj.to_s)   if obj.respond_to? :to_s
+                    return ::DateTime.parse(obj.to_str) if obj.respond_to? :to_str
                     return obj
                 end
             end
