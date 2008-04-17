@@ -29,7 +29,7 @@ module DBI
             USED_DBD_VERSION = "0.1"
 
             def self.driver_name
-                "sqlite"
+                "SQLite"
             end
 
             # XXX I'm starting to think this is less of a problem with SQLite

@@ -49,7 +49,7 @@ module DBI
       USED_DBD_VERSION='0.2'
 
       def self.driver_name
-          "sqlite3"
+          "SQLite3"
       end
 
       # FIXME plucked from SQLite driver, this needs to be in DBI proper 
@@ -81,20 +81,6 @@ module DBI
           @db = ::SQLite3::Database.new(dbname)
 
           @db.type_translation = false
-#           @db.translator.add_translator("timestamp") do |type, value|
-#               ::Time.parse(value)
-#           end
-#           @db.translator.add_translator(nil) do |type, value|
-#             # autodetect numbers in typeless columns
-#             case value
-#             when /\A-?[0-9]+\z/
-#               value.to_i
-#             when /\A-?[0-9]+?\.[0-9]+\z/
-#               value.to_f
-#             else
-#               value
-#             end 
-#           end
 
           @attr = {'AutoCommit' => true}
           if attr then
