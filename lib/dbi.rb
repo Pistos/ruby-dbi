@@ -690,7 +690,26 @@ module DBI
        def column_types
            raise InterfaceError, "Statement was already closed!" if @handle.nil?
            return @coltypes unless @coltypes.nil?
-           @coltypes = @handle.column_info.collect { |col| col['dbi_type'] }
+           @coltypes = @handle.column_info.collect do |col| 
+               if col['dbi_type']
+                   col['dbi_type']
+               else
+                   case col['type_name']
+                   when /int(eger)?/i
+                       DBI::Type::Integer
+                   when /varchar/i
+                       DBI::Type::Varchar
+                   when /float/i
+                       DBI::Type::Float
+                   when /boo(lean)?/i
+                       DBI::Type::Boolean
+                   when /time(stamp)?/i
+                       DBI::Type::Timestamp
+                   else
+                       DBI::Type::Varchar
+                   end
+               end
+           end
        end
 
        def column_info

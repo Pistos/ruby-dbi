@@ -266,19 +266,6 @@ EOS
             h = { 
               'name' => name,
               'type_name' => m[1],
-              'dbi_type' => 
-              case m[1]
-              when /int(eger)?/i
-                  DBI::Type::Integer
-              when /varchar/i
-                  DBI::Type::Varchar
-              when /float/i
-                  DBI::Type::Float
-              when /boo(lean)/i
-                  DBI::Type::Boolean
-              else
-                  DBI::Type::Varchar
-              end,
               'sql_type' => begin
                               DBI.const_get('SQL_'+m[1].upcase)
                             rescue NameError
