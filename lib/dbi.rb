@@ -3,6 +3,7 @@ $LOAD_PATH.unshift(File.dirname(__FILE__))
 # Ruby/DBI
 #
 # Copyright (c) 2001, 2002, 2003 Michael Neumann <mneumann@ntecs.de>
+# Copyright (c) 2008 Erik Hollensbe <erik@hollensbe.org>
 # 
 # All rights reserved.
 #
@@ -36,6 +37,7 @@ require "dbi/row"
 require "dbi/utils"
 require "dbi/sql"
 require "dbi/columninfo"
+require 'dbi/types'
 require "date"
 require "thread"
 require 'monitor'
