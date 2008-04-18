@@ -86,7 +86,7 @@ module DBI
       
       # Create a new row with 'new_values', reusing the field name hash.
       def clone_with(new_values)    
-         Row.new(@column_names, new_values)
+         Row.new(@column_names, @column_types, new_values)
       end
 
       alias field_names column_names

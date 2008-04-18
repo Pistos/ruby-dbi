@@ -127,39 +127,43 @@ DBD_PACKAGES.each_key do |dbd|
     task my_namespace => DEFAULT_TASKS.collect { |x| "#{my_namespace}:#{x.to_s}" }
     namespace my_namespace do
 
-        require "dbd/#{DBD_PACKAGES[dbd][0]}"
+        begin
+            require "dbd/#{DBD_PACKAGES[dbd][0]}"
 
-        task :default => DEFAULT_TASKS
+            task :default => DEFAULT_TASKS
 
-        code_files = [
-            "test/dbd/general/**", 
-            File.join("test", "dbd", DBD_PACKAGES[dbd][0] == "pg" ? "postgresql" : DBD_PACKAGES[dbd][0], "*"), 
-            File.join("lib", "dbd", DBD_PACKAGES[dbd][0] + ".rb"), 
-            File.join("lib", "dbd", DBD_PACKAGES[dbd][0], "*")
-        ]
+            code_files = [
+                "test/dbd/general/**", 
+                File.join("test", "dbd", DBD_PACKAGES[dbd][0] == "pg" ? "postgresql" : DBD_PACKAGES[dbd][0], "*"), 
+                File.join("lib", "dbd", DBD_PACKAGES[dbd][0] + ".rb"), 
+                File.join("lib", "dbd", DBD_PACKAGES[dbd][0], "*")
+            ]
 
-        spec = gem.dup
-        spec.name        = my_namespace
-        spec.version     = DBI::DBD.const_get(DBD_PACKAGES[dbd][0]).const_get("VERSION")
-        spec.test_file   = 'test/ts_dbd.rb'
-        spec.files       = gem_files(code_files) 
-        spec.summary     = DBD_PACKAGES[dbd][1] 
-        spec.description = DBD_PACKAGES[dbd][1]
+            spec = gem.dup
+            spec.name        = my_namespace
+            spec.version     = DBI::DBD.const_get(DBD_PACKAGES[dbd][0]).const_get("VERSION")
+            spec.test_file   = 'test/ts_dbd.rb'
+            spec.files       = gem_files(code_files) 
+            spec.summary     = DBD_PACKAGES[dbd][1] 
+            spec.description = DBD_PACKAGES[dbd][1]
 
-        Rake::GemPackageTask.new(spec) do |s|
-        end
-
-        Rake::PackageTask.new(spec.name, spec.version) do |p|
-            p.need_tar_gz = true
-            p.need_zip = true
-
-            (code_files + DOC_FILES).each do |x|
-                p.package_files.include(x)
+            Rake::GemPackageTask.new(spec) do |s|
             end
 
-            EXCLUSIONS.each do |x|
-                p.package_files.exclude(x)
+            Rake::PackageTask.new(spec.name, spec.version) do |p|
+                p.need_tar_gz = true
+                p.need_zip = true
+
+                (code_files + DOC_FILES).each do |x|
+                    p.package_files.include(x)
+                end
+
+                EXCLUSIONS.each do |x|
+                    p.package_files.exclude(x)
+                end
             end
+        rescue LoadError => e
+            warn "Skipping #{my_namespace} because we can't require DBD"
         end
     end
 end

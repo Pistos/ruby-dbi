@@ -692,15 +692,15 @@ module DBI
                    col['dbi_type']
                else
                    case col['type_name']
-                   when /int(eger)?/i
+                   when /int(?:eger)?/i
                        DBI::Type::Integer
                    when /varchar/i
                        DBI::Type::Varchar
-                   when /float/i
+                   when /float|real/i
                        DBI::Type::Float
-                   when /boo(lean)?/i
+                   when /boo(?:lean)?/i
                        DBI::Type::Boolean
-                   when /time(stamp)?/i
+                   when /time(?:stamp)?/i
                        DBI::Type::Timestamp
                    else
                        DBI::Type::Varchar
@@ -724,6 +724,7 @@ module DBI
 
            if block_given? 
                while (res = @handle.fetch) != nil
+                   @row = @row.dup
                    @row.set_values(res)
                    yield @row
                end
@@ -736,6 +737,7 @@ module DBI
                    @handle.cancel
                    @fetchable = false
                else
+                   @row = @row.dup
                    @row.set_values(res)
                    res = @row
                end
@@ -821,14 +823,19 @@ module DBI
            raise InterfaceError, "Statement must first be executed" unless @fetchable
 
            cols = column_names
-           rows = @handle.fetch_all
-           if rows.nil?
-               @handle.cancel
-               @fetchable = false
-               return []
-           else
-               return rows.collect{|r| Row.new(cols, column_types, r)}
+           fetched_rows = []
+
+           begin
+               while row = fetch do
+                   fetched_rows.push(row)
+               end
+           rescue Exception
            end
+
+           @handle.cancel
+           @fetchable = false
+
+           return fetched_rows
        end
 
        def fetch_scroll(direction, offset=1)

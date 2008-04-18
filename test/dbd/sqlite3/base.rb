@@ -18,6 +18,7 @@ DBDConfig.set_testbase(:sqlite3, Class.new(Test::Unit::TestCase) do
         end
 
         def teardown
+            @sth.finish if @sth && !@sth.finished?
             @dbh.disconnect if @dbh.connected?
             config = DBDConfig.get_config['sqlite3']
             FileUtils.rm_f(config['dbname'])
