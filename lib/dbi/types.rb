@@ -19,6 +19,8 @@ module DBI
 
     DBI::TypeUtil.register_conversion("default") do |obj|
           case obj
+          when DBI::Binary # these need to be handled specially by the driver
+              obj
           when ::NilClass
               'NULL'
           when ::TrueClass

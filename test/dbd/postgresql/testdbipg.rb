@@ -184,11 +184,11 @@ class TestDbdPostgres < DBDConfig.testbase(:postgresql)
     res = dbd.do("INSERT INTO names (name, age) VALUES('Dan', 16)")
     assert_equal 1, res
     
-    sth = get_dbi.prepare("SELECT name FROM names WHERE age=16")
-    sth.execute
-    assert sth.fetchable?
+    @sth = get_dbi.prepare("SELECT name FROM names WHERE age=16")
+    @sth.execute
+    assert @sth.fetchable?
     # XXX FIXME This is a bug in the DBD. #rows should equal 1 for select statements.
-    assert_equal 0, sth.rows
+    assert_equal 0, @sth.rows
   ensure
     dbd.do("DELETE FROM names WHERE age < 20")
     dbd.disconnect if dbd

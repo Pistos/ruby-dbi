@@ -7,8 +7,8 @@ DBDConfig.set_testbase(:sqlite3, Class.new(Test::Unit::TestCase) do
         end
 
         def test_base
-            assert_equal(@dbh.driver_name, "SQLite3")
-            assert_kind_of(DBI::DBD::SQLite3::Database, @dbh.instance_variable_get(:@handle))
+             assert_equal(@dbh.driver_name, "SQLite3")
+             assert_kind_of(DBI::DBD::SQLite3::Database, @dbh.instance_variable_get(:@handle))
         end
 
         def setup

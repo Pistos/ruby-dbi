@@ -45,6 +45,19 @@ module DBI
       
       VERSION          = "0.3.3"
       USED_DBD_VERSION = "0.2"
+
+      def self.driver_name
+          "Pg"
+      end
+
+      DBI::TypeUtil.register_conversion(driver_name) do |obj|
+          case obj
+          when ::Time, ::Date, ::DateTime
+              ::DateTime.parse(obj.to_s).strftime("%m/%d/%Y %H:%M:%S.%N")
+          else
+              obj
+          end
+      end
       
       class Driver < DBI::BaseDriver
         

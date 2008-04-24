@@ -19,6 +19,7 @@ DBDConfig.set_testbase(:postgresql, Class.new(Test::Unit::TestCase) do
         end
 
         def teardown
+            @sth.finish if @sth && !@sth.finished?
             config = DBDConfig.get_config['postgresql']
             DBDConfig.inject_sql(@dbh, dbtype, "dbd/postgresql/down.sql")
             @dbh.disconnect
