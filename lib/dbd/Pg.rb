@@ -783,7 +783,7 @@ module DBI
 
                 def fill_array(rowdata)
                     rowdata.each do |key, value|
-                        @row[@pg_result.fnumber(key)] = value #@db.convert(value,@pg_result.ftype(@pg_result.fnumber(key)))
+                        @row[@pg_result.fnumber(key)] = value
                     end
                 end
 
