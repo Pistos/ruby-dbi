@@ -1,30 +1,30 @@
 class TestStatement < DBDConfig.testbase(:sqlite3)
     def test_constructor
-        @sth = DBI::DBD::SQLite3::Statement.new("select * from names", @dbh.instance_variable_get("@handle").instance_variable_get("@db"))
+        sth = DBI::DBD::SQLite3::Statement.new("select * from names", @dbh.instance_variable_get("@handle").instance_variable_get("@db"))
 
-        assert_kind_of DBI::DBD::SQLite3::Statement, @sth
-        assert @sth.instance_variable_get("@db")
-        assert_kind_of ::SQLite3::Database, @sth.instance_variable_get("@db")
-        assert_equal(@dbh.instance_variable_get("@handle").instance_variable_get("@db"), @sth.instance_variable_get("@db"))
-        assert_kind_of ::SQLite3::Statement, @sth.instance_variable_get("@stmt")
+        assert_kind_of DBI::DBD::SQLite3::Statement, sth
+        assert sth.instance_variable_get("@db")
+        assert_kind_of ::SQLite3::Database, sth.instance_variable_get("@db")
+        assert_equal(@dbh.instance_variable_get("@handle").instance_variable_get("@db"), sth.instance_variable_get("@db"))
+        assert_kind_of ::SQLite3::Statement, sth.instance_variable_get("@stmt")
         assert_nil(@sth.instance_variable_get("@result"))
 
-        @sth.finish
+        sth.finish
 
-        @sth = @dbh.prepare("select * from names")
+        sth = @dbh.prepare("select * from names")
 
-        assert_kind_of DBI::StatementHandle, @sth
-        @sth.finish
+        assert_kind_of DBI::StatementHandle, sth
+        sth.finish
     end
 
     def test_bind_param
-        @sth = DBI::DBD::SQLite3::Statement.new("select * from names", @dbh.instance_variable_get("@handle").instance_variable_get("@db"))
+        sth = DBI::DBD::SQLite3::Statement.new("select * from names", @dbh.instance_variable_get("@handle").instance_variable_get("@db"))
 
         assert_raise(DBI::InterfaceError) do
-            @sth.bind_param(:foo, "monkeys")
+            sth.bind_param(:foo, "monkeys")
         end
 
-        @sth.finish
+        sth.finish
     end
     
     def test_column_info
@@ -54,5 +54,4 @@ class TestStatement < DBDConfig.testbase(:sqlite3)
 
         @sth.finish
     end
-
 end
