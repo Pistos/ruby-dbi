@@ -3,6 +3,8 @@ class TestPostgresTimestamp < DBDConfig.testbase(:postgresql)
         DateTime.parse("2008-03-08 10:39:01.012300")
     end
 
+    # XXX DateTime is not allowed to modify the sec_fraction component, so this test is moot.
+    # perhaps we need to fix DateTime.
     def skip_test_timestamp_altered_fraction
         ts = nil
 
