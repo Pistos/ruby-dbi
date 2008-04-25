@@ -16,7 +16,8 @@ class TC_DBI_Row < Test::Unit::TestCase
    def setup
       @data = %w/Daniel Berger 36/
       @cols = %w/first last age/
-      @row  = DBI::Row.new(@cols, @data.clone)
+      @coltypes = [DBI::Type::Varchar, DBI::Type::Varchar, DBI::Type::Integer]
+      @row  = DBI::Row.new(@cols, @coltypes, @data.clone)
    end
 
    def teardown
@@ -27,12 +28,13 @@ class TC_DBI_Row < Test::Unit::TestCase
    
    # Ensure that constructor only allows Integers or Arrays (or nil)
    def test_row_constructor
-      assert_nothing_raised{ DBI::Row.new(@cols) }
-      assert_nothing_raised{ DBI::Row.new(@cols, 1) }
-      assert_nothing_raised{ DBI::Row.new(@cols, nil) }
-      assert_nothing_raised{ DBI::Row.new(@cols, [1,2,3])}
+      assert_nothing_raised{ DBI::Row.new(@cols, @coltypes) }
+      assert_nothing_raised{ DBI::Row.new(@cols, @coltypes, 1) }
+      assert_nothing_raised{ DBI::Row.new(@cols, @coltypes, nil) }
+      assert_nothing_raised{ DBI::Row.new(@cols, @coltypes, [1,2,3])}
       assert_raises(ArgumentError){ DBI::Row.new }
-      assert_raises(TypeError){ DBI::Row.new(@cols, {}) }
+      assert_raises(ArgumentError){ DBI::Row.new(@cols) }
+      assert_raises(TypeError){ DBI::Row.new(@cols, @coltypes, {}) }
    end
 
    # Test added to ensure that Row#at is equivalent to Row#by_index.  When the
@@ -54,7 +56,7 @@ class TC_DBI_Row < Test::Unit::TestCase
    
    def test_row_length
       assert_equal(3, @row.length)
-      assert_equal(3, DBI::Row.new(@cols).length)
+      assert_equal(3, DBI::Row.new(@cols, @coltypes).length)
    end
 
    def test_row_data_by_index
@@ -200,7 +202,7 @@ class TC_DBI_Row < Test::Unit::TestCase
 
    def test_to_a
       assert_respond_to(@row, :to_a)
-      assert_equal(@data, DBI::Row.new(@cols, @data).to_a)
+      assert_equal(@data, DBI::Row.new(@cols, @coltypes, @data).to_a)
    end
 
    def test_dup_clone
