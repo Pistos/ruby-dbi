@@ -168,7 +168,7 @@ class TestDbdPostgres < DBDConfig.testbase(:postgresql)
     dbd.disconnect if dbd
   end
 
-  def test_type_map
+  def skip_test_type_map
     dbd = get_dbd
     def dbd.type_map
       @type_map
@@ -204,14 +204,16 @@ class TestDbdPostgres < DBDConfig.testbase(:postgresql)
   end
 
   def test_query_single
-    dbd = get_dbd
+    dbd = get_dbi
     res = dbd.prepare("SELECT name, age FROM names WHERE age=21;")
     assert res
     res.execute
     fields = res.column_info
     assert_equal 2, fields.length
     assert_equal 'name', fields[0]['name']
+    assert_equal 'varchar', fields[0]['type_name']
     assert_equal 'age', fields[1]['name']
+    assert_equal 'int4', fields[1]['type_name']
 
     row = res.fetch
 

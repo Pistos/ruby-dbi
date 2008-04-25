@@ -53,8 +53,8 @@ class TestPostgresTimestamp < DBDConfig.testbase(:postgresql)
             assert_equal t.hour, row[0].hour
             assert_equal t.min, row[0].min
             assert_equal t.sec, row[0].sec
-            assert_equal t.sec_fraction, row[0].sec_fraction
             assert_not_nil row[0].sec_fraction
+            assert_equal t.sec_fraction, row[0].sec_fraction
             @sth.finish
         end
     end

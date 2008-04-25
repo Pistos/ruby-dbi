@@ -92,6 +92,13 @@ module DBI
                 elsif obj.kind_of? TrueClass
                     return true
                 else
+                    case obj
+                    when 't'
+                        return true
+                    when 'f'
+                        return false
+                    end
+
                     if obj.respond_to? :to_i
                         if obj.to_i == 0
                             return false

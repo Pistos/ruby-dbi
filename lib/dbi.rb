@@ -692,7 +692,7 @@ module DBI
                    col['dbi_type']
                else
                    case col['type_name']
-                   when /^int(?:eger)?$/i
+                   when /^int(?:\d+|eger)?$/i
                        DBI::Type::Integer
                    when /^varchar$/i, /^character varying$/i
                        DBI::Type::Varchar
@@ -700,7 +700,7 @@ module DBI
                        DBI::Type::Float
                    when /^bool(?:ean)?$/i
                        DBI::Type::Boolean
-                   when /^time(?:stamp)?$/i
+                   when /^time(?:stamp(?:tz)?)?$/i
                        DBI::Type::Timestamp
                    else
                        DBI::Type::Varchar
