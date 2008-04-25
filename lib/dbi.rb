@@ -698,7 +698,7 @@ module DBI
                        DBI::Type::Varchar
                    when /^(?:float|real)$/i
                        DBI::Type::Float
-                   when /^bool(?:ean)?$/i
+                   when /^bool(?:ean)?$/i, /^tinyint$/i
                        DBI::Type::Boolean
                    when /^time(?:stamp(?:tz)?)?$/i
                        DBI::Type::Timestamp

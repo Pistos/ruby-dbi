@@ -24,7 +24,7 @@ class TestMysqlPatches < DBDConfig.testbase(:mysql)
                     "indexed"=>true,
                     "precision"=>11,
                     "type_name"=>"int",
-                    "unique"=>false
+                    "unique"=>true
                 }
             ], @dbh.columns("field_types_test")
         end
