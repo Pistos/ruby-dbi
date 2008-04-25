@@ -443,16 +443,9 @@ module DBI
 
                     def quote(value)
                         if value.kind_of? Array then # work around broken PGconn.quote for Arrays
-            "'#{ quote_array_elements( value ).gsub(/\\/){ '\\\\' }.gsub(/'/){ '\\\'' } }'"
+                            "'#{ quote_array_elements( value ).gsub(/\\/){ '\\\\' }.gsub(/'/){ '\\\'' } }'"
                         else
-                            PGconn.quote(value) {|value|
-                                case value
-                                when DBI::Date, DBI::Time, DBI::Timestamp, ::Date, ::Time
-                "'#{value.to_s}'"
-                                else
-                                    value.to_s
-                                end
-                            }
+                            PGconn.quote(value) { |value| value.to_s }
                         end
                     end
 
@@ -461,9 +454,9 @@ module DBI
                     def quote(value)
                         case value
                         when String
-            "'#{ value.gsub(/\\/){ '\\\\' }.gsub(/'/){ '\\\'' } }'"
+                            "'#{ value.gsub(/\\/){ '\\\\' }.gsub(/'/){ '\\\'' } }'"
                         when Array
-            "'#{ quote_array_elements( value ).gsub(/\\/){ '\\\\' }.gsub(/'/){ '\\\'' } }'"
+                            "'#{ quote_array_elements( value ).gsub(/\\/){ '\\\\' }.gsub(/'/){ '\\\'' } }'"
                         else
                             super
                         end
@@ -478,9 +471,9 @@ module DBI
                 def quote_array_elements( value )
                     case value
                     when Array
-            '{'+ value.collect{|v| quote_array_elements(v) }.join(',') + '}'
+                        '{'+ value.collect{|v| quote_array_elements(v) }.join(',') + '}'
                     when String
-            '"' + value.gsub(/\\/){ '\\\\' }.gsub(/"/){ '\\"' } + '"'
+                        '"' + value.gsub(/\\/){ '\\\\' }.gsub(/"/){ '\\"' } + '"'
                     else
                         quote( value ).sub(/^'/,'').sub(/'$/,'') 
                     end
@@ -537,10 +530,6 @@ module DBI
                 def __blob_import(file)
                     start_transaction unless @in_transaction
                     @connection.lo_import(file)
-                    #if @attr['AutoCommit']
-                    #  _exec("COMMIT")
-                    #  @in_transaction = false
-                    #end
                 rescue PGError => err
                     raise DBI::DatabaseError.new(err.message) 
                 end
@@ -548,10 +537,6 @@ module DBI
                 def __blob_export(oid, file)
                     start_transaction unless @in_transaction
                     @connection.lo_export(oid.to_i, file)
-                    #if @attr['AutoCommit']
-                    #  _exec("COMMIT")
-                    #  @in_transaction = false
-                    #end
                 rescue PGError => err
                     raise DBI::DatabaseError.new(err.message) 
                 end
@@ -559,10 +544,6 @@ module DBI
                 def __blob_create(mode=PGconn::INV_READ)
                     start_transaction unless @in_transaction
                     @connection.lo_creat(mode)
-                    #if @attr['AutoCommit']
-                    #  _exec("COMMIT")
-                    #  @in_transaction = false
-                    #end
                 rescue PGError => err
                     raise DBI::DatabaseError.new(err.message) 
                 end
@@ -570,10 +551,6 @@ module DBI
                 def __blob_open(oid, mode=PGconn::INV_READ)
                     start_transaction unless @in_transaction
                     @connection.lo_open(oid.to_i, mode)
-                    #if @attr['AutoCommit']
-                    #  _exec("COMMIT")
-                    #  @in_transaction = false
-                    #end
                 rescue PGError => err
                     raise DBI::DatabaseError.new(err.message) 
                 end
@@ -581,10 +558,6 @@ module DBI
                 def __blob_unlink(oid)
                     start_transaction unless @in_transaction
                     @connection.lo_unlink(oid.to_i)
-                    #if @attr['AutoCommit']
-                    #  _exec("COMMIT")
-                    #  @in_transaction = false
-                    #end
                 rescue PGError => err
                     raise DBI::DatabaseError.new(err.message) 
                 end
@@ -627,13 +600,6 @@ module DBI
                 if PGconn.respond_to?(:escape_bytea)
 
                     def __encode_bytea(str)
-                        # FIXME there's a bug in the upstream 'pg' driver that does not
-                        # properly encode bytea, improperly handling "\123" treating it as
-                        # an octet.
-                        # 
-                        # Fix this for now, but beware that we'll have to unfix this as
-                        # soon as they fix their end.
-                        #str = str.gsub(/\\[0-7]{3}/) { |match| "\\#{match}" }
                         @connection.escape_bytea(str)
                     end
 
@@ -693,8 +659,6 @@ module DBI
                     end
                     pg_result = @db._exec(boundsql)
                     @result = Tuples.new(@db, pg_result)
-
-                    #$stderr.puts @result.column_info.inspect
 
                 rescue PGError, RuntimeError => err
                     raise DBI::ProgrammingError.new(err.message)
