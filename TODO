@@ -3,6 +3,7 @@
   * Get rid of that array parser
  * Mysql
 * Remove all other drivers
+ * Not sure what to do with ODBC and Proxy yet.
 * Finish type management system
  * DBI tests
 * Cleanup core
