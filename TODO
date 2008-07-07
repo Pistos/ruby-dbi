@@ -1,0 +1,15 @@
+* Cleanup:
+ * Pg
+  * Get rid of that array parser
+ * Mysql
+* Remove all other drivers
+* Finish type management system
+ * DBI tests
+* Cleanup core
+ * Remove DBI::DIR crap
+ * Require code is a mess
+* Packaging:
+ * Add stock setup.rb to all tarballs, including drivers
+ * Remove custom setup.rb
+* Scripts:
+ * What to do with these? I doubt they still work.
