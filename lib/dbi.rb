@@ -46,7 +46,6 @@ module DBI
    VERSION = "0.2.0"
    
    module DBD
-      DIR         = "DBD"
       API_VERSION = "0.3"
    end
    
@@ -212,6 +211,7 @@ module DBI
    @@driver_monitor = ::Monitor.new()
    @@trace_mode     = DEFAULT_TRACE_MODE
    @@trace_output   = DEFAULT_TRACE_OUTPUT
+   @@caseless_driver_name_map = nil
    
    class << self
       
@@ -241,20 +241,30 @@ module DBI
          @@trace_mode   = mode   || @@trace_mode   || DBI::DEFAULT_TRACE_MODE
          @@trace_output = output || @@trace_output || DBI::DEFAULT_TRACE_OUTPUT
       end
-      
+     
+      def collect_drivers
+         drivers = { }
+         # FIXME rewrite this to leverage require and be more intelligent
+         path = File.join(File.dirname(__FILE__), "dbd", "*.rb")
+         Dir[path].each do |f|
+            if File.file?(f)
+               driver = File.basename(f, ".rb")
+               drivers[driver] = f
+            end
+         end
+
+         return drivers
+      end
+
       # Returns a list of the currently available drivers on your system in
       # 'dbi:driver:' format.
       def available_drivers
-         drivers = []
-         #path = File.dirname(File.dirname(__FILE__)) + "/" + DBD::DIR
-         path = File.dirname(__FILE__) + "/" + DBD::DIR
-         Find.find(path){ |f|
-            if File.file?(f)
-               driver = File.basename(f, ".rb")
-               drivers.push("dbi:#{driver}:")
-            end
-         }
-         drivers
+          drivers = []
+          collect_drivers.each do |key, value|
+              drivers.push("dbi:#{key}:")
+          end
+
+          return drivers
       end
       
       def data_sources(driver)
@@ -273,59 +283,30 @@ module DBI
          end
       end
       
-      
       private
-      
-      ##
-      # extended by John Gorman <jgorman@webbysoft.com> for
-      # case insensitive DBD names
-      # 
+     
       def load_driver(driver_name)
           @@driver_monitor.synchronize do
-              if @@driver_map[driver_name].nil?
-
+              unless @@driver_map[driver_name]
                   dc = driver_name.downcase
-
+                  
                   # caseless look for drivers already loaded
                   found = @@driver_map.keys.find {|key| key.downcase == dc}
                   return found if found
 
-                  if $SAFE >= 1
-                      # case-sensitive in safe mode
-                      require "#{DBD::DIR}/#{driver_name}/#{driver_name}"
-                  else
-                      # FIXME this whole require scheme is so horribly stupid I
-                      # can't even begin to think about how much I'd enjoy what
-                      # was smoked when this was thought up.
-                      #
-                      # Here's a hack to get tests to work.
-                      # try a quick load and then a caseless scan
-                      begin
-                          begin
-                              require "dbd/#{driver_name}"
-                          rescue LoadError 
-                              require "#{DBD::DIR}/#{driver_name}/#{driver_name}"
-                          end
-                      rescue LoadError
-                          $LOAD_PATH.each do |dir|
-                              path = "#{dir}/dbd"
-                              if FileTest.directory?(path)
-                                  require "#{path}/#{driver_name}"
-                                  break
-                              end
-
-                              path = "#{dir}/#{DBD::DIR}"
-                              next unless FileTest.directory?(path)
-                              found = Dir.entries(path).find {|e| e.downcase == dc}
-                              next unless found
-
-                              require "#{path}/#{found}/#{found}"
-                              break
+                  begin
+                      require "dbd/#{driver_name}"
+                  rescue LoadError
+                      # see if you can find it in the path
+                      unless @@caseless_driver_name_map
+                          @@caseless_driver_name_map = { } 
+                          collect_drivers.each do |key, value|
+                              @@caseless_driver_name_map[key.downcase] = value
                           end
                       end
-                  end
 
-                  found ||= driver_name
+                      require @@caseless_driver_name_map[dc] if @@caseless_driver_name_map[dc]
+                  end
 
                   # On a filesystem that is not case-sensitive (e.g., HFS+ on Mac OS X),
                   # the initial require attempt that loads the driver may succeed even
@@ -338,14 +319,14 @@ module DBI
 
                   dr = nil
                   begin
-                      dr = DBI::DBD.const_get(found.intern)
+                      dr = DBI::DBD.const_get(driver_name.intern)
                   rescue NameError
                       # caseless look for constants to find actual constant
-                      found = found.downcase
-                      found = DBI::DBD.constants.find { |e| e.downcase == found }
+                      dc = driver_name.downcase
+                      found = DBI::DBD.constants.find { |e| e.downcase == dc }
                       dr = DBI::DBD.const_get(found.intern) unless found.nil?
                   end
-
+                  
                   # If dr is nil at this point, it means the underlying driver
                   # failed to load.  This usually means it's not installed, but
                   # can fail for other reasons.
@@ -358,8 +339,8 @@ module DBI
                   drh = DBI::DriverHandle.new(dbd_dr)
                   drh.driver_name = dr.driver_name
                   drh.trace(@@trace_mode, @@trace_output)
-                  @@driver_map[found] = [drh, dbd_dr]
-                  return found
+                  @@driver_map[driver_name] = [drh, dbd_dr]
+                  return driver_name 
               else
                   return driver_name
               end

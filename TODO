@@ -2,13 +2,15 @@
  * Pg
   * Get rid of that array parser
  * Mysql
-* Remove all other drivers
+x Remove all other drivers
  * Not sure what to do with ODBC and Proxy yet.
 * Finish type management system
  * DBI tests
+ * Gut old typing system
 * Cleanup core
- * Remove DBI::DIR crap
- * Require code is a mess
+ x Remove DBI::DIR crap
+ x Require code is a mess
+ * Find a good clean way to enumerate drivers in separate gems
 * Packaging:
  * Add stock setup.rb to all tarballs, including drivers
  * Remove custom setup.rb
