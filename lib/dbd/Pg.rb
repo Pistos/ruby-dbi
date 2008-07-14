@@ -220,6 +220,7 @@ module DBI
                             indexed = false
                             primary = nil
                             unique = nil
+                            array_of_type = nil
                             if indices.has_key?(name)
                                 indexed = true
                                 primary, unique = indices[name]
@@ -229,6 +230,7 @@ module DBI
                             pos = ftype.index('(')
                             decimal = nil
                             size = nil
+
                             if pos != nil
                                 type = ftype[0..pos-1]
                                 size = ftype[pos+1..-2]
@@ -241,7 +243,13 @@ module DBI
                                     size = size.to_i
                                 end
                             end
+
                             size = len if size.nil?
+
+                            if type =~ /\[\]$/
+                                type.sub!(/\[\]$/, '')
+                                array_of_type = true
+                            end
 
                             if POSTGRESQL_to_XOPEN.has_key?(type)
                                 sql_type = POSTGRESQL_to_XOPEN[type][0]
@@ -260,6 +268,7 @@ module DBI
                             row['precision']      = size
                             row['scale']          = decimal
                             row['default']        = default_values[name]
+                            row['array_of_type']  = array_of_type
                             row
                         end # collect
                     end # execute

@@ -10,36 +10,39 @@ class TestPostgresArray < DBDConfig.testbase(:postgresql)
                         "default"=>nil, 
                         "primary"=>nil, 
                         "scale"=>nil, 
-                        "sql_type"=>DBI::SQL_OTHER, 
+                        "sql_type"=>DBI::SQL_INTEGER, 
                         "nullable"=>true, 
                         "indexed"=>false, 
                         "precision"=>-1, 
-                        "type_name"=>"integer[]", 
-                        "unique"=>nil
+                        "type_name"=>"integer", 
+                        "unique"=>nil,
+                        "array_of_type" => true
                     }, 
                     {
                         "name"=>"bar", 
                         "default"=>nil, 
                         "primary"=>nil, 
                         "scale"=>nil, 
-                        "sql_type"=>DBI::SQL_OTHER, 
+                        "sql_type"=>DBI::SQL_INTEGER, 
                         "nullable"=>true, 
                         "indexed"=>false, 
                         "precision"=>-1, 
-                        "type_name"=>"integer[]", 
-                        "unique"=>nil
+                        "type_name"=>"integer", 
+                        "unique"=>nil,
+                        "array_of_type" => true
                     },
                     {
                         "name"=>"baz", 
                         "default"=>nil, 
                         "primary"=>nil, 
                         "scale"=>nil, 
-                        "sql_type"=>DBI::SQL_OTHER, 
+                        "sql_type"=>DBI::SQL_INTEGER, 
                         "nullable"=>true, 
                         "indexed"=>false, 
                         "precision"=>-1, 
-                        "type_name"=>"integer[]", 
-                        "unique"=>nil
+                        "type_name"=>"integer", 
+                        "unique"=>nil,
+                        "array_of_type" => true
                     }
                 ], cols
             )
@@ -86,11 +89,42 @@ class TestPostgresArray < DBDConfig.testbase(:postgresql)
             sth.execute('{1,2,3}')
         end
 
-        # XXX postgresql does not enforce extents on the outermost array
+        # XXX postgresql does not enforce extents on single-dimension arrays 
         assert_nothing_raised do
             sth.execute('{1,2,3,4}')
         end
 
         sth.finish
+        sth = @dbh.prepare('insert into array_test(baz) values (?)')
+
+        assert_nothing_raised do
+            sth.execute('{{1,2,3}, {1,2,3}}')
+        end
+
+        assert_nothing_raised do
+            # XXX for the record, I have no fucking idea why this works, what
+            # it's technically represented as and what backwards array
+            # implementation would allow it to work.
+            #
+            # I'm hoping it'll break on some future version of postgresql so I
+            # can fix it.
+            sth.execute('{1,2,3}')
+        end
+
+        assert_raise(DBI::ProgrammingError) do
+            sth.execute('{{1,2,3,4}, {1,2,3}}')
+        end
+
+        assert_raise(DBI::ProgrammingError) do
+            sth.execute('{{1,2,3}, {1,2,3,4}}')
+        end
+
+        sth.finish
+    end
+
+    def test_array_parser
+    end
+
+    def test_array_generator
     end
 end

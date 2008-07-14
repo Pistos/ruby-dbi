@@ -46,7 +46,8 @@ class TestDbdPostgres < DBDConfig.testbase(:postgresql)
                         "indexed"=>false,
                         "precision"=>4,
                         "type_name"=>"integer",
-                        "unique"=>nil
+                        "unique"=>nil,
+                        "array_of_type"=>nil
                 },
                 {
                         "name"=>"name",
@@ -58,7 +59,8 @@ class TestDbdPostgres < DBDConfig.testbase(:postgresql)
                         "indexed"=>false,
                         "precision"=>255,
                         "type_name"=>"character varying",
-                        "unique"=>nil
+                        "unique"=>nil,
+                        "array_of_type"=>nil
                 }
         ], @dbh.columns("names").sort_by { |x| x["name"] })
 
@@ -81,7 +83,8 @@ class TestDbdPostgres < DBDConfig.testbase(:postgresql)
                     "indexed"=>false,
                     "precision"=>4,
                     "type_name"=>"integer",
-                    "unique"=>nil
+                    "unique"=>nil,
+                    "array_of_type"=>nil
         
                 }
             ], 
