@@ -126,5 +126,13 @@ class TestPostgresArray < DBDConfig.testbase(:postgresql)
     end
 
     def test_array_generator
+        pg = DBI::DBD::Pg
+
+        assert_nothing_raised do
+            assert_equal("{1,2,3}", pg.generate_array([1,2,3]))
+            assert_equal("{{1,2,3},{1,2,3}}", pg.generate_array([[1,2,3],[1,2,3]]))
+            assert_equal("{\"one\",\"two\"}", pg.generate_array(["one", "two"]))
+            assert_equal("{\"hello\\\\ world\",\"again\"}", pg.generate_array(["hello\\ world", "again"]))
+        end
     end
 end

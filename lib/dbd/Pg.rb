@@ -50,12 +50,38 @@ module DBI
                 "Pg"
             end
 
+            def self.generate_array(obj)
+                # yarr, there be recursion here, and it's probably not a good idea.
+                output = "{"
+                obj.each do |item|
+                    case item
+                    when ::Array
+                        output += generate_array(item)
+                    else
+                        generated = DBI::TypeUtil.convert(driver_name, item)
+                        if item.kind_of? String
+                            # in strings, escapes are doubled and the quotes are different.
+                            # this gets *really* ugly and needs to be well-tested
+                            generated.gsub!(/\\/) { "\\\\" }
+                            generated = "\"#{generated}\"" 
+                        end
+
+                        output += generated
+                    end
+                    output += "," # FIXME technically, delimiters are variable
+                end
+
+                output.sub(/,$/, '}')
+            end
+
             DBI::TypeUtil.register_conversion(driver_name) do |obj|
                 case obj
                 when ::DateTime
                     obj.strftime("%m/%d/%Y %H:%M:%S.%N")
                 when ::Time, ::Date
                     ::DateTime.parse(obj.to_s).strftime("%m/%d/%Y %H:%M:%S.%N")
+                when ::Array
+                    self.generate_array(obj)
                 else
                     obj
                 end
