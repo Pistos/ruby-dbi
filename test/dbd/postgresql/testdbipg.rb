@@ -21,6 +21,7 @@ class TestDbdPostgres < DBDConfig.testbase(:postgresql)
     def test_tables
         assert_equal(
         [
+            "array_test",
             "bit_test",
             "blob_test",
             "boolean_test",
