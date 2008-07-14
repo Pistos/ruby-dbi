@@ -28,7 +28,7 @@ create table bit_test (mybit bit);
 ---
 create table field_types_test (foo integer not null primary key default 1);
 ---
-create table array_test (foo integer[] not null, bar integer[3][3]);
+create table array_test (foo integer[], bar integer[3], baz integer[3][3]);
 ---
 create schema schema1;
 ---

@@ -1,7 +1,13 @@
 * Cleanup:
  * Pg
-  * Get rid of that array parser
-   * But test it first
+  * LOB tests don't clean up LOBs, just the tables that hold them 
+  * Transaction Tests (AutoCommit on and off, ensuring rollback, etc)
+  * more fetch tests
+  * Arrays:
+      * Find some way to get the extents of an array type
+       * checked pg_type, pg_attribute and pg_class, can't find anything.
+      * Get rid of that array parser
+       * But test it first
  * Mysql
 x Remove all other drivers
  * Not sure what to do with ODBC and Proxy yet.
