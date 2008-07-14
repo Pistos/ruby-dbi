@@ -48,7 +48,6 @@ module DBI
                     attr_reader :base_type
 
                     def initialize(base_type)
-                        raise "base_type is not valid" unless base_type.respond_to?(:parse)
                         @base_type = base_type
                     end
 
@@ -475,20 +474,6 @@ module DBI
 
                 # Other Public Methods ---------------------------------------
 
-
-                def convert(obj,typeid)
-                    return nil if obj.nil?
-
-                    if @elem_map.include?( typeid ) then
-                        convert_array( obj, @elem_map[ typeid ] )
-                    else
-                        converter = @type_map[typeid] || :as_str
-                        #raise DBI::InterfaceError, "Unsupported Type (typeid=#{typeid})" if converter.nil?
-                        @coerce.coerce(converter, obj)
-                    end
-
-                end
-
                 def in_transaction?
                     @in_transaction
                 end
@@ -542,36 +527,70 @@ module DBI
                     end
                 end 
 
+                def parse_type_name(type_name)
+                    case type_name
+                    when 'bool'                      then DBI::Type::Boolean
+                    when 'int8', 'int4', 'int2'      then DBI::Type::Integer
+                    when 'varchar'                   then DBI::Type::Varchar
+                    when 'float4','float8'           then DBI::Type::Float
+                    when 'time', 'timetz'            then DBI::Type::Timestamp
+                    when 'timestamp', 'timestamptz'  then DBI::Type::Timestamp
+                    when 'date'                      then DBI::Type::Timestamp
+                    when 'bytea'                     then :as_bytea
+                    end
+                end
+
+                #
+                # Gathers the types from the postgres database and attempts to
+                # locate matching DBI::Type objects for them.
+                # 
                 def load_type_map
                     @type_map = Hash.new
-                    @elem_map = Hash.new
-                    @coerce = PgCoerce.new
 
                     res = _exec("SELECT oid, typname, typelem FROM pg_type WHERE typtype = 'b';")
 
                     res.each do |row|
+                        rowtype = parse_type_name(row["typname"])
                         @type_map[row["oid"].to_i] = 
-                            case row["typname"]
-                            when 'bool'                      then :as_bool
-                            when 'int8', 'int4', 'int2'    then :as_int
-                            when 'varchar'                   then :as_str
-                            when 'float4','float8'          then :as_float
-                            when 'time', 'timetz'           then :as_time
-                            when 'timestamp', 'timestamptz' then :as_timestamp
-                            when 'date'                      then :as_date
-                            when 'bytea'                     then :as_bytea
-                            else
-                                if row["typname"] =~ /^_/ and row["typelem"].to_i > 0 then
-                                    @elem_map[row["typname"].to_i] = row["typelem"].to_i
-                                    :as_str
-                                else
-                                    :as_str
-                                end
-                            end
+                            { 
+                                "type_name" => row["typname"],
+                                "dbi_type" => 
+                                    if rowtype
+                                        rowtype
+                                    elsif row["typname"] =~ /^_/ and row["typelem"].to_i > 0 then
+                                        # arrays are special and have a subtype, as an
+                                        # oid held in the "typelem" field.
+                                        # Since we may not have a mapping for the
+                                        # subtype yet, defer by storing the typelem
+                                        # integer as a base type in a constructed
+                                        # Type::Array object. dirty, i know.
+                                        #
+                                        # These array objects will be reconstructed
+                                        # after all rows are processed and therefore
+                                        # the oid -> type mapping is complete.
+                                        # 
+                                        DBI::DBD::Pg::Type::Array.new(row["typelem"].to_i)
+                                    else
+                                        DBI::Type::Varchar
+                                    end
+                            }
                     end 
                     # additional conversions
-                    @type_map[705]  ||= :as_str       # select 'hallo'
-                    @type_map[1114] ||= :as_timestamp # TIMESTAMP WITHOUT TIME ZONE
+                    @type_map[705]  ||= DBI::Type::Varchar       # select 'hallo'
+                    @type_map[1114] ||= DBI::Type::Timestamp # TIMESTAMP WITHOUT TIME ZONE
+
+                    # remap array subtypes
+                    @type_map.each_key do |key|
+                        if @type_map[key]["dbi_type"].class == DBI::DBD::Pg::Type::Array
+                            oid = @type_map[key]["dbi_type"].base_type
+                            if @type_map[oid]
+                                @type_map[key]["dbi_type"] = DBI::DBD::Pg::Type::Array.new(@type_map[oid]["dbi_type"])
+                            else
+                                # punt
+                                @type_map[key] = DBI::DBD::Pg::Type::Array.new(DBI::Type::Varchar)
+                            end
+                        end
+                    end
                 end
 
 
@@ -580,7 +599,11 @@ module DBI
                 public
 
                 # return the postgresql types for this session. returns an oid -> type name mapping.
-                def __types
+                def __types(force=nil)
+                    load_type_map if (!@type_map or force)
+                    @type_map
+                end
+                def __types_old
                     h = { } 
 
                     _exec('select oid, typname from pg_type').each do |row|
@@ -786,9 +809,7 @@ module DBI
                 def column_info
                     a = []
                     @pg_result.fields.each_with_index do |str, i| 
-                        h = { "name" => str }
-                        h["type_name"] = @db.type_map[@pg_result.ftype(i)]
-
+                        h = { "name" => str }.merge(@db.type_map[@pg_result.ftype(i)])
                         a.push h
                     end
 

@@ -71,8 +71,8 @@ class TestPostgresArray < DBDConfig.testbase(:postgresql)
             sth.execute
             assert_equal(
                 [
-                    ['{1,2,3}'],
-                    ['{1,2,3}']
+                    [[1,2,3]],
+                    [[1,2,3]]
                 ], sth.fetch_all
             )
             sth.finish
@@ -120,7 +120,7 @@ class TestPostgresArray < DBDConfig.testbase(:postgresql)
         sth.finish
     end
 
-    def test_array_parser
+    def test_array_type_parser
         pc = DBI::DBD::Pg::Type::Array
 
         assert_nothing_raised do
