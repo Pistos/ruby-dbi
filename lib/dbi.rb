@@ -672,20 +672,7 @@ module DBI
                if col['dbi_type']
                    col['dbi_type']
                else
-                   case col['type_name']
-                   when /^int(?:\d+|eger)?$/i
-                       DBI::Type::Integer
-                   when /^varchar$/i, /^character varying$/i
-                       DBI::Type::Varchar
-                   when /^(?:float|real)$/i
-                       DBI::Type::Float
-                   when /^bool(?:ean)?$/i, /^tinyint$/i
-                       DBI::Type::Boolean
-                   when /^time(?:stamp(?:tz)?)?$/i
-                       DBI::Type::Timestamp
-                   else
-                       DBI::Type::Varchar
-                   end
+                   DBI::TypeUtil.type_name_to_module(col['type_name'])
                end
            end
        end

@@ -15,6 +15,23 @@ module DBI
             end
             return @@conversions["default"].call(obj)
         end
+
+        def self.type_name_to_module(type_name)
+            case type_name
+            when /^int(?:\d+|eger)?$/i
+                DBI::Type::Integer
+            when /^varchar$/i, /^character varying$/i
+                DBI::Type::Varchar
+            when /^(?:float|real)$/i
+                DBI::Type::Float
+            when /^bool(?:ean)?$/i, /^tinyint$/i
+                DBI::Type::Boolean
+            when /^time(?:stamp(?:tz)?)?$/i
+                DBI::Type::Timestamp
+            else
+                DBI::Type::Varchar
+            end
+        end
     end
 
     DBI::TypeUtil.register_conversion("default") do |obj|

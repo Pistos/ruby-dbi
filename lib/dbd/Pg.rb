@@ -44,6 +44,9 @@ module DBI
         module Pg
             module Type
                 class Array
+
+                    attr_reader :base_type
+
                     def initialize(base_type)
                         raise "base_type is not valid" unless base_type.respond_to?(:parse)
                         @base_type = base_type
@@ -396,6 +399,13 @@ module DBI
                             row['scale']          = decimal
                             row['default']        = default_values[name]
                             row['array_of_type']  = array_of_type
+
+                            if array_of_type
+                                row['dbi_type'] = 
+                                    DBI::DBD::Pg::Type::Array.new(
+                                        DBI::TypeUtil.type_name_to_module(type)
+                                    )
+                            end
                             row
                         end # collect
                     end # execute

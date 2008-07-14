@@ -2,7 +2,6 @@ class TestPostgresArray < DBDConfig.testbase(:postgresql)
     def test_array_type
         assert_nothing_raised do
             cols = @dbh.columns("array_test")
-            assert(cols)
             assert_equal(
                 [
                     {
@@ -44,8 +43,11 @@ class TestPostgresArray < DBDConfig.testbase(:postgresql)
                         "unique"=>nil,
                         "array_of_type" => true
                     }
-                ], cols
+                ], cols.collect { |x| x.reject { |key, value| key == "dbi_type" } }
             )
+
+            assert_equal(([DBI::DBD::Pg::Type::Array] * 3), cols.collect { |x| x["dbi_type"].class })
+            assert_equal(([DBI::Type::Integer] * 3), cols.collect { |x| x["dbi_type"].base_type })
         end
     end
 
