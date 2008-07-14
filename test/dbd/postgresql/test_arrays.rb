@@ -57,14 +57,10 @@ class TestPostgresArray < DBDConfig.testbase(:postgresql)
             sth.finish
         end
 
-        # typed representation
-        # FIXME this currently fails until typed handling is fixed
-        if false
-            assert_nothing_raised do
-                sth = @dbh.prepare('insert into array_test (foo) values (?)')
-                sth.execute([1,2,3])
-                sth.finish
-            end
+        assert_nothing_raised do
+            sth = @dbh.prepare('insert into array_test (foo) values (?)')
+            sth.execute([1,2,3])
+            sth.finish
         end
 
         assert_nothing_raised do
@@ -73,7 +69,7 @@ class TestPostgresArray < DBDConfig.testbase(:postgresql)
             sth.execute
             assert_equal(
                 [
-                    # ['{1,2,3}'], FIXME uncomment me when the type handling is fixed
+                    ['{1,2,3}'],
                     ['{1,2,3}']
                 ], sth.fetch_all
             )
@@ -123,6 +119,20 @@ class TestPostgresArray < DBDConfig.testbase(:postgresql)
     end
 
     def test_array_parser
+        pc = DBI::DBD::Pg::Type::Array
+
+        assert_nothing_raised do
+            po = pc.new(DBI::Type::Integer)
+            assert_equal([1,2,3], po.parse("{1,2,3}"))
+            assert_equal([[1,2,3],[4,5,6]], po.parse("{{1,2,3},{4,5,6}}"))
+        end
+
+        assert_nothing_raised do
+            po = pc.new(DBI::Type::Varchar)
+            assert_equal(["one", "two", "three"], po.parse("{\"one\",\"two\",\"three\"}"))
+            assert_equal([["one"], ["two\\"]], po.parse("{{\"one\"},{\"two\\\\\"}}"))
+            assert_equal([["one", "two\\"], ["three\\", "four"]], po.parse("{{\"one\",\"two\\\\\"},{\"three\\\\\",\"four\"}}"))
+        end
     end
 
     def test_array_generator
