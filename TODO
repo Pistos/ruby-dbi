@@ -1,6 +1,7 @@
 * Cleanup:
  * Pg
   * Get rid of that array parser
+   * But test it first
  * Mysql
 x Remove all other drivers
  * Not sure what to do with ODBC and Proxy yet.
@@ -13,6 +14,7 @@ x Remove all other drivers
  * Find a good clean way to enumerate drivers in separate gems
 * Packaging:
  * Add stock setup.rb to all tarballs, including drivers
+ * Ideally, move DBD-specific tests to DBD packages
  * Remove custom setup.rb
 * Scripts:
  * What to do with these? I doubt they still work.
