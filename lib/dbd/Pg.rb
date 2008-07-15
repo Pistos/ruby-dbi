@@ -43,6 +43,55 @@ module DBI
     module DBD
         module Pg
             module Type
+                class ByteA
+
+                    attr_reader :original
+                    attr_reader :escaped
+
+                    def initialize(obj)
+                        @original = obj
+                        @escaped = escape_bytea(obj)
+                        @original.freeze
+                        @escaped.freeze
+                    end
+                    
+                    def escape_bytea(str)
+                        PGconn.escape_bytea(str)
+                    end
+
+                    def to_s
+                        return @original.dup
+                    end
+
+                    def self.escape_bytea(str)
+                        self.new(str).escaped
+                    end
+
+                    def self.parse(obj)
+                        # FIXME there's a bug in the upstream 'pg' driver that does not
+                        # properly decode bytea, leaving in an extra slash for each decoded
+                        # character.
+                        #
+                        # Fix this for now, but beware that we'll have to unfix this as
+                        # soon as they fix their end.
+                        ret = PGconn.unescape_bytea(obj)
+
+                        # XXX 
+                        # String#split does not properly create a full array if the the
+                        # string ENDS in the split regex, unless this oddball -1 argument is supplied.
+                        #
+                        # Another way of saying this:
+                        # if foo = "foo\\\\\" and foo.split(/\\\\/), the result will be
+                        # ["foo"]. You can add as many delimiters to the end of the string
+                        # as you'd like - the result is no different.
+                        #
+
+                        ret = ret.split(/\\\\/, -1).collect { |x| x.length > 0 ? x.gsub(/\\[0-7]{3}/) { |y| y[1..3].oct.chr } : "" }.join("\\")
+                        ret.gsub!(/''/, "'")
+                        return ret
+                    end
+                end
+
                 class Array
 
                     attr_reader :base_type
@@ -166,7 +215,7 @@ module DBI
                             # in strings, escapes are doubled and the quotes are different.
                             # this gets *really* ugly and needs to be well-tested
                             generated.gsub!(/\\/) { "\\\\" }
-                            generated = "\"#{generated}\"" 
+                            generated.gsub!(/(^')|('$)/) { "\"" }
                         end
 
                         output += generated
@@ -180,14 +229,24 @@ module DBI
             DBI::TypeUtil.register_conversion(driver_name) do |obj|
                 case obj
                 when ::DateTime
-                    obj.strftime("%m/%d/%Y %H:%M:%S.%N")
+                    self.quote(obj.strftime("%m/%d/%Y %H:%M:%S.%N"))
                 when ::Time, ::Date
-                    ::DateTime.parse(obj.to_s).strftime("%m/%d/%Y %H:%M:%S.%N")
+                    self.quote(::DateTime.parse(obj.to_s).strftime("%m/%d/%Y %H:%M:%S.%N"))
                 when ::Array
-                    self.generate_array(obj)
+                    self.quote(self.generate_array(obj))
+                when ::TrueClass
+                    "'t'"
+                when ::FalseClass
+                    "'f'"
+                when Type::ByteA
+                    "E'#{obj.escaped}'"
                 else
                     obj
                 end
+            end
+
+            def self.quote(value)
+                "E'#{ value.gsub(/\\/){ '\\\\' }.gsub(/'/){ '\\\'' } }'"
             end
 
             class Driver < DBI::BaseDriver
@@ -487,32 +546,6 @@ module DBI
                     @connection.send(@exec_method, sql)
                 end
 
-                if PGconn.respond_to?(:quote)
-
-                    def quote(value)
-                        if value.kind_of? Array then # work around broken PGconn.quote for Arrays
-                            "'#{ quote_array_elements( value ).gsub(/\\/){ '\\\\' }.gsub(/'/){ '\\\'' } }'"
-                        else
-                            PGconn.quote(value) { |value| value.to_s }
-                        end
-                    end
-
-                else
-
-                    def quote(value)
-                        case value
-                        when String
-                            "'#{ value.gsub(/\\/){ '\\\\' }.gsub(/'/){ '\\\'' } }'"
-                        when Array
-                            "'#{ quote_array_elements( value ).gsub(/\\/){ '\\\\' }.gsub(/'/){ '\\\'' } }'"
-                        else
-                            super
-                        end
-                    end
-
-                end
-
-
                 private # ----------------------------------------------------
 
                 # special quoting if value is element of an array 
@@ -536,7 +569,7 @@ module DBI
                     when 'time', 'timetz'            then DBI::Type::Timestamp
                     when 'timestamp', 'timestamptz'  then DBI::Type::Timestamp
                     when 'date'                      then DBI::Type::Timestamp
-                    when 'bytea'                     then :as_bytea
+                    when 'bytea'                     then DBI::DBD::Pg::Type::ByteA
                     end
                 end
 
@@ -683,31 +716,6 @@ module DBI
                     raise DBI::DatabaseError.new(err.message) 
                 end
 
-                if PGconn.respond_to?(:escape_bytea)
-
-                    def __encode_bytea(str)
-                        @connection.escape_bytea(str)
-                    end
-
-                else
-
-                    ##
-                    # encodes a string as bytea value.
-                    #
-                    # for encoding rules see:
-                    #   http://www.postgresql.org/idocs/index.php?datatype-binary.html
-                    #
-                    def __encode_bytea(str)
-                        # TODO: use quote function of Pg driver
-                        a = str.split(/\\/, -1).collect! {|s|
-                            s.gsub!(/'/,    "\\\\047")  # '  => \\047 
-                            s.gsub!(/\000/, "\\\\000")  # \0 => \\000  
-                            s
-                        }
-                        a.join("\\\\")                # \  => \\
-                    end
-
-                end
 
             end # Database
 
@@ -872,46 +880,6 @@ module DBI
                 end
 
             end # Tuples
-
-            ################################################################
-            class PgCoerce < DBI::SQL::BasicQuote::Coerce
-                #
-                # for decoding rules see:
-                #   http://www.postgresql.org/idocs/index.php?datatype-binary.html
-                #
-                def as_bytea(str)
-                    # FIXME there's a bug in the upstream 'pg' driver that does not
-                    # properly decode bytea, leaving in an extra slash for each decoded
-                    # character.
-                    #
-                    # Fix this for now, but beware that we'll have to unfix this as
-                    # soon as they fix their end.
-                    ret = PGconn.unescape_bytea(str)
-
-                    # XXX 
-                    # String#split does not properly create a full array if the the
-                    # string ENDS in the split regex, unless this oddball -1 argument is supplied.
-                    #
-                    # Another way of saying this:
-                    # if foo = "foo\\\\\" and foo.split(/\\\\/), the result will be
-                    # ["foo"]. You can add as many delimiters to the end of the string
-                    # as you'd like - the result is no different.
-                    #
-
-                    ret = ret.split(/\\\\/, -1).collect { |x| x.length > 0 ? x.gsub(/\\[0-7]{3}/) { |y| y[1..3].oct.chr } : "" }.join("\\")
-                    ret.gsub!(/''/, "'")
-                    return ret
-                end
-
-                def as_timestamp(str)
-                    return super unless m = /\.\d+(?=(?:[-+]\d+)?$)/.match(str)
-                    # ".12345" => 123456000 nanoseconds
-                    num = m.to_s[1..9].ljust(9, "0")
-                    (t = super $` + $').fraction = num.to_i
-                    t
-                end
-            end
-
         end # module Pg
     end # module DBD
 end # module DBI

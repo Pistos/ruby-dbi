@@ -10,10 +10,15 @@ module DBI
         end
 
         def self.convert(driver_name, obj)
+            newobj = obj
             if @@conversions[driver_name]
-                obj = @@conversions[driver_name].call(obj)
+                newobj = @@conversions[driver_name].call(obj)
             end
-            return @@conversions["default"].call(obj)
+            if newobj.object_id == obj.object_id
+                return @@conversions["default"].call(newobj)
+            end
+
+            return newobj
         end
 
         def self.type_name_to_module(type_name)
@@ -39,15 +44,17 @@ module DBI
           when DBI::Binary # these need to be handled specially by the driver
               obj
           when ::NilClass
-              'NULL'
+              "'NULL'"
           when ::TrueClass
-              '1'
+              "'1'"
           when ::FalseClass
-              '0'
+              "'0'"
           when ::Time, ::Date, ::DateTime
-              ::DateTime.parse(obj.to_s).strftime("%m/%d/%Y %H:%M:%S")
-          else
+              "'#{::DateTime.parse(obj.to_s).strftime("%m/%d/%Y %H:%M:%S")}'"
+          when ::Numeric
               obj.to_s
+          else
+              "'#{obj.to_s}'"
           end
     end
 

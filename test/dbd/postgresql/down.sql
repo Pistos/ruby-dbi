@@ -16,6 +16,8 @@ drop table field_types_test;
 ---
 drop table array_test;
 ---
+drop table bytea_test;
+---
 drop schema schema1 cascade;
 ---
 drop schema schema2 cascade;
