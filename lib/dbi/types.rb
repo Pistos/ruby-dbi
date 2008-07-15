@@ -51,6 +51,9 @@ module DBI
               "'0'"
           when ::Time, ::Date, ::DateTime
               "'#{::DateTime.parse(obj.to_s).strftime("%m/%d/%Y %H:%M:%S")}'"
+          when ::String
+              obj = obj.gsub(/'/) { "''" }
+              "'#{obj}'"
           when ::Numeric
               obj.to_s
           else
