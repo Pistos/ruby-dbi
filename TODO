@@ -10,12 +10,16 @@
       x Get rid of that array parser
        x But test it first
  * Mysql
+  * find a better way to handle the ColumnInfo stuff; currently monkeypatching
+ * Tracing
+  * WTH do we want to do with this
 x Remove all other drivers
  * Not sure what to do with ODBC and Proxy yet.
 * Finish type management system
  * DBI tests
  * Find a better way to leverage lower-level binding APIs
  x Gut old typing system
+  * Notify user that Date/Time/Timestamp are deprecated
 * Cleanup core
  x Remove DBI::DIR crap
  x Require code is a mess
