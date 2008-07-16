@@ -296,7 +296,7 @@ module DBI
 
                   begin
                       require "dbd/#{driver_name}"
-                  rescue LoadError
+                  rescue LoadError => e1
                       # see if you can find it in the path
                       unless @@caseless_driver_name_map
                           @@caseless_driver_name_map = { } 
@@ -304,8 +304,12 @@ module DBI
                               @@caseless_driver_name_map[key.downcase] = value
                           end
                       end
-
-                      require @@caseless_driver_name_map[dc] if @@caseless_driver_name_map[dc]
+                      
+                      begin
+                          require @@caseless_driver_name_map[dc] if @@caseless_driver_name_map[dc]
+                      rescue LoadError => e2
+                          raise e.class, "Could not find driver #{driver_name} or #{driver_name.downcase} (error: #{e1.message})"
+                      end
                   end
 
                   # On a filesystem that is not case-sensitive (e.g., HFS+ on Mac OS X),

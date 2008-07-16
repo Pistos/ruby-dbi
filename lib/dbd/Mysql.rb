@@ -30,6 +30,12 @@
 # $Id$
 #
 
+begin
+    require 'rubygems'
+    gem 'mysql'
+rescue LoadError => e
+end
+
 require "mysql"
 require "thread"   # for Mutex
 
@@ -109,9 +115,9 @@ module DBI
             DBI::TypeUtil.register_conversion(driver_name) do |obj|
                 case obj
                 when ::Time
-                    obj.strftime("%H:%M:%S")
+                    "'#{obj.strftime("%H:%M:%S")}'"
                 when ::Date
-                    obj.strftime("%m/%d/%Y")
+                    "'#{obj.strftime("%m/%d/%Y")}'"
                 else
                     obj
                 end
@@ -287,50 +293,66 @@ module DBI
                 TYPE_MAP = {}
                 ::Mysql::Field.constants.grep(/^TYPE_/).each do |const|
                     mysql_type = MysqlField.const_get(const)  # numeric type code
-                    coercion_method = :as_str                 # default coercion method
+                    coercion_method = DBI::Type::Varchar                 # default coercion method
                     case const
-                    when 'TYPE_TINY':         mysql_type_name = 'TINYINT'
-                        coercion_method = :as_int
-                    when 'TYPE_SHORT':        mysql_type_name = 'SMALLINT'
-                        coercion_method = :as_int
-                    when 'TYPE_INT24':        mysql_type_name = 'MEDIUMINT'
-                        coercion_method = :as_int
-                    when 'TYPE_LONG':         mysql_type_name = 'INT'
-                        coercion_method = :as_int
-                    when 'TYPE_LONGLONG':     mysql_type_name = 'BIGINT'
-                        coercion_method = :as_int
-                    when 'TYPE_FLOAT':        mysql_type_name = 'FLOAT'
-                        coercion_method = :as_float
-                    when 'TYPE_DOUBLE':       mysql_type_name = 'DOUBLE'
-                        coercion_method = :as_float
+                    when 'TYPE_TINY'
+                        mysql_type_name = 'TINYINT'
+                        coercion_method = DBI::Type::Integer
+                    when 'TYPE_SHORT'
+                        mysql_type_name = 'SMALLINT'
+                        coercion_method = DBI::Type::Integer
+                    when 'TYPE_INT24'
+                        mysql_type_name = 'MEDIUMINT'
+                        coercion_method = DBI::Type::Integer
+                    when 'TYPE_LONG'
+                        mysql_type_name = 'INT'
+                        coercion_method = DBI::Type::Integer
+                    when 'TYPE_LONGLONG'
+                        mysql_type_name = 'BIGINT'
+                        coercion_method = DBI::Type::Integer
+                    when 'TYPE_FLOAT'
+                        mysql_type_name = 'FLOAT'
+                        coercion_method = DBI::Type::Float
+                    when 'TYPE_DOUBLE'
+                        mysql_type_name = 'DOUBLE'
+                        coercion_method = DBI::Type::Float
                     when 'TYPE_VAR_STRING',
-                         'TYPE_STRING':       mysql_type_name = 'VARCHAR'    # questionable?
-                        coercion_method = :as_str
-                    when 'TYPE_DATE':         mysql_type_name = 'DATE'
-                        coercion_method = :as_date
-                    when 'TYPE_TIME':         mysql_type_name = 'TIME'
-                        coercion_method = :as_time
-                    when 'TYPE_DATETIME', 
-                         'TYPE_TIMESTAMP':    mysql_type_name = 'DATETIME'
-                         coercion_method = :as_timestamp
-                    when 'TYPE_CHAR':         mysql_type_name = 'TINYINT'    # questionable?
-                    when 'TYPE_TINY_BLOB':    mysql_type_name = 'TINYBLOB'   # questionable?
-                    when 'TYPE_MEDIUM_BLOB':  mysql_type_name = 'MEDIUMBLOB' # questionable?
-                    when 'TYPE_LONG_BLOB':    mysql_type_name = 'LONGBLOB'   # questionable?
-                    when 'TYPE_GEOMETRY':     mysql_type_name = 'BLOB'       # questionable?
+                         'TYPE_STRING'
+                        mysql_type_name = 'VARCHAR'    # questionable?
+                        coercion_method = DBI::Type::Varchar
+                    when 'TYPE_DATE'
+                        mysql_type_name = 'DATE'
+                        coercion_method = DBI::Type::Timestamp
+                    when 'TYPE_TIME'
+                        mysql_type_name = 'TIME'
+                        coercion_method = DBI::Type::Timestamp
+                    when 'TYPE_DATETIME', 'TYPE_TIMESTAMP'
+                        mysql_type_name = 'DATETIME'
+                        coercion_method = DBI::Type::Timestamp
+                    when 'TYPE_CHAR'
+                        mysql_type_name = 'TINYINT'    # questionable?
+                    when 'TYPE_TINY_BLOB'
+                        mysql_type_name = 'TINYBLOB'   # questionable?
+                    when 'TYPE_MEDIUM_BLOB'
+                        mysql_type_name = 'MEDIUMBLOB' # questionable?
+                    when 'TYPE_LONG_BLOB'
+                        mysql_type_name = 'LONGBLOB'   # questionable?
+                    when 'TYPE_GEOMETRY'
+                        mysql_type_name = 'BLOB'       # questionable?
                     when 'TYPE_YEAR',
                          'TYPE_DECIMAL',                                     # questionable?
                          'TYPE_BLOB',                                        # questionable?
                          'TYPE_ENUM',
                          'TYPE_SET',
                          'TYPE_BIT',
-                         'TYPE_NULL':         mysql_type_name = const.sub(/^TYPE_/, '')
+                         'TYPE_NULL'
+                         mysql_type_name = const.sub(/^TYPE_/, '')
                     else
                         mysql_type_name = 'UNKNOWN'
                     end
                     TYPE_MAP[mysql_type] = [mysql_type_name, coercion_method]
                 end
-                TYPE_MAP[nil] = ['UNKNOWN', :as_str]
+                TYPE_MAP[nil] = ['UNKNOWN', DBI::Type::Varchar]
 
                 def initialize(handle, attr)
                     super
@@ -408,12 +430,11 @@ module DBI
                 end
 
                 def do(stmt, *bindvars)
-                    sql = bind(self, stmt, bindvars)
-                    @mutex.synchronize { 
-                        @handle.query_with_result = false
-                        @handle.query(sql)
-                        @handle.affected_rows     # return value
-                    }
+                    st = Statement.new(self, @handle, stmt, @mutex)
+                    st.bind_params(*bindvars)
+                    res = st.execute
+                    st.finish
+                    return res
                 rescue MyError => err
                     error(err)
                 end
@@ -590,7 +611,6 @@ module DBI
                         @handle.query_with_result = true
                         @res_handle = @handle.query(sql)
                         @column_info = self.column_info
-                        @coerce = DBI::SQL::BasicQuote::Coerce.new
                         @current_row = 0
                         @rows = DBI::SQL.query?(sql) ? 0 : @handle.affected_rows 
                     }
@@ -612,11 +632,11 @@ module DBI
                         type = info['mysql_type']
                         type_symbol =
                             if SQL_TINYINT == info['sql_type'] and 1 == info['precision']
-                                :as_bool
+                                DBI::Type::Boolean
                             else
-                                Database::TYPE_MAP[type][1] || :as_str rescue :as_str
+                                Database::TYPE_MAP[type][1] || DBI::Type::Varchar rescue DBI::Type::Varchar
                             end
-                        row[index] = @coerce.coerce(type_symbol, value)
+                        row[index] = type_symbol.parse(value)
                     }
                     row
                 end
