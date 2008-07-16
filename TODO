@@ -1,8 +1,9 @@
 * Cleanup:
  * Pg
-  * LOB tests don't clean up LOBs, just the tables that hold them 
-  * Transaction Tests (AutoCommit on and off, ensuring rollback, etc)
-  * more fetch tests
+  * Tests:
+      * LOB tests don't clean up LOBs, just the tables that hold them 
+      * Transaction Tests (AutoCommit on and off, ensuring rollback, etc)
+      * more fetch tests
   * Arrays:
       * Find some way to get the extents of an array type
        * checked pg_type, pg_attribute and pg_class, can't find anything.
@@ -13,6 +14,7 @@ x Remove all other drivers
  * Not sure what to do with ODBC and Proxy yet.
 * Finish type management system
  * DBI tests
+ * Find a better way to leverage lower-level binding APIs
  x Gut old typing system
 * Cleanup core
  x Remove DBI::DIR crap
