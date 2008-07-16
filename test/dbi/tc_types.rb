@@ -24,8 +24,8 @@ class TC_DBI_Type < Test::Unit::TestCase
 end
 
 class TC_DBI_TypeUtil < Test::Unit::TestCase
-    def cast(obj, driver_name=nil)
-        DBI::TypeUtil.convert(driver_name, obj)
+    def cast(obj)
+        DBI::TypeUtil.convert(nil, obj)
     end
 
     def datecast(obj)
@@ -75,5 +75,37 @@ class TC_DBI_TypeUtil < Test::Unit::TestCase
         assert_kind_of(DBI::Binary, cast(DBI::Binary.new("poop")))
         obj = DBI::Binary.new("poop")
         assert_equal(obj.object_id, cast(obj).object_id)
+    end
+end
+
+DBI::TypeUtil.register_conversion("test") do |obj|
+    case obj
+    when ::NilClass
+        "Custom Nil"
+    when ::TrueClass
+        "Custom True"
+    when ::FalseClass
+        "Custom False"
+    else
+        obj
+    end
+end
+
+class TC_DBI_TypeUtil_Custom < Test::Unit::TestCase
+    def cast(obj)
+        DBI::TypeUtil.convert("test", obj)
+    end
+
+    def test_custom_casts
+        assert_equal("Custom Nil", cast(nil))
+        assert_equal("Custom True", cast(true))
+        assert_equal("Custom False", cast(false))
+    end
+
+    def test_custom_fallthrough
+        assert_equal("'foo'", cast("foo"))
+        assert_equal("'foo''bar'", cast("foo'bar"))
+        assert_equal("1", cast(1))
+        assert_equal("'foo'", cast(MyType.new("foo")))
     end
 end
