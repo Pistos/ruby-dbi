@@ -42,8 +42,26 @@ require "thread"   # for Mutex
 module DBI
     module DBD
         module Mysql
-            module Util
+            VERSION          = "0.3.3"
+            USED_DBD_VERSION = "0.2"
 
+            MyError = ::MysqlError
+
+            def self.driver_name
+                "Mysql"
+            end
+
+            DBI::TypeUtil.register_conversion(driver_name) do |obj|
+                case obj
+                when ::Time
+                    "'#{obj.strftime("%H:%M:%S")}'"
+                when ::Date
+                    "'#{obj.strftime("%m/%d/%Y")}'"
+                else
+                    obj
+                end
+            end
+            module Util
                 private
 
                 # Raise exception using information from MysqlError object e.
@@ -64,25 +82,3 @@ require 'dbd/mysql/columninfo'
 require 'dbd/mysql/driver'
 require 'dbd/mysql/database'
 require 'dbd/mysql/statement'
-
-module DBI::DBD::Mysql
-    VERSION          = "0.3.3"
-    USED_DBD_VERSION = "0.2"
-
-    MyError = ::MysqlError
-
-    def self.driver_name
-        "Mysql"
-    end
-
-    DBI::TypeUtil.register_conversion(driver_name) do |obj|
-        case obj
-        when ::Time
-            "'#{obj.strftime("%H:%M:%S")}'"
-        when ::Date
-            "'#{obj.strftime("%m/%d/%Y")}'"
-        else
-            obj
-        end
-    end
-end # module Mysql
