@@ -19,10 +19,9 @@ end
 
 class TC_DBI_Type < Test::Unit::TestCase
     def test_null
-        # ALL types need to appropriately handle NULL
+        # all types except Varchar need to appropriately handle NULL
         [
             DBI::Type::Null,
-            DBI::Type::Varchar,
             DBI::Type::Integer,
             DBI::Type::Float,
             DBI::Type::Timestamp,
@@ -40,7 +39,7 @@ class TC_DBI_Type < Test::Unit::TestCase
         assert_kind_of(String, klass.parse("1"))
         assert_kind_of(String, klass.parse("1.23"))
 
-        assert_equal(nil, klass.parse("NULL"))
+        assert_equal("NULL", klass.parse("NULL"))
         assert_equal("1", klass.parse("1"))
         assert_equal("hello", klass.parse("hello"))
         assert_equal("1.23", klass.parse("1.23"))
@@ -162,11 +161,11 @@ class TC_DBI_TypeUtil < Test::Unit::TestCase
     def test_default_boolean_casts
         assert_kind_of(String, cast(false))
         assert_kind_of(String, cast(true))
-        assert_kind_of(String, cast(nil))
+        assert_kind_of(NilClass, cast(nil))
 
         assert_equal("'1'", cast(true))
         assert_equal("'0'", cast(false))
-        assert_equal("'NULL'", cast(nil))
+        assert_equal(nil, cast(nil))
     end
 
     def test_default_binary_casts

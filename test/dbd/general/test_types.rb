@@ -1,5 +1,4 @@
 @class = Class.new(DBDConfig.testbase(DBDConfig.current_dbtype)) do
-
     def skip_bit
         # FIXME this test fails because DBI's type system blows goats.
        @sth = nil
@@ -23,6 +22,25 @@
             @sth.finish
 
             assert_equal [0], row
+        end
+    end
+
+    def test_null
+        assert_nothing_raised do
+            @sth = @dbh.prepare('insert into names (name, age) values (?, ?)')
+            @sth.execute("'NULL'", 201)
+            @sth.execute(nil, 202)
+            @sth.execute("NULL", 203)
+            @sth.finish
+        end
+
+        assert_nothing_raised do
+            @sth = @dbh.prepare('select * from names where age > 200 order by age')
+            @sth.execute
+            assert_equal(["'NULL'", 201], @sth.fetch)
+            assert_equal([nil, 202], @sth.fetch)
+            assert_equal(["NULL", 203], @sth.fetch)
+            @sth.finish
         end
     end
 

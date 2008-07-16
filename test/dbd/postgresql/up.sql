@@ -1,6 +1,6 @@
 create table names (
-    name varchar(255) not null,
-    age integer not null
+    name varchar(255),
+    age integer
 );
 ---
 insert into names (name, age) values ('Joe', 19);

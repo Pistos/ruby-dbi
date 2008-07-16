@@ -57,6 +57,8 @@ module DBI
                     "'#{obj.strftime("%H:%M:%S")}'"
                 when ::Date
                     "'#{obj.strftime("%m/%d/%Y")}'"
+                when ::NilClass
+                    "NULL"
                 else
                     obj
                 end

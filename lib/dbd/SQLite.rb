@@ -57,3 +57,12 @@ end
 
 require 'dbd/sqlite/database'
 require 'dbd/sqlite/statement'
+
+DBI::TypeUtil.register_conversion(DBI::DBD::SQLite.driver_name) do |obj|
+    case obj
+    when ::NilClass
+        "NULL"
+    else 
+        obj
+    end
+end

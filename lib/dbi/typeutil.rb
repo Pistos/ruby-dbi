@@ -43,7 +43,7 @@ DBI::TypeUtil.register_conversion("default") do |obj|
     when DBI::Binary # these need to be handled specially by the driver
         obj
     when ::NilClass
-        "'NULL'"
+        nil
     when ::TrueClass
         "'1'"
     when ::FalseClass

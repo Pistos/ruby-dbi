@@ -116,6 +116,8 @@ DBI::TypeUtil.register_conversion(pg.driver_name) do |obj|
         "'t'"
     when ::FalseClass
         "'f'"
+    when ::NilClass
+        "NULL"
     when DBI::DBD::Pg::Type::ByteA
         "E'#{obj.escaped}'"
     else
