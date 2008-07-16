@@ -6,14 +6,14 @@
   * Arrays:
       * Find some way to get the extents of an array type
        * checked pg_type, pg_attribute and pg_class, can't find anything.
-      * Get rid of that array parser
-       * But test it first
+      x Get rid of that array parser
+       x But test it first
  * Mysql
 x Remove all other drivers
  * Not sure what to do with ODBC and Proxy yet.
 * Finish type management system
  * DBI tests
- * Gut old typing system
+ x Gut old typing system
 * Cleanup core
  x Remove DBI::DIR crap
  x Require code is a mess
