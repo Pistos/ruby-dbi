@@ -33,6 +33,18 @@ class TC_DBI_Type < Test::Unit::TestCase
         end
     end
 
+    def test_boolean
+        klass = DBI::Type::Boolean
+        assert_kind_of(NilClass, klass.parse(nil))
+        assert_kind_of(NilClass, klass.parse("NULL"))
+        assert_kind_of(TrueClass, klass.parse('t'))
+        assert_kind_of(TrueClass, klass.parse(1))
+        assert_kind_of(TrueClass, klass.parse('1'))
+        assert_kind_of(FalseClass, klass.parse('f'))
+        assert_kind_of(FalseClass, klass.parse(0))
+        assert_kind_of(FalseClass, klass.parse('0'))
+    end
+
     def test_varchar
         klass = DBI::Type::Varchar
         assert_kind_of(String, klass.parse("hello"))
