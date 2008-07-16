@@ -32,7 +32,6 @@ $LOAD_PATH.unshift(File.dirname(__FILE__))
 # $Id: dbi.rb,v 1.8 2006/09/03 04:05:29 pdubois Exp $
 #
 
-require "find"
 require "dbi/row"
 require "dbi/utils"
 require "dbi/sql"
