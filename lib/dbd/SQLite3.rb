@@ -39,8 +39,6 @@ end
 require 'sqlite3'
 require 'sqlite3/version'
 
-
-
 module DBI
   module DBD
     module SQLite3
@@ -50,6 +48,18 @@ module DBI
 
       def self.driver_name
           "SQLite3"
+      end
+      
+      DBI::TypeUtil.register_conversion(driver_name) do |obj|
+          case obj
+          when ::TrueClass
+              '1'
+          when ::FalseClass
+              '0'
+          else
+              # SQLite3 is managing its own conversion right now, until I'm happy let's keep it that way
+              obj.dup rescue obj
+          end
       end
 
       # FIXME plucked from SQLite driver, this needs to be in DBI proper 
@@ -230,7 +240,6 @@ EOS
 
         def bind_param(param, value, attribs=nil)
           raise DBI::InterfaceError, "Bound parameter must be an integer" unless param.kind_of? Fixnum 
-
           @stmt.bind_param(param, value)
         end
 
@@ -269,7 +278,7 @@ EOS
         end
 
         def rows()
-            @rows
+          @rows
         end
 
         def bind_params(*bindvars)
@@ -279,27 +288,6 @@ EOS
         def cancel()
           @result = nil
           @index = 0
-        end
-
-        def fetch_many(cnt)
-          ret = nil
-          if @result && (not @result.eof?) then
-            ret = []
-            cnt.times{ ret.push(@result.next()) }
-            ret.compact!
-            ret
-          end
-          nil
-        end
-
-        def fetch_all()
-          ret = nil
-          if @result then
-            ret = []
-            @result.each{|row| ret.push(row)}
-            return ret
-          end
-          nil 
         end
       end
     end
