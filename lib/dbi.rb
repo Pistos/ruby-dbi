@@ -37,6 +37,7 @@ require "dbi/utils"
 require "dbi/sql"
 require "dbi/columninfo"
 require 'dbi/types'
+require 'dbi/typeutil'
 require 'dbi/sql_type_constants'
 require 'dbi/exceptions'
 require 'dbi/binary'
