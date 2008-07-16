@@ -245,7 +245,6 @@ module DBI
 
             class Database < DBI::BaseDatabase
                 include Util
-                include SQL::BasicBind
 
                 # Eli Green:
                 #   The hope is that we don't ever need to just assume the default values.
@@ -589,7 +588,6 @@ module DBI
 
             class Statement < DBI::BaseStatement
                 include Util
-                #include SQL::BasicBind
 
                 def initialize(parent, handle, statement, mutex)
                     super(nil)

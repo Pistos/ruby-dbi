@@ -104,7 +104,9 @@ end
 ######################################################################
 class TestLex < Test::Unit::TestCase
 
-  include DBI::SQL::BasicBind
+    def tokens(sql)
+        DBI::SQL::PreparedStatement.tokens(sql)
+    end
 
   def test_non_strings
     assert_equal ['This is _a t35t'],

@@ -53,9 +53,6 @@ module DBI
            return res
        end
 
-       # includes quote
-       include DBI::SQL::BasicQuote
-
        def [](attr)
            @attr[attr]
        end

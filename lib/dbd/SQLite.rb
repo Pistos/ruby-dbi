@@ -53,8 +53,6 @@ module DBI
             end
 
             class Database < DBI::BaseDatabase
-                include DBI::SQL::BasicBind
-
                 attr_reader :db
                 attr_reader :attr_hash
                 attr_accessor :open_handles
@@ -178,9 +176,6 @@ module DBI
             end
 
             class Statement < DBI::BaseStatement
-                include DBI::SQL::BasicBind
-                include DBI::SQL::BasicQuote
-
                 DBI_TYPE_MAP = [
                     [ /^INT(EGER)?$/i,          DBI::SQL_INTEGER ],
                     [ /^(OID|ROWID|_ROWID_)$/i, DBI::SQL_OTHER   ],

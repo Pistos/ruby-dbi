@@ -12,22 +12,22 @@ require "time"
 module SQL
 
   ## Is the SQL statement a query?
-  def SQL.query?(sql)
+  def self.query?(sql)
     sql =~ /^\s*select\b/i
   end
 
+  class PreparedStatement
 
-  ####################################################################
-  # Mixin module useful for expanding SQL statements.
-  #
-  # FIXME gut this
-  module BasicQuote
-  end # module BasicQuote
+    attr_accessor :unbound
 
-  ####################################################################
-  # Mixin module useful for binding arguments to an SQL string.
-  #
-  module BasicBind
+    def self.tokens(sql)
+        self.new(nil, sql).tokens
+    end
+
+    def initialize(quoter, sql)
+      @quoter, @sql = quoter, sql
+      prepare
+    end
 
     ## Break the sql string into parts.
     #
@@ -39,8 +39,8 @@ module SQL
     # C-style (/* */) and Ada-style (--) comments are handled.
     # Note: Nested C-style comments are NOT handled!
     #
-    def tokens(sql)
-      sql.scan(%r{
+    def tokens
+      @sql.scan(%r{
         (
             -- .*                               (?# matches "--" style comments to the end of line or string )
         |   -                                   (?# matches single "-" )
@@ -57,19 +57,6 @@ module SQL
             [^-/'"?]+                           (?# match all characters except ' " ? - and / )
             
         )}x).collect {|t| t.first}
-    end
-
-  end # module BasicBind
-
-
-  class PreparedStatement
-    include BasicBind # for method tokens(sql)
-
-    attr_accessor :unbound
-
-    def initialize(quoter, sql)
-      @quoter, @sql = quoter, sql
-      prepare
     end
 
     def bind(args)
@@ -94,7 +81,7 @@ module SQL
       pos = 0
       @arg_index = 0
 
-      tokens(@sql).each { |part|
+      tokens.each { |part|
         case part
         when '?'
               @result[pos] = nil

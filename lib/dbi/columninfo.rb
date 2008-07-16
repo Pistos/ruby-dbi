@@ -162,5 +162,3 @@ class ColumnInfo < Hash
    alias decimal_digits scale
    alias decimal_digits= scale=
 end
-
-
