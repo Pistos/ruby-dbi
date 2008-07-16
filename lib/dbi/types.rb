@@ -11,6 +11,8 @@ module DBI
 
         class Varchar < Null
             def self.parse(obj)
+                # XXX if the varchar contains "NULL" and nothing else, this
+                # could cause a problem.
                 obj = super
                 return obj unless obj
                 return obj.to_s if obj.respond_to? :to_s
@@ -21,6 +23,7 @@ module DBI
 
         class Integer < Varchar
             def self.parse(obj)
+                return nil if Null.parse(obj).nil?
                 return obj.to_i if obj.respond_to? :to_i
                 super 
             end
@@ -28,8 +31,9 @@ module DBI
 
         class Float < Integer
             def self.parse(obj)
+                return nil if Null.parse(obj).nil?
                 return obj.to_f if obj.respond_to? :to_f
-                super 
+                super
             end
         end
 
@@ -52,9 +56,13 @@ module DBI
             end
         end
 
-        class Boolean
+        class Boolean < Null
             def self.parse(obj)
-                if !obj
+                obj = super
+
+                return nil if obj.nil?
+
+                if obj == false or obj.kind_of? FalseClass
                     return false
                 elsif obj.kind_of? TrueClass
                     return true

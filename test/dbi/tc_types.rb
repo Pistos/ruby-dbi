@@ -18,8 +18,106 @@ class MyType
 end
 
 class TC_DBI_Type < Test::Unit::TestCase
-    def test_stub
-        assert true
+    def test_null
+        # ALL types need to appropriately handle NULL
+        [
+            DBI::Type::Null,
+            DBI::Type::Varchar,
+            DBI::Type::Integer,
+            DBI::Type::Float,
+            DBI::Type::Timestamp,
+            DBI::Type::Boolean
+        ].each do |klass|
+            assert_equal(nil, klass.parse("NULL"))
+            assert_equal(nil, klass.parse("null"))
+            assert_equal(nil, klass.parse("Null"))
+        end
+    end
+
+    def test_varchar
+        klass = DBI::Type::Varchar
+        assert_kind_of(String, klass.parse("hello"))
+        assert_kind_of(String, klass.parse("1"))
+        assert_kind_of(String, klass.parse("1.23"))
+
+        assert_equal(nil, klass.parse("NULL"))
+        assert_equal("1", klass.parse("1"))
+        assert_equal("hello", klass.parse("hello"))
+        assert_equal("1.23", klass.parse("1.23"))
+    end
+
+    def test_integer
+        klass = DBI::Type::Integer
+        assert_kind_of(Integer, klass.parse("1.23"))
+        assert_kind_of(Integer, klass.parse("-1.23"))
+        assert_kind_of(Integer, klass.parse("1.0"))
+        assert_kind_of(Integer, klass.parse("1"))
+        assert_kind_of(Integer, klass.parse("-1"))
+        assert_kind_of(Integer, klass.parse("0"))
+
+        assert_equal(nil, klass.parse("NULL"))
+        assert_equal(1, klass.parse("1.23"))
+        assert_equal(-1, klass.parse("-1.23"))
+        assert_equal(1, klass.parse("1.0"))
+        assert_equal(1, klass.parse("1"))
+        assert_equal(-1, klass.parse("-1"))
+        assert_equal(0, klass.parse("0"))
+    end
+
+    def test_float
+        klass = DBI::Type::Float
+        assert_kind_of(Float, klass.parse("1.23"))
+        assert_kind_of(Float, klass.parse("-1.23"))
+        assert_kind_of(Float, klass.parse("1.0"))
+        assert_kind_of(Float, klass.parse("1"))
+        assert_kind_of(Float, klass.parse("-1"))
+        assert_kind_of(Float, klass.parse("0"))
+
+        assert_equal(nil, klass.parse("NULL"))
+        assert_equal(1.23, klass.parse("1.23"))
+        assert_equal(-1.23, klass.parse("-1.23"))
+        assert_equal(1, klass.parse("1.0"))
+        assert_equal(1, klass.parse("1"))
+        assert_equal(-1, klass.parse("-1"))
+        assert_equal(0, klass.parse("0"))
+    end
+
+    def test_timestamp
+        klass = DBI::Type::Timestamp
+        assert_kind_of(DateTime, klass.parse(Time.now))
+        assert_kind_of(DateTime, klass.parse(Date.today))
+        assert_kind_of(DateTime, klass.parse(DateTime.now))
+        assert_kind_of(DateTime, klass.parse(Time.now.to_s))
+        assert_kind_of(DateTime, klass.parse(Date.today.to_s))
+        assert_kind_of(DateTime, klass.parse(DateTime.now.to_s))
+
+        assert_equal(nil, klass.parse("NULL"))
+
+        # string coercion
+        dt = DateTime.now
+        assert_equal(dt.to_s, klass.parse(dt).to_s)
+        
+        t = Time.now
+        assert_equal(DateTime.parse(t.to_s), klass.parse(t))
+
+        d = Date.today
+        assert_equal(DateTime.parse(d.to_s), klass.parse(d))
+
+        # be sure we're actually getting the right data back
+        assert_equal(
+            "2008-10-11", 
+            klass.parse(Date.parse("10/11/2008")).strftime("%Y-%m-%d")
+        )
+
+        assert_equal(
+            "10:01:02",
+            klass.parse(Time.parse("10:01:02")).strftime("%H:%M:%S")
+        )
+
+        assert_equal(
+            "10/11/2008 10:01:02",
+            klass.parse(DateTime.parse("10/11/2008 10:01:02")).strftime("%m/%d/%Y %H:%M:%S")
+        )
     end
 end
 
