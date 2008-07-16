@@ -61,22 +61,23 @@ module DBI
                     obj
                 end
             end
-            module Util
-                private
-
-                # Raise exception using information from MysqlError object e.
-                # For state value, use SQLSTATE value if mysql-ruby defines
-                # sqlstate method, otherwise nil.
-
-                def error(e)
-                    sqlstate = e.respond_to?("sqlstate") ? e.sqlstate : nil
-                    raise DBI::DatabaseError.new(e.message, e.errno, sqlstate)
-                end
-
-            end # module Util
         end
     end
 end
+
+module DBI::DBD::Mysql::Util
+    private
+
+    # Raise exception using information from MysqlError object e.
+    # For state value, use SQLSTATE value if mysql-ruby defines
+    # sqlstate method, otherwise nil.
+
+    def error(e)
+        sqlstate = e.respond_to?("sqlstate") ? e.sqlstate : nil
+        raise DBI::DatabaseError.new(e.message, e.errno, sqlstate)
+    end
+
+end # module Util
 
 require 'dbd/mysql/columninfo'
 require 'dbd/mysql/driver'
