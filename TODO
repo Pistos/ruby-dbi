@@ -22,7 +22,7 @@ x Remove all other drivers
  * Unify ColumnInfo
   * see "Mysql" above
  x Gut old typing system
-  * Notify user that Date/Time/Timestamp are deprecated
+  x Notify user that Date/Time/Timestamp are deprecated
 * Cleanup core
  x Remove DBI::DIR crap
  x Require code is a mess
