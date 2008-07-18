@@ -11,6 +11,44 @@
         end
     end
 
+    def test_columninfo
+        @sth = nil
+        
+        assert_nothing_raised do
+            @sth = @dbh.prepare("select * from names")
+            @sth.execute
+
+            cols = @sth.column_info
+
+            assert(cols)
+            assert_kind_of(Array, cols)
+            assert_equal(2, cols.length)
+
+            # FIXME this is a duplication of the columns test in
+            # general/test_database.rb. We should probably genericize this a
+            # bit for maintenance.
+            
+            # the first column should always be "name" and have the following
+            # properties:
+            assert_equal("name", cols[0]["name"])
+            assert_equal(
+                DBI::Type::Varchar, 
+                DBI::TypeUtil.type_name_to_module(cols[0]["type_name"])
+            )
+
+            # the second column should always be "age" and have the following
+            # properties:
+            assert_equal("age", cols[1]["name"])
+            assert_equal(
+                DBI::Type::Integer, 
+                DBI::TypeUtil.type_name_to_module(cols[1]["type_name"])
+            )
+
+            cols.each { |col| assert_kind_of(DBI::ColumnInfo, col) }
+            @sth.finish
+        end
+    end
+
     def test_rows
         @sth = nil
 
