@@ -23,10 +23,6 @@
             assert(cols)
             assert_kind_of(Array, cols)
             assert_equal(2, cols.length)
-
-            # FIXME this is a duplication of the columns test in
-            # general/test_database.rb. We should probably genericize this a
-            # bit for maintenance.
             
             # the first column should always be "name" and have the following
             # properties:

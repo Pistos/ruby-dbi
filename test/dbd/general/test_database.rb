@@ -8,6 +8,7 @@
     def test_columns
         assert_nothing_raised do
             cols = @dbh.columns("names")
+
             assert(cols)
             assert_kind_of(Array, cols)
             assert_equal(2, cols.length)
