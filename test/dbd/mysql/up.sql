@@ -9,6 +9,8 @@ insert into names (name, age) values ('Jim', 30);
 ---
 insert into names (name, age) values ('Bob', 21);
 ---
+create table precision_test (text_field varchar(20), integer_field decimal(2,1));
+---
 CREATE TABLE blob_test (name VARCHAR(30), data BLOB) Engine=InnoDB;
 ---
 create view view_names as select * from names;

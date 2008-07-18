@@ -13,3 +13,5 @@ drop table timestamp_test;
 drop table bit_test;
 ---
 drop table field_types_test;
+---
+drop table precision_test;

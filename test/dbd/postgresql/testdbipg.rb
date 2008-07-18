@@ -28,6 +28,7 @@ class TestDbdPostgres < DBDConfig.testbase(:postgresql)
             "bytea_test",
             "field_types_test",
             "names",
+            "precision_test",
             "time_test",
             "timestamp_test",
             "view_names"

@@ -18,6 +18,8 @@ drop table array_test;
 ---
 drop table bytea_test;
 ---
+drop table precision_test;
+---
 drop schema schema1 cascade;
 ---
 drop schema schema2 cascade;
