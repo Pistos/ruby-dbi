@@ -16,8 +16,11 @@
 x Remove all other drivers
  * Not sure what to do with ODBC and Proxy yet.
 * Finish type management system
- * DBI tests
+ x DBI tests
  * Find a better way to leverage lower-level binding APIs
+  * Binding API for PostgreSQL in particular
+ * Unify ColumnInfo
+  * see "Mysql" above
  x Gut old typing system
   * Notify user that Date/Time/Timestamp are deprecated
 * Cleanup core
