@@ -1,7 +1,7 @@
 ############################################################
 # tc_columninfo.rb
 #
-# Test case for the ColumnInfo class.
+# Test case for the DBI::ColumnInfo class.
 ############################################################
 $LOAD_PATH.unshift(Dir.pwd)
 $LOAD_PATH.unshift(File.dirname(Dir.pwd))
@@ -14,7 +14,7 @@ require "test/unit"
 
 class TC_DBI_ColumnInfo < Test::Unit::TestCase
    def setup
-      @colinfo = ColumnInfo.new(
+      @colinfo = DBI::ColumnInfo.new(
          "name"      => "test",
          "sql_type"  => "numeric",
          "type_name" => "test_type_name",
@@ -32,8 +32,8 @@ class TC_DBI_ColumnInfo < Test::Unit::TestCase
    end
    
    def test_constructor
-      assert_nothing_raised{ ColumnInfo.new }
-      assert_raises(TypeError){ ColumnInfo.new(1) }
+      assert_nothing_raised{ DBI::ColumnInfo.new }
+      assert_raises(TypeError){ DBI::ColumnInfo.new(1) }
    end
 
    def test_name_basic

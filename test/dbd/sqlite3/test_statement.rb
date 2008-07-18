@@ -36,8 +36,8 @@ class TestStatement < DBDConfig.testbase(:sqlite3)
         end
 
         assert_kind_of Array, @sth.column_info 
-        assert_kind_of ColumnInfo, @sth.column_info[0]
-        assert_kind_of ColumnInfo, @sth.column_info[1]
+        assert_kind_of DBI::ColumnInfo, @sth.column_info[0]
+        assert_kind_of DBI::ColumnInfo, @sth.column_info[1]
         assert_equal [ 
             { 
                 "name" => "name",
