@@ -110,23 +110,24 @@ module DBI::DBD::Mysql
 
                 retval << {
                     # Standard Ruby DBI column attributes
-                              'name'        => col.name,
-                              'sql_type'    => sql_type,
-                              'type_name'   => type_name,
-                              'precision'   => col.length,
-                              'scale'       => col.decimals,
-                              'nullable'    => !col.is_not_null?,
-                              'indexed'     => ((col.flags & indexed) != 0) ||
-                              col.is_pri_key?,
-                              'primary'     => col.is_pri_key?,
-                              'unique'      => ((col.flags & unique_key_flag) != 0) ||
-                              col.is_pri_key?,
-                              # MySQL-specific attributes (signified by leading "mysql_")
-                              'mysql_type'       => col.type,
-                              'mysql_type_name'  => mysql_type_name,
-                              'mysql_length'     => col.length,
-                              'mysql_max_length' => col.max_length,
-                              'mysql_flags'      => col.flags
+                    'name'        => col.name,
+                    'sql_type'    => sql_type,
+                    'type_name'   => type_name,
+                    # XXX it seems mysql counts the literal decimal point when weighing in the "length".
+                    'precision'   => col.decimals > 0 ? col.length - col.decimals - 1 : col.length,
+                    'scale'       => col.decimals,
+                    'nullable'    => !col.is_not_null?,
+                    'indexed'     => ((col.flags & indexed) != 0) ||
+                                        col.is_pri_key?,
+                    'primary'     => col.is_pri_key?,
+                    'unique'      => ((col.flags & unique_key_flag) != 0) ||
+                                        col.is_pri_key?,
+                    # MySQL-specific attributes (signified by leading "mysql_")
+                    'mysql_type'       => col.type,
+                    'mysql_type_name'  => mysql_type_name,
+                    'mysql_length'     => col.length,
+                    'mysql_max_length' => col.max_length,
+                    'mysql_flags'      => col.flags
                 }
             }
             retval

@@ -78,6 +78,40 @@ module DBI
                 "E'#{ value.gsub(/\\/){ '\\\\' }.gsub(/'/){ '\\\'' } }'"
             end
 
+            def self.parse_type(ftype)
+                type = ftype
+                pos = ftype.index('(')
+                decimal = nil
+                size = nil
+                array_of_type = nil 
+
+                if pos != nil
+                    type = ftype[0..pos-1]
+                    size = ftype[pos+1..-2]
+                    pos = size.index(',')
+                    if pos != nil
+                        size, decimal = size.split(',', 2)
+                        size = size.to_i
+                        decimal = decimal.to_i
+                    else
+                        size = size.to_i
+                    end
+                end
+
+                if type =~ /\[\]$/
+                    type.sub!(/\[\]$/, '')
+                    array_of_type = true
+                end
+
+                return {
+                    :ftype   => ftype,
+                    :type    => type,
+                    :size    => size,
+                    :decimal => decimal,
+                    :array   => array_of_type
+                }
+            end
+
             class Driver < DBI::BaseDriver
                 def initialize
                     super(USED_DBD_VERSION)

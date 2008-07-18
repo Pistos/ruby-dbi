@@ -138,39 +138,16 @@ class DBI::DBD::Pg::Database < DBI::BaseDatabase
                         indexed = false
                         primary = nil
                         unique = nil
-                        array_of_type = nil
                         if indices.has_key?(name)
                             indexed = true
                             primary, unique = indices[name]
                         end
 
-                        type = ftype
-                        pos = ftype.index('(')
-                        decimal = nil
-                        size = nil
+                        typeinfo = DBI::DBD::Pg.parse_type(ftype)
+                        typeinfo[:size] ||= len
 
-                        if pos != nil
-                            type = ftype[0..pos-1]
-                            size = ftype[pos+1..-2]
-                            pos = size.index(',')
-                            if pos != nil
-                                size, decimal = size.split(',', 2)
-                                size = size.to_i
-                                decimal = decimal.to_i
-                            else
-                                size = size.to_i
-                            end
-                        end
-
-                        size = len if size.nil?
-
-                        if type =~ /\[\]$/
-                            type.sub!(/\[\]$/, '')
-                            array_of_type = true
-                        end
-
-                        if POSTGRESQL_to_XOPEN.has_key?(type)
-                            sql_type = POSTGRESQL_to_XOPEN[type][0]
+                        if POSTGRESQL_to_XOPEN.has_key?(typeinfo[:type])
+                            sql_type = POSTGRESQL_to_XOPEN[typeinfo[:type]][0]
                         else
                             sql_type = POSTGRESQL_to_XOPEN[nil][0]
                         end
@@ -178,20 +155,20 @@ class DBI::DBD::Pg::Database < DBI::BaseDatabase
                         row = {}
                         row['name']           = name
                         row['sql_type']       = sql_type
-                        row['type_name']      = type
+                        row['type_name']      = typeinfo[:type]
                         row['nullable']       = ! notnullable
                         row['indexed']        = indexed
                         row['primary']        = primary
                         row['unique']         = unique
-                        row['precision']      = size
-                        row['scale']          = decimal
+                        row['precision']      = typeinfo[:size]
+                        row['scale']          = typeinfo[:decimal]
                         row['default']        = default_values[name]
-                        row['array_of_type']  = array_of_type
+                        row['array_of_type']  = typeinfo[:array]
 
-                        if array_of_type
+                        if typeinfo[:array]
                             row['dbi_type'] = 
                                 DBI::DBD::Pg::Type::Array.new(
-                                    DBI::TypeUtil.type_name_to_module(type)
+                                    DBI::TypeUtil.type_name_to_module(typeinfo[:type])
                             )
                         end
                         row

@@ -10,7 +10,34 @@ class DBI::DBD::Pg::Tuples
     def column_info
         a = []
         @pg_result.fields.each_with_index do |str, i| 
+            typeinfo = nil
+
+            begin
+                typmod = @pg_result.fmod(i)
+            rescue
+            end
+
+            if typmod and typ = @pg_result.ftype(i)
+                res = @db._exec("select format_type(#{typ}, #{typmod})")
+                typeinfo = DBI::DBD::Pg.parse_type(res[0].values[0])
+            end
+
             h = { "name" => str }.merge(@db.type_map[@pg_result.ftype(i)])
+
+            if typeinfo
+                h["precision"]     = typeinfo[:size]
+                h["scale"]         = typeinfo[:decimal]
+                h["type"]          = typeinfo[:type]
+                h["array_of_type"] = typeinfo[:array]
+
+                if typeinfo[:array]
+                    h['dbi_type'] = 
+                        DBI::DBD::Pg::Type::Array.new(
+                            DBI::TypeUtil.type_name_to_module(typeinfo[:type])
+                    )
+                end
+            end
+
             a.push h
         end
 
