@@ -87,95 +87,99 @@ class DBI::DBD::Pg::Database < DBI::BaseDatabase
     #
     def columns(table)
         sql1 = %[
-                        SELECT a.attname, i.indisprimary, i.indisunique 
-                               FROM pg_catalog.pg_class bc, pg_index i, pg_attribute a 
-                        WHERE bc.relkind in ('r', 'v') AND bc.relname = ? AND i.indrelid = bc.oid AND 
-                              i.indexrelid = bc.oid AND bc.oid = a.attrelid
-                        AND bc.relkind IN ('r','v')
-                        AND pg_catalog.pg_table_is_visible(bc.oid)
-                      ]
+            select a.attname, i.indisprimary, i.indisunique
+            from pg_class bc inner join pg_index i 
+                on bc.oid = i.indrelid 
+                inner join pg_class c 
+                    on c.oid = i.indexrelid 
+                    inner join pg_attribute a
+                        on c.oid = a.attrelid
+            where bc.relname = ?
+                and bc.relkind in ('r', 'v')
+                and pg_catalog.pg_table_is_visible(bc.oid);
+        ]
 
-            sql2 = %[
-                SELECT a.attname, a.atttypid, a.attnotnull, a.attlen, format_type(a.atttypid, a.atttypmod) 
-                FROM pg_catalog.pg_class c, pg_attribute a, pg_type t 
-                WHERE a.attnum > 0 AND a.attrelid = c.oid AND a.atttypid = t.oid AND c.relname = ?
-                    AND c.relkind IN ('r','v')
-                AND pg_catalog.pg_table_is_visible(c.oid)
-                      ]
+        sql2 = %[
+            SELECT a.attname, a.atttypid, a.attnotnull, a.attlen, format_type(a.atttypid, a.atttypmod) 
+            FROM pg_catalog.pg_class c, pg_attribute a, pg_type t 
+            WHERE a.attnum > 0 AND a.attrelid = c.oid AND a.atttypid = t.oid AND c.relname = ?
+                AND c.relkind IN ('r','v')
+            AND pg_catalog.pg_table_is_visible(c.oid)
+        ]
 
-            # by Michael Neumann (get default value)
-            # corrected by Joseph McDonald
-            sql3 = %[
-                SELECT pg_attrdef.adsrc, pg_attribute.attname 
-                FROM pg_attribute, pg_attrdef, pg_catalog.pg_class
-                WHERE pg_catalog.pg_class.relname = ? AND 
-                pg_attribute.attrelid = pg_catalog.pg_class.oid AND
-                              pg_attrdef.adrelid = pg_catalog.pg_class.oid AND
-                              pg_attrdef.adnum = pg_attribute.attnum
-                              AND pg_catalog.pg_class.relkind IN ('r','v')
-                              AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid)
-                      ]
+        # by Michael Neumann (get default value)
+        # corrected by Joseph McDonald
+        sql3 = %[
+            SELECT pg_attrdef.adsrc, pg_attribute.attname 
+            FROM pg_attribute, pg_attrdef, pg_catalog.pg_class
+            WHERE pg_catalog.pg_class.relname = ? AND 
+            pg_attribute.attrelid = pg_catalog.pg_class.oid AND
+                          pg_attrdef.adrelid = pg_catalog.pg_class.oid AND
+                          pg_attrdef.adnum = pg_attribute.attnum
+                          AND pg_catalog.pg_class.relkind IN ('r','v')
+                          AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid)
+        ]
 
-                dbh = DBI::DatabaseHandle.new(self)
-                indices = {}
-                default_values = {}
+        dbh = DBI::DatabaseHandle.new(self)
+        indices = {}
+        default_values = {}
 
-                dbh.select_all(sql3, table) do |default, name|
-                    default_values[name] = default
+        dbh.select_all(sql3, table) do |default, name|
+            default_values[name] = default
+        end
+
+        dbh.select_all(sql1, table) do |name, primary, unique|
+            indices[name] = [primary, unique]
+        end
+
+        ########## 
+
+        ret = []
+        dbh.execute(sql2, table) do |sth|
+            ret = sth.collect do |row|
+                name, pg_type, notnullable, len, ftype = row
+                #name = row[2]
+                indexed = false
+                primary = nil
+                unique = nil
+                if indices.has_key?(name)
+                    indexed = true
+                    primary, unique = indices[name]
                 end
 
-                dbh.select_all(sql1, table) do |name, primary, unique|
-                    indices[name] = [primary, unique]
+                typeinfo = DBI::DBD::Pg.parse_type(ftype)
+                typeinfo[:size] ||= len
+
+                if POSTGRESQL_to_XOPEN.has_key?(typeinfo[:type])
+                    sql_type = POSTGRESQL_to_XOPEN[typeinfo[:type]][0]
+                else
+                    sql_type = POSTGRESQL_to_XOPEN[nil][0]
                 end
 
-                ########## 
+                row = {}
+                row['name']           = name
+                row['sql_type']       = sql_type
+                row['type_name']      = typeinfo[:type]
+                row['nullable']       = ! notnullable
+                row['indexed']        = indexed
+                row['primary']        = primary
+                row['unique']         = unique
+                row['precision']      = typeinfo[:size]
+                row['scale']          = typeinfo[:decimal]
+                row['default']        = default_values[name]
+                row['array_of_type']  = typeinfo[:array]
 
-                ret = []
-                dbh.execute(sql2, table) do |sth|
-                    ret = sth.collect do |row|
-                        name, pg_type, notnullable, len, ftype = row
-                        #name = row[2]
-                        indexed = false
-                        primary = nil
-                        unique = nil
-                        if indices.has_key?(name)
-                            indexed = true
-                            primary, unique = indices[name]
-                        end
+                if typeinfo[:array]
+                    row['dbi_type'] = 
+                        DBI::DBD::Pg::Type::Array.new(
+                            DBI::TypeUtil.type_name_to_module(typeinfo[:type])
+                    )
+                end
+                row
+            end # collect
+        end # execute
 
-                        typeinfo = DBI::DBD::Pg.parse_type(ftype)
-                        typeinfo[:size] ||= len
-
-                        if POSTGRESQL_to_XOPEN.has_key?(typeinfo[:type])
-                            sql_type = POSTGRESQL_to_XOPEN[typeinfo[:type]][0]
-                        else
-                            sql_type = POSTGRESQL_to_XOPEN[nil][0]
-                        end
-
-                        row = {}
-                        row['name']           = name
-                        row['sql_type']       = sql_type
-                        row['type_name']      = typeinfo[:type]
-                        row['nullable']       = ! notnullable
-                        row['indexed']        = indexed
-                        row['primary']        = primary
-                        row['unique']         = unique
-                        row['precision']      = typeinfo[:size]
-                        row['scale']          = typeinfo[:decimal]
-                        row['default']        = default_values[name]
-                        row['array_of_type']  = typeinfo[:array]
-
-                        if typeinfo[:array]
-                            row['dbi_type'] = 
-                                DBI::DBD::Pg::Type::Array.new(
-                                    DBI::TypeUtil.type_name_to_module(typeinfo[:type])
-                            )
-                        end
-                        row
-                    end # collect
-                end # execute
-
-                return ret
+        return ret
     end
 
     def prepare(statement)

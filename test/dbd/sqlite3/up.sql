@@ -6,7 +6,7 @@ insert into names (name, age) values ("Joe", 19);
 ---
 insert into names (name, age) values ("Jim", 30);
 ---
-create table precision_test (text_field varchar(20), integer_field decimal(2,1));
+create table precision_test (text_field varchar(20) primary key not null, integer_field decimal(2,1));
 ---
 create view view_names as select * from names;
 ---

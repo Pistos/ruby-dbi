@@ -16,7 +16,19 @@
             # the first column should always be "text_field" and have the following
             # properties:
             assert_equal("text_field", cols[0]["name"])
-            assert(cols[0]["nullable"])
+            assert(!cols[0]["nullable"])
+
+            assert_equal(20, cols[0]["precision"])
+            # scale can be either nil or 0 for character types.
+            case cols[0]["scale"]
+            when nil
+                assert_equal(nil, cols[0]["scale"])
+            when 0
+                assert_equal(0, cols[0]["scale"])
+            else
+                flunk "scale can be either 0 or nil for character types"
+            end
+
             assert_equal(
                 DBI::Type::Varchar, 
                 DBI::TypeUtil.type_name_to_module(cols[0]["type_name"])
@@ -26,6 +38,8 @@
             # properties:
             assert_equal("integer_field", cols[1]["name"])
             assert(cols[1]["nullable"])
+            assert_equal(1, cols[1]["scale"])
+            assert_equal(2, cols[1]["precision"])
             assert_equal(
                 DBI::Type::Decimal, 
                 DBI::TypeUtil.type_name_to_module(cols[1]["type_name"])
