@@ -32,6 +32,13 @@ $LOAD_PATH.unshift(File.dirname(__FILE__))
 # $Id: dbi.rb,v 1.8 2006/09/03 04:05:29 pdubois Exp $
 #
 
+begin
+    require "rubygems"
+    gem "deprecated"
+rescue LoadError
+end
+
+require "deprecated"
 require "dbi/row"
 require "dbi/utils"
 require "dbi/sql"
@@ -46,6 +53,18 @@ require 'dbi/base_classes'
 require "date"
 require "thread"
 require 'monitor'
+
+Deprecate.set_action(
+    proc do |call|
+        klass, meth = call.split(/[#.]/)
+        case klass
+        when "DBI::Date", "DBI::Time", "DBI::Timestamp"
+            warn "DBI::Date/Time/Timestamp are deprecated and will eventually be removed."
+        end
+        warn "You may change the result of calling deprecated code via Deprecate.set_action; Trace follows:"
+        warn caller[2..-1].join("\n")
+    end
+)
 
 module DBI
    VERSION = "0.2.0"

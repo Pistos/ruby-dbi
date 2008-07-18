@@ -3,7 +3,8 @@ module DBI
       attr_accessor :year, :month, :day
       attr_accessor :hour, :minute, :second
       attr_writer   :fraction
-  
+
+      private
       # DBI::Timestamp(year=0,month=0,day=0,hour=0,min=0,sec=0,fraction=nil)
       # DBI::Timestamp(Time)
       # DBI::Timestamp(Date)
@@ -27,6 +28,10 @@ module DBI
                @hour, @minute, @second, @fraction = hour, min, sec, fraction
          end
       end
+
+      public
+      
+      deprecate :initialize, :public
 
       # Returns true if +timestamp+ has a year, month, day, hour, minute,
       # second and fraction equal to the comparing object.

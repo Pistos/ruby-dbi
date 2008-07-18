@@ -76,6 +76,8 @@ if __FILE__ == $0
 
     require 'dbi'
 
+    Deprecate.set_action(proc { })
+
     config = DBDConfig.get_config
 
     if config

@@ -2,6 +2,7 @@ module DBI
    class Time
       attr_accessor :hour, :minute, :second
 
+      private
       # DBI::Time.new(hour = 0, minute = 0, second = 0)
       # DBI::Time.new(Time)
       #
@@ -17,6 +18,10 @@ module DBI
                @hour, @minute, @second = hour, minute, second
          end
       end
+
+      public
+      
+      deprecate :initialize, :public
 
       alias :min :minute
       alias :min= :minute=
