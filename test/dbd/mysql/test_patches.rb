@@ -5,7 +5,7 @@ class TestMysqlPatches < DBDConfig.testbase(:mysql)
             sth.execute
             row = sth.fetch 
             # FIXME: this is BROKEN - should not be a string, should be fixnum
-            assert_equal("70", row[0])
+            assert_equal(70.0, row[0])
             sth.finish
         end
     end

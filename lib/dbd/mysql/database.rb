@@ -71,9 +71,8 @@ module DBI::DBD::Mysql
             when 'TYPE_DOUBLE'
                 mysql_type_name = 'DOUBLE'
                 coercion_method = DBI::Type::Float
-            when 'TYPE_VAR_STRING',
-                         'TYPE_STRING'
-                         mysql_type_name = 'VARCHAR'    # questionable?
+            when 'TYPE_VAR_STRING', 'TYPE_STRING'
+                mysql_type_name = 'VARCHAR'    # questionable?
                 coercion_method = DBI::Type::Varchar
             when 'TYPE_DATE'
                 mysql_type_name = 'DATE'
@@ -95,19 +94,20 @@ module DBI::DBD::Mysql
             when 'TYPE_GEOMETRY'
                 mysql_type_name = 'BLOB'       # questionable?
             when 'TYPE_YEAR',
-                         'TYPE_DECIMAL',                                     # questionable?
-                         'TYPE_BLOB',                                        # questionable?
-                         'TYPE_ENUM',
-                         'TYPE_SET',
-                         'TYPE_BIT',
-                         'TYPE_NULL'
-                         mysql_type_name = const.sub(/^TYPE_/, '')
+                 'TYPE_DECIMAL',                                     # questionable?
+                 'TYPE_BLOB',                                        # questionable?
+                 'TYPE_ENUM',
+                 'TYPE_SET',
+                 'TYPE_BIT',
+                 'TYPE_NULL'
+                mysql_type_name = const.sub(/^TYPE_/, '')
             else
                 mysql_type_name = 'UNKNOWN'
             end
             TYPE_MAP[mysql_type] = [mysql_type_name, coercion_method]
         end
         TYPE_MAP[nil] = ['UNKNOWN', DBI::Type::Varchar]
+        TYPE_MAP[246] = ['NUMERIC', DBI::Type::Decimal]
 
         def initialize(handle, attr)
             super

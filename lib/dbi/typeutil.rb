@@ -31,6 +31,8 @@ module DBI
                 DBI::Type::Boolean
             when /^time(?:stamp(?:tz)?)?$/i
                 DBI::Type::Timestamp
+            when /^(?:decimal|numeric)$/i
+                DBI::Type::Decimal
             else
                 DBI::Type::Varchar
             end
@@ -53,6 +55,8 @@ DBI::TypeUtil.register_conversion("default") do |obj|
     when ::String
         obj = obj.gsub(/'/) { "''" }
         "'#{obj}'"
+    when ::BigDecimal
+        obj.to_s("F")
     when ::Numeric
         obj.to_s
     else

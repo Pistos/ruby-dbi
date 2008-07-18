@@ -1,4 +1,5 @@
 require 'time'
+require 'bigdecimal'
 
 module DBI
     module Type
@@ -33,6 +34,12 @@ module DBI
                 return nil if Null.parse(obj).nil?
                 return obj.to_f if obj.respond_to? :to_f
                 super
+            end
+        end
+
+        class Decimal < Float
+            def self.parse(obj)
+                BigDecimal.new(obj) rescue super
             end
         end
 
