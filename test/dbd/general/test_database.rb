@@ -5,6 +5,37 @@
         # good behavior is yet.
     end
 
+    def test_columns
+        assert_nothing_raised do
+            cols = @dbh.columns("names")
+            assert(cols)
+            assert_kind_of(Array, cols)
+            assert_equal(2, cols.length)
+
+            # the first column should always be "name" and have the following
+            # properties:
+            assert_equal("name", cols[0]["name"])
+            assert(cols[0]["nullable"])
+            assert_equal(
+                DBI::Type::Varchar, 
+                DBI::TypeUtil.type_name_to_module(cols[0]["type_name"])
+            )
+
+            # the second column should always be "age" and have the following
+            # properties:
+            assert_equal("age", cols[1]["name"])
+            assert(cols[1]["nullable"])
+            assert_equal(
+                DBI::Type::Integer, 
+                DBI::TypeUtil.type_name_to_module(cols[1]["type_name"])
+            )
+
+            # finally, we ensure that every column in the array is a ColumnInfo
+            # object
+            cols.each { |col| assert_kind_of(DBI::ColumnInfo, col) }
+        end
+    end
+
     def test_prepare
         @sth = @dbh.prepare('select * from names')
 
