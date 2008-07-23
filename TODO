@@ -21,8 +21,8 @@ x Remove all other drivers
  * You should be able to turn off the type management system
  * Find a better way to leverage lower-level binding APIs
   * Binding API for PostgreSQL in particular
- * Unify ColumnInfo
-  * see "Mysql" above
+ x Unify ColumnInfo
+  x see "Mysql" above
  x Gut old typing system
   x Notify user that Date/Time/Timestamp are deprecated
 * Cleanup core
