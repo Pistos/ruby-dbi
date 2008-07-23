@@ -40,15 +40,15 @@ class TestStatement < DBDConfig.testbase(:sqlite3)
         assert_kind_of DBI::ColumnInfo, @sth.column_info[1]
         assert_equal [ 
             { 
-                "name" => "name",
-                "sql_type" => 12,
-                "precision" => 255,
-                "type_name" => "varchar"
+                :name  => "name",
+                :sql_type  => 12,
+                :precision  => 255,
+                :type_name  => "varchar"
             }, 
             { 
-                "name" => "age",
-                "sql_type" => 4,
-                "type_name" => "integer"
+                :name  => "age",
+                :sql_type  => 4,
+                :type_name  => "integer"
             } 
         ], @sth.column_info
 

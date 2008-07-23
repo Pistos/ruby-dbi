@@ -39,30 +39,30 @@ class TestDbdPostgres < DBDConfig.testbase(:postgresql)
         assert_equal(
             [
                 {
-                        "name"=>"age",
-                        "default"=>nil,
-                        "primary"=>nil,
-                        "scale"=>nil,
-                        "sql_type"=>4,
-                        "nullable"=>true,
-                        "indexed"=>false,
-                        "precision"=>4,
-                        "type_name"=>"integer",
-                        "unique"=>nil,
-                        "array_of_type"=>nil
+                        :name =>"age",
+                        :default =>nil,
+                        :primary =>nil,
+                        :scale =>nil,
+                        :sql_type =>4,
+                        :nullable =>true,
+                        :indexed =>false,
+                        :precision =>4,
+                        :type_name =>"integer",
+                        :unique =>nil,
+                        :array_of_type =>nil
                 },
                 {
-                        "name"=>"name",
-                        "default"=>nil,
-                        "primary"=>nil,
-                        "scale"=>nil,
-                        "sql_type"=>12,
-                        "nullable"=>true,
-                        "indexed"=>false,
-                        "precision"=>255,
-                        "type_name"=>"character varying",
-                        "unique"=>nil,
-                        "array_of_type"=>nil
+                        :name =>"name",
+                        :default =>nil,
+                        :primary =>nil,
+                        :scale =>nil,
+                        :sql_type =>12,
+                        :nullable =>true,
+                        :indexed =>false,
+                        :precision =>255,
+                        :type_name =>"character varying",
+                        :unique =>nil,
+                        :array_of_type =>nil
                 }
         ], @dbh.columns("names").sort_by { |x| x["name"] })
 
@@ -76,17 +76,17 @@ class TestDbdPostgres < DBDConfig.testbase(:postgresql)
         assert_equal(
             [
                 {
-                    "name"=>"foo",
-                    "default"=>nil,
-                    "primary"=>nil,
-                    "scale"=>nil,
-                    "sql_type"=>4,
-                    "nullable"=>true,
-                    "indexed"=>false,
-                    "precision"=>4,
-                    "type_name"=>"integer",
-                    "unique"=>nil,
-                    "array_of_type"=>nil
+                    :name =>"foo",
+                    :default =>nil,
+                    :primary =>nil,
+                    :scale =>nil,
+                    :sql_type =>4,
+                    :nullable =>true,
+                    :indexed =>false,
+                    :precision =>4,
+                    :type_name =>"integer",
+                    :unique =>nil,
+                    :array_of_type =>nil
         
                 }
             ], 

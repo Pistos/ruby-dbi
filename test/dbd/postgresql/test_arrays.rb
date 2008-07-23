@@ -5,45 +5,45 @@ class TestPostgresArray < DBDConfig.testbase(:postgresql)
             assert_equal(
                 [
                     {
-                        "name"=>"foo", 
-                        "default"=>nil, 
-                        "primary"=>nil, 
-                        "scale"=>nil, 
-                        "sql_type"=>DBI::SQL_INTEGER, 
-                        "nullable"=>true, 
-                        "indexed"=>false, 
-                        "precision"=>-1, 
-                        "type_name"=>"integer", 
-                        "unique"=>nil,
-                        "array_of_type" => true
+                        :name =>"foo", 
+                        :default =>nil, 
+                        :primary =>nil, 
+                        :scale =>nil, 
+                        :sql_type =>DBI::SQL_INTEGER, 
+                        :nullable =>true, 
+                        :indexed =>false, 
+                        :precision =>-1, 
+                        :type_name =>"integer", 
+                        :unique =>nil,
+                        :array_of_type  => true
                     }, 
                     {
-                        "name"=>"bar", 
-                        "default"=>nil, 
-                        "primary"=>nil, 
-                        "scale"=>nil, 
-                        "sql_type"=>DBI::SQL_INTEGER, 
-                        "nullable"=>true, 
-                        "indexed"=>false, 
-                        "precision"=>-1, 
-                        "type_name"=>"integer", 
-                        "unique"=>nil,
-                        "array_of_type" => true
+                        :name =>"bar", 
+                        :default =>nil, 
+                        :primary =>nil, 
+                        :scale =>nil, 
+                        :sql_type =>DBI::SQL_INTEGER, 
+                        :nullable =>true, 
+                        :indexed =>false, 
+                        :precision =>-1, 
+                        :type_name =>"integer", 
+                        :unique =>nil,
+                        :array_of_type  => true
                     },
                     {
-                        "name"=>"baz", 
-                        "default"=>nil, 
-                        "primary"=>nil, 
-                        "scale"=>nil, 
-                        "sql_type"=>DBI::SQL_INTEGER, 
-                        "nullable"=>true, 
-                        "indexed"=>false, 
-                        "precision"=>-1, 
-                        "type_name"=>"integer", 
-                        "unique"=>nil,
-                        "array_of_type" => true
+                        :name =>"baz", 
+                        :default =>nil, 
+                        :primary =>nil, 
+                        :scale =>nil, 
+                        :sql_type =>DBI::SQL_INTEGER, 
+                        :nullable =>true, 
+                        :indexed =>false, 
+                        :precision =>-1, 
+                        :type_name =>"integer", 
+                        :unique =>nil,
+                        :array_of_type  => true
                     }
-                ], cols.collect { |x| x.reject { |key, value| key == "dbi_type" } }
+                ], cols.collect { |x| x.reject { |key, value| key == :dbi_type } }
             )
 
             assert_equal(([DBI::DBD::Pg::Type::Array] * 3), cols.collect { |x| x["dbi_type"].class })
