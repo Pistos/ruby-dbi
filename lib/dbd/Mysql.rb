@@ -81,7 +81,6 @@ module DBI::DBD::Mysql::Util
 
 end # module Util
 
-require 'dbd/mysql/columninfo'
 require 'dbd/mysql/driver'
 require 'dbd/mysql/database'
 require 'dbd/mysql/statement'
