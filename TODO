@@ -1,7 +1,7 @@
 * Cleanup:
  * Pg
   * Tests:
-      * LOB tests don't clean up LOBs, just the tables that hold them 
+      * LOB tests don't clean up LOBs, just the tables that hold the OIDs
       * Transaction Tests (AutoCommit on and off, ensuring rollback, etc)
       * more fetch tests
   * Arrays:
@@ -10,7 +10,7 @@
       x Get rid of that array parser
        x But test it first
  * Mysql
-  * find a better way to handle the ColumnInfo stuff; currently monkeypatching
+  x find a better way to handle the ColumnInfo stuff; currently monkeypatching
  * Tracing
   * WTH do we want to do with this
 x Remove all other drivers
