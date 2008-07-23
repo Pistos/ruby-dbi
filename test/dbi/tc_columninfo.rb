@@ -33,7 +33,6 @@ class TC_DBI_ColumnInfo < Test::Unit::TestCase
    
    def test_constructor
       assert_nothing_raised{ DBI::ColumnInfo.new }
-      assert_raises(TypeError){ DBI::ColumnInfo.new(1) }
    end
 
    def test_name_basic

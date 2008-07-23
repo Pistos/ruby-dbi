@@ -1,5 +1,7 @@
+require 'delegate'
+
 module DBI
-    class ColumnInfo < Hash
+    class ColumnInfo < DelegateClass(Hash)
 
         # Creates and returns a ColumnInfo object.  This represents metadata for
         # columns within a given table, such as the data type, whether or not the
@@ -8,7 +10,8 @@ module DBI
         # ColumnInfo is a subclass of Hash.
         #
         def initialize(hash=nil)
-            self.update(hash) if hash
+            @hash = hash or Hash.new
+            super(@hash)
         end
 
         def self_value( key )
@@ -30,28 +33,6 @@ module DBI
 
         # Returns a portable integer representation of the column's type.  Here are
         # the constant names (under DBI) and their respective values:
-        #
-        # SQL_CHAR      = 1
-        # SQL_NUMERIC   = 2
-        # SQL_DECIMAL   = 3
-        # SQL_INTEGER   = 4
-        # SQL_SMALLINT  = 5
-        # SQL_FLOAT     = 6
-        # SQL_REAL      = 7
-        # SQL_DOUBLE    = 8
-        # SQL_DATE      = 9 
-        # SQL_TIME      = 10
-        # SQL_TIMESTAMP = 11
-        # SQL_VARCHAR   = 12
-        #
-        # SQL_LONGVARCHAR   = -1
-        # SQL_BINARY        = -2
-        # SQL_VARBINARY     = -3
-        # SQL_LONGVARBINARY = -4
-        # SQL_BIGINT        = -5
-        # SQL_BIT           = -7
-        # SQL_TINYINT       = -6
-        #
         def sql_type
             self[ :sql_type ] || self['sql_type']
         end
