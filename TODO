@@ -14,9 +14,11 @@
  * Tracing
   * WTH do we want to do with this
 x Remove all other drivers
- * Not sure what to do with ODBC and Proxy yet.
+ * ODBC
+ * Proxy
 * Finish type management system
  x DBI tests
+ * You should be able to turn off the type management system
  * Find a better way to leverage lower-level binding APIs
   * Binding API for PostgreSQL in particular
  * Unify ColumnInfo
@@ -27,9 +29,9 @@ x Remove all other drivers
  x Remove DBI::DIR crap
  x Require code is a mess
  * Find a good clean way to enumerate drivers in separate gems
-* Packaging:
+* Packaging
  * Add stock setup.rb to all tarballs, including drivers
  * Ideally, move DBD-specific tests to DBD packages
  * Remove custom setup.rb
-* Scripts:
+* Scripts
  * What to do with these? I doubt they still work.
