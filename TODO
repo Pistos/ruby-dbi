@@ -18,6 +18,7 @@ x Remove all other drivers
  * Proxy
 * Finish type management system
  x DBI tests
+ * bind_coltype (see prototypes/types.rb)
  * You should be able to turn off the type management system
  * Find a better way to leverage lower-level binding APIs
   * Binding API for PostgreSQL in particular
