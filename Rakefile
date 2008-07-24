@@ -102,7 +102,7 @@ namespace :dbi do
     spec.name        = 'dbi'
     spec.version     = DBI::VERSION
     spec.test_file   = 'test/ts_dbi.rb'
-    spec.files       = gem_files(code_files + DOC_FILES)
+    spec.files       = gem_files(code_files)
     spec.summary     = 'A vendor independent interface for accessing databases, similar to Perl\'s DBI'
     spec.description = 'A vendor independent interface for accessing databases, similar to Perl\'s DBI'
 
@@ -113,7 +113,7 @@ namespace :dbi do
         p.need_tar_gz = true
         p.need_zip = true
 
-        (code_files + DOC_FILES + PACKAGE_FILES).each do |x|
+        (code_files + PACKAGE_FILES).each do |x|
             p.package_files.include(x)
         end
 
@@ -139,13 +139,14 @@ DBD_PACKAGES.each_key do |dbd|
                 File.join("test", "dbd", DBD_PACKAGES[dbd][0] == "pg" ? "postgresql" : DBD_PACKAGES[dbd][0].downcase, "*"), 
                 File.join("lib", "dbd", DBD_PACKAGES[dbd][0] + ".rb"), 
                 "lib/dbd/#{DBD_PACKAGES[dbd][0].downcase}/*.rb",
+                DBD_FILES
             ]
 
             spec = gem.dup
             spec.name        = my_namespace
             spec.version     = DBI::DBD.const_get(DBD_PACKAGES[dbd][0]).const_get("VERSION")
             spec.test_file   = 'test/ts_dbd.rb'
-            spec.files       = gem_files(code_files + DOC_FILES) 
+            spec.files       = gem_files(code_files) 
             spec.summary     = DBD_PACKAGES[dbd][1] 
             spec.description = DBD_PACKAGES[dbd][1]
 
