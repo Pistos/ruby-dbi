@@ -29,11 +29,14 @@ x Remove all other drivers
   x Notify user that Date/Time/Timestamp are deprecated
 * Cleanup core
  x Remove DBI::DIR crap
- x Require code is a mess
+ * Require code is a mess
+  * Just remove the case-sensitivity from the DBDs in general
  * Find a good clean way to enumerate drivers in separate gems
+  * Some registration-on-require would be cleaner and safer
 * Packaging
- * Add stock setup.rb to all tarballs, including drivers
- * Ideally, move DBD-specific tests to DBD packages
+ x Add stock setup.rb to all tarballs, including drivers
+ x Ideally, move DBD-specific tests to DBD packages
  x Remove custom setup.rb
+ * Custom Rakefile for DBDs
 * Scripts
  * What to do with these? I doubt they still work.
