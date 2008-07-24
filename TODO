@@ -23,6 +23,7 @@ x Remove all other drivers
   * Binding API for PostgreSQL in particular
  x Unify ColumnInfo
   x see "Mysql" above
+  * Should we enforce ColumnInfo requirements at the DBI level?
  x Gut old typing system
   x Notify user that Date/Time/Timestamp are deprecated
 * Cleanup core
