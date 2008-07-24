@@ -34,6 +34,6 @@ x Remove all other drivers
 * Packaging
  * Add stock setup.rb to all tarballs, including drivers
  * Ideally, move DBD-specific tests to DBD packages
- * Remove custom setup.rb
+ x Remove custom setup.rb
 * Scripts
  * What to do with these? I doubt they still work.
