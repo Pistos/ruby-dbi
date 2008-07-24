@@ -1,4 +1,4 @@
-#!/usr/local/bin/ruby
+#! /usr/bin/ruby1.8
 #!/usr/bin/env ruby
 #
 # Copyright (c) 2001, 2002 Michael Neumann <neumann@s-direktnet.de>
