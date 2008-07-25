@@ -45,6 +45,7 @@ module DBI
         module Pg
             VERSION          = "0.3.3"
             USED_DBD_VERSION = "0.2"
+            DESCRIPTION      = "PostgreSQL DBI DBD"
 
             def self.driver_name
                 "Pg"

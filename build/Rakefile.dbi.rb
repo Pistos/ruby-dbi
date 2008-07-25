@@ -1,6 +1,15 @@
 require 'rake_task_lib'
 require 'dbi'
 
+DBD_PACKAGES = Dir['lib/dbd/*.rb'].collect { |x| File.basename(x, '.rb') }
+
+# creates a number of tasks like dbi:task_name, dbd_mysql:task_name, so on.
+# Builds these out into an array that can be used as a prereq for other tasks.
+def map_task(task_name)
+    namespaces = (['dbi'] + DBD_PACKAGES.collect { |x| dbd_namespace(x) }).flatten
+    namespaces.collect { |x| [x, task_name].join(":") }
+end
+
 task :package         => (map_task("package") + map_task("gem"))
 task :clobber_package => map_task("clobber_package")
 
@@ -24,16 +33,15 @@ namespace :dbi do
     build_package_tasks(spec, code_files)
 end
 
-Dir['lib/dbd/*.rb'].collect { |x| File.basename(x) }.each do |dbd|
+DBD_PACKAGES.each do |dbd|
     my_namespace = dbd_namespace(dbd)
 
     task my_namespace => DEFAULT_TASKS.collect { |x| "#{my_namespace}:#{x.to_s}" }
     namespace my_namespace do
+        task :default => DEFAULT_TASKS
 
         begin
             require "dbd/#{dbd}"
-
-            task :default => DEFAULT_TASKS
 
             code_files = dbd_code_files(dbd) 
 
@@ -41,6 +49,10 @@ Dir['lib/dbd/*.rb'].collect { |x| File.basename(x) }.each do |dbd|
 
             build_package_tasks(spec, code_files)
         rescue LoadError => e
+            DEFAULT_TASKS.each do |x|
+                task x do
+                end
+            end
             warn "Skipping #{my_namespace} because we can't require DBD"
         end
     end

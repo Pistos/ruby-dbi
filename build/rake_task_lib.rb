@@ -19,13 +19,6 @@ DBD_FILES  = %w(test/DBD_TESTS)
 # some inlines
 #
 
-# creates a number of tasks like dbi:task_name, dbd_mysql:task_name, so on.
-# Builds these out into an array that can be used as a prereq for other tasks.
-def map_task(task_name)
-    namespaces = (['dbi'] + DBD_PACKAGES.keys.collect { |x| dbd_namespace(x) }).flatten
-    namespaces.collect { |x| [x, task_name].join(":") }
-end
-
 def gem_files(code_files)
     (code_files + DOC_FILES).collect { |x| Dir[x] }.reject { |x| EXCLUSIONS.include? x }.flatten
 end

@@ -44,6 +44,7 @@ module DBI
         module SQLite3
             VERSION = ::SQLite3::Version::STRING
             USED_DBD_VERSION='0.2'
+            DESCRIPTION = "SQLite 3.x DBD for DBI"
 
             def self.driver_name
                 "SQLite3"

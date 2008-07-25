@@ -27,6 +27,7 @@ module DBI
         class SQLite
             VERSION = "0.1"
             USED_DBD_VERSION = "0.1"
+            DESCRIPTION = "SQLite 2.x DBI DBD"
 
             def self.driver_name
                 "SQLite"

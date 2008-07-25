@@ -38,6 +38,7 @@ module Proxy
 
 VERSION          = "0.2"
 USED_DBD_VERSION = "0.2"
+DESCRIPTION      = "DRB-based DBD Proxy for DBI"
 
 module HelperMixin
   def check_exception(obj)
