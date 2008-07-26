@@ -80,7 +80,7 @@ Deprecate.set_action(
 )
 
 module DBI
-   VERSION = "0.2.0"
+   VERSION = "0.4.0"
    
    module DBD
       API_VERSION = "0.3"
