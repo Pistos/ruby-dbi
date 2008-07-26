@@ -166,7 +166,6 @@ class TC_DBI < Test::Unit::TestCase
             "dbi:Mysql:",
             "dbi:ODBC:",
             "dbi:Pg:",
-            "dbi:Proxy:",
             "dbi:SQLite3:",
             "dbi:SQLite:"
        ], DBI.available_drivers.sort)
