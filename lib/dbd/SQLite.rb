@@ -17,9 +17,11 @@
 begin
     require 'rubygems'
     gem 'sqlite'
+    gem 'dbi'
 rescue Exception => e
 end
 
+require 'dbi'
 require 'sqlite'
 
 module DBI

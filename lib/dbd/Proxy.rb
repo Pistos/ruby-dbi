@@ -30,6 +30,13 @@
 # $Id$
 #
 
+begin
+    require 'rubygems'
+    gem 'dbi'
+rescue LoadError => e
+end
+
+require 'dbi'
 require "drb"
 
 module DBI

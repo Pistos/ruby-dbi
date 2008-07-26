@@ -33,9 +33,11 @@
 begin
     require 'rubygems'
     gem 'mysql'
+    gem 'dbi'
 rescue LoadError => e
 end
 
+require 'dbi'
 require "mysql"
 require "thread"   # for Mutex
 

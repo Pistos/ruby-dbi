@@ -3,7 +3,7 @@
 #     Use the Rakefile in the root directory for development.
 
 $:.unshift 'lib'
-require 'dbd/@DBD@'
+require 'rake_task_lib'
 require 'rake'
 require 'rake/gempackagetask'
 require 'rake/packagetask'

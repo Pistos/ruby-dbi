@@ -33,9 +33,12 @@
 
 begin
   require 'rubygems'
+  gem 'sqlite3-ruby'
+  gem 'dbi'
 rescue LoadError
 end
 
+require 'dbi'
 require 'sqlite3'
 require 'sqlite3/version'
 

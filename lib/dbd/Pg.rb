@@ -34,9 +34,11 @@
 begin
     require 'rubygems'
     gem 'pg'
+    gem 'dbi'
 rescue Exception => e
 end
 
+require 'dbi'
 require 'pg'
 
 # XXX lots of this driver is in require statements below this module definition

@@ -10,7 +10,7 @@ DEFAULT_TASKS = [:clobber_package, :package, :gem]
 # Packaging
 #
 
-PACKAGE_FILES = %w(setup.rb)
+PACKAGE_FILES = %w(Rakefile build/rake_task_lib.rb setup.rb)
 DOC_FILES  = %w(README LICENSE ChangeLog)
 EXCLUSIONS = %w(test/sql.log)
 DBD_FILES  = %w(test/DBD_TESTS)
@@ -35,7 +35,7 @@ def build_package_tasks(spec, code_files)
         p.need_tar_gz = true
         p.need_zip = true
 
-        code_files.each do |x|
+        package_files(code_files).each do |x|
             p.package_files.include(x)
         end
 
@@ -80,24 +80,70 @@ def dbd_package_files(code_files)
     DBD_FILES + package_files(code_files)
 end
 
-def dbd_gem_spec(dbd, code_files)
+def dbd_gem_spec(dbd, dbd_const, code_files)
     spec = boilerplate_spec
     spec.name        = dbd_namespace(dbd)
-    spec.version     = dbd_version(dbd)
+    spec.version     = dbd_version(dbd_const)
     spec.test_file   = 'test/ts_dbd.rb'
     spec.files       = gem_files(code_files) 
-    spec.summary     = dbd_description(dbd)
-    spec.description = dbd_description(dbd) 
+    spec.summary     = dbd_description(dbd_const)
+    spec.description = dbd_description(dbd_const) 
 
     return spec
 end
 
-def dbd_version(dbd)
-    DBI::DBD.const_get(dbd).const_get("VERSION")
+def dbd_version(const)
+    DBI::DBD.const_get(const).const_get("VERSION")
 end
 
-def dbd_description(dbd)
-    DBI::DBD.const_get(dbd).const_get("DESCRIPTION")
+def dbd_description(const)
+    DBI::DBD.const_get(const).const_get("DESCRIPTION")
+end
+
+
+def build_dbd_tasks(dbd)
+    task :default => DEFAULT_TASKS
+
+    begin
+        done = false
+        dbd_const = nil
+        Dir["lib/dbd/*.rb"].each do |dbd_file|
+            if File.basename(dbd_file.downcase, '.rb') == dbd.to_s.downcase
+                dbd_const = File.basename(dbd_file, '.rb')
+                require "dbd/#{dbd_const}"
+                done = true
+            end
+        end
+
+        abort "No DBD found even though we asked to make tasks for it" unless done
+
+        code_files = dbd_code_files(dbd_const) 
+
+        spec = dbd_gem_spec(dbd, dbd_const, code_files)
+
+        build_package_tasks(spec, code_files)
+
+        # FIXME: convert to a rake_test_loader sooner or later
+        task :test do
+            ENV["DBTYPES"] = dbd
+            system("ruby", 'test/ts_dbd.rb')
+        end
+    rescue LoadError => e
+        DEFAULT_TASKS.each do |x|
+            task x do
+            end
+        end
+        warn "Skipping #{dbd_namespace(dbd)} because we can't require DBD"
+    end
+end
+
+def build_dbi_tasks
+    # FIXME: convert to a rake_test_loader sooner or later
+    task :test do
+        Dir["test/ts_*.rb"].each do |file|
+            system("ruby", file)
+        end
+    end
 end
 
 #
@@ -124,10 +170,3 @@ Rake::RDocTask.new do |rd|
     rd.options = %w(-ap)
 end
 
-# Runs the DBI test suite (though not the various DBD tests)
-# FIXME: convert to a rake_test_loader sooner or later
-task :test do
-    Dir["test/ts_*.rb"].each do |file|
-        system("ruby", file)
-    end
-end

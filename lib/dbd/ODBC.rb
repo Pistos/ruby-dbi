@@ -30,9 +30,17 @@
 # $Id$
 #
 
-$:.delete(".")
+$:.delete(".") # FIXME oh for the love of pete..
 require "odbc"
 $: << "."
+
+begin
+    require 'rubygems'
+    gem 'dbi'
+rescue LoadError => e
+end
+
+require 'dbi'
 
 module DBI
 module DBD

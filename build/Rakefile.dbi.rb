@@ -13,6 +13,8 @@ end
 task :package         => (map_task("package") + map_task("gem"))
 task :clobber_package => map_task("clobber_package")
 
+build_dbi_tasks
+
 #
 # There's probably a better way to do this, but here's a boilerplate spec that we dup and modify.
 #
@@ -20,7 +22,7 @@ task :clobber_package => map_task("clobber_package")
 task :dbi => DEFAULT_TASKS.collect { |x| "dbi:#{x.to_s}" }
 
 namespace :dbi do
-    code_files = %w(examples/**/* bin/**/* Rakefile lib/dbi.rb lib/dbi/* test/ts_dbi.rb test/dbi/*)
+    code_files = %w(examples/**/* bin/**/* build/Rakefile.dbi.rb lib/dbi.rb lib/dbi/**/*.rb test/ts_dbi.rb test/dbi/*)
 
     spec = boilerplate_spec
     spec.name        = 'dbi'
@@ -38,22 +40,6 @@ DBD_PACKAGES.each do |dbd|
 
     task my_namespace => DEFAULT_TASKS.collect { |x| "#{my_namespace}:#{x.to_s}" }
     namespace my_namespace do
-        task :default => DEFAULT_TASKS
-
-        begin
-            require "dbd/#{dbd}"
-
-            code_files = dbd_code_files(dbd) 
-
-            spec = dbd_gem_spec(dbd, code_files)
-
-            build_package_tasks(spec, code_files)
-        rescue LoadError => e
-            DEFAULT_TASKS.each do |x|
-                task x do
-                end
-            end
-            warn "Skipping #{my_namespace} because we can't require DBD"
-        end
+        build_dbd_tasks(dbd)
     end
 end
