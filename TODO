@@ -40,5 +40,7 @@ x Packaging
  x Remove custom setup.rb
  x Custom Rakefile for DBDs
  * Add dependencies for DBDs
-* Scripts
- * What to do with these? I doubt they still work.
+x Scripts
+ x What to do with these? I doubt they still work.
+  x bin/dbi working
+  x bin/dbd_proxy seems to have never worked; slate it for 0.6.0

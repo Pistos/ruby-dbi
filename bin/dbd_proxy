@@ -29,6 +29,8 @@
 # $Id: proxyserver.rb,v 1.1 2006/01/04 02:03:08 francis Exp $
 #
 
+fail "This currently does not (and apparently never did) work."
+
 require "drb"
 require "dbi"
 

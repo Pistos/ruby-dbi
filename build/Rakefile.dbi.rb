@@ -22,12 +22,13 @@ build_dbi_tasks
 task :dbi => DEFAULT_TASKS.collect { |x| "dbi:#{x.to_s}" }
 
 namespace :dbi do
-    code_files = %w(examples/**/* bin/**/* build/Rakefile.dbi.rb lib/dbi.rb lib/dbi/**/*.rb test/ts_dbi.rb test/dbi/*)
+    code_files = %w(examples/**/* bin/dbi build/Rakefile.dbi.rb lib/dbi.rb lib/dbi/**/*.rb test/ts_dbi.rb test/dbi/*)
 
     spec = boilerplate_spec
     spec.name        = 'dbi'
     spec.version     = DBI::VERSION
     spec.test_file   = 'test/ts_dbi.rb'
+    spec.executables = ['dbi']
     spec.files       = gem_files(code_files)
     spec.summary     = 'A vendor independent interface for accessing databases, similar to Perl\'s DBI'
     spec.description = 'A vendor independent interface for accessing databases, similar to Perl\'s DBI'
