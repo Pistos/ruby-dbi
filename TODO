@@ -16,7 +16,8 @@
    * Wow, this module has *serious issues*. Crashes DBI without warning. Redo this completely.
 x Remove all other drivers
  * ODBC
- * Proxy
+ x Proxy
+  x Slated for 0.6.0
 * Finish type management system
  x DBI tests
  * bind_coltype (see prototypes/types.rb)
