@@ -33,10 +33,10 @@ x Remove all other drivers
   * Just remove the case-sensitivity from the DBDs in general
  * Find a good clean way to enumerate drivers in separate gems
   * Some registration-on-require would be cleaner and safer
-* Packaging
+x Packaging
  x Add stock setup.rb to all tarballs, including drivers
  x Ideally, move DBD-specific tests to DBD packages
  x Remove custom setup.rb
- * Custom Rakefile for DBDs
+ x Custom Rakefile for DBDs
 * Scripts
  * What to do with these? I doubt they still work.
