@@ -2,10 +2,14 @@ module DBI
     module Utils
         module TableFormatter
             # TODO: add a nr-column where the number of the column is shown
-            def self.ascii(header, rows, 
-                                     header_orient=:left, rows_orient=:left, 
-                                     indent=2, cellspace=1, pagebreak_after=nil,
-                                     output=STDOUT)
+            def self.ascii(header, 
+                           rows, 
+                           header_orient=:left, 
+                           rows_orient=:left, 
+                           indent=2, 
+                           cellspace=1, 
+                           pagebreak_after=nil,
+                           output=STDOUT)
 
                 header_orient ||= :left
                 rows_orient   ||= :left
