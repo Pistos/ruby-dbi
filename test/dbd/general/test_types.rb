@@ -96,27 +96,29 @@
     def test_boolean_return
         @sth = nil
 
-        assert_nothing_raised do
-            @sth = @dbh.prepare("insert into boolean_test (num, mybool) values (?, ?)")
-            @sth.execute(1, true)
-            @sth.execute(2, false)
-            @sth.finish
-        end
+        unless dbtype == "odbc" # ODBC has no boolean type
+            assert_nothing_raised do
+                @sth = @dbh.prepare("insert into boolean_test (num, mybool) values (?, ?)")
+                @sth.execute(1, true)
+                @sth.execute(2, false)
+                @sth.finish
+            end
 
-        assert_nothing_raised do
-            @sth = @dbh.prepare("select * from boolean_test order by num")
-            @sth.execute
+            assert_nothing_raised do
+                @sth = @dbh.prepare("select * from boolean_test order by num")
+                @sth.execute
 
-            pairs = @sth.fetch_all
+                pairs = @sth.fetch_all
 
-            assert_equal(
-                [
-                             [1, true],
-                             [2, false],
-                ], pairs
-            )
+                assert_equal(
+                    [
+                                 [1, true],
+                                 [2, false],
+                    ], pairs
+                )
 
-            @sth.finish
+                @sth.finish
+            end
         end
     end
 end

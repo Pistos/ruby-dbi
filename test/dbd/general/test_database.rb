@@ -73,6 +73,57 @@
 
         # since this is a general test, let's prune the system tables
         # FIXME not so sure if this should be a general test anymore.
+        if dbtype == "odbc"
+            tables -= [
+                "administrable_role_authorizations",
+                "applicable_roles",
+                "attributes",
+                "check_constraint_routine_usage",
+                "check_constraints",
+                "column_domain_usage",
+                "column_privileges",
+                "column_udt_usage",
+                "columns",
+                "constraint_column_usage",
+                "constraint_table_usage",
+                "data_type_privileges",
+                "domain_constraints",
+                "domain_udt_usage",
+                "domains",
+                "element_types",
+                "enabled_roles",
+                "information_schema_catalog_name",
+                "key_column_usage",
+                "parameters",
+                "referential_constraints",
+                "role_column_grants",
+                "role_routine_grants",
+                "role_table_grants",
+                "role_usage_grants",
+                "routine_privileges",
+                "routines",
+                "schemata",
+                "sequences",
+                "sql_features",
+                "sql_implementation_info",
+                "sql_languages",
+                "sql_packages",
+                "sql_parts",
+                "sql_sizing",
+                "sql_sizing_profiles",
+                "table_constraints",
+                "table_privileges",
+                "tables",
+                "triggered_update_columns",
+                "triggers",
+                "usage_privileges",
+                "view_column_usage",
+                "view_routine_usage",
+                "view_table_usage",
+                "views"
+            ]
+        end
+        
         case dbtype 
         when "postgresql"
             tables.reject! { |x| x =~ /^pg_/ }
