@@ -1,6 +1,14 @@
 module DBI
     module Utils
         module TableFormatter
+
+            # FIXME this is probably short-sighted.
+            def self.coerce(obj)
+                obj = "NULL" if obj.nil?
+                obj = (obj.kind_of?(Array) or obj.kind_of?(Hash)) ? obj.inspect : obj.to_s
+                return obj
+            end
+
             # TODO: add a nr-column where the number of the column is shown
             def self.ascii(header, 
                            rows, 
@@ -23,7 +31,7 @@ module DBI
                     [
                         (0...rows.size).collect { |rownr|
                         value = rows[rownr][colnr]
-                        (value.nil? ? "NULL" : value).to_s.size
+                        coerce(value).size
                     }.max,
                         header[colnr].size
                     ].max
@@ -40,7 +48,9 @@ module DBI
                     output << indent + "|"
                     row.each_with_index {|c,i|
                         output << cellspace
-                        str = (c.nil? ? "NULL" : c).to_s
+
+                        str = coerce(c)
+
                         output << case orient
                         when :left then   str.ljust(col_lengths[i])
                         when :right then  str.rjust(col_lengths[i])

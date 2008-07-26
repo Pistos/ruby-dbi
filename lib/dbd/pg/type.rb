@@ -24,6 +24,9 @@ module DBI::DBD::Pg::Type
         end
 
         def self.parse(obj)
+
+            return nil if obj.nil?
+
             # FIXME there's a bug in the upstream 'pg' driver that does not
             # properly decode bytea, leaving in an extra slash for each decoded
             # character.
@@ -57,7 +60,9 @@ module DBI::DBD::Pg::Type
         end
 
         def parse(obj)
-            if obj.index('{') == 0 and obj.rindex('}') == (obj.length - 1)
+            if obj.nil?
+                nil
+            elsif obj.index('{') == 0 and obj.rindex('}') == (obj.length - 1)
                 convert_array(obj)
             else
                 raise "Not an array"

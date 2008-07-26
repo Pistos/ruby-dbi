@@ -361,7 +361,7 @@ def output_table(header, rows)
     DBI::Utils::TableFormatter.ascii(header, rows, nil, nil, nil, nil, $page_len) do   
         if $paging
             print "[enter to continue, a to abort]"
-            break if $stdin.readline.chomp == "a"
+            break if $stdin.readline.chomp.downcase == "a"
         end
     end
 end
