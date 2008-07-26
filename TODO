@@ -13,6 +13,7 @@
   x find a better way to handle the ColumnInfo stuff; currently monkeypatching
  * Tracing
   * WTH do we want to do with this
+   * Wow, this module has *serious issues*. Crashes DBI without warning. Redo this completely.
 x Remove all other drivers
  * ODBC
  * Proxy
@@ -38,5 +39,6 @@ x Packaging
  x Ideally, move DBD-specific tests to DBD packages
  x Remove custom setup.rb
  x Custom Rakefile for DBDs
+ * Add dependencies for DBDs
 * Scripts
  * What to do with these? I doubt they still work.

@@ -31,6 +31,7 @@ namespace :dbi do
     spec.files       = gem_files(code_files)
     spec.summary     = 'A vendor independent interface for accessing databases, similar to Perl\'s DBI'
     spec.description = 'A vendor independent interface for accessing databases, similar to Perl\'s DBI'
+    spec.add_dependency 'deprecated', '>= 2.0.0'
 
     build_package_tasks(spec, code_files)
 end

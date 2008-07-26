@@ -88,6 +88,7 @@ def dbd_gem_spec(dbd, dbd_const, code_files)
     spec.files       = gem_files(code_files) 
     spec.summary     = dbd_description(dbd_const)
     spec.description = dbd_description(dbd_const) 
+    spec.add_dependency 'dbi', '>= 0.4.0'
 
     return spec
 end
