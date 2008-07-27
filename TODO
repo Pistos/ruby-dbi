@@ -15,7 +15,7 @@
   * WTH do we want to do with this
    * Wow, this module has *serious issues*. Crashes DBI without warning. Redo this completely.
 x Remove all other drivers
- * ODBC
+ x ODBC
  x Proxy
   x Slated for 0.6.0
 * Finish type management system
@@ -27,6 +27,7 @@ x Remove all other drivers
  x Unify ColumnInfo
   x see "Mysql" above
   * Should we enforce ColumnInfo requirements at the DBI level?
+   * At least test the result of statement colinfo uniformly
  x Gut old typing system
   x Notify user that Date/Time/Timestamp are deprecated
 * Cleanup core
