@@ -53,6 +53,7 @@ DBI::TypeUtil.register_conversion("default") do |obj|
     when ::Time, ::Date, ::DateTime
         "'#{::DateTime.parse(obj.to_s).strftime("%m/%d/%Y %H:%M:%S")}'"
     when ::String
+        obj = obj.gsub(/\\/) { "\\\\" }
         obj = obj.gsub(/'/) { "''" }
         "'#{obj}'"
     when ::BigDecimal

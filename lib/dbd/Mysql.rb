@@ -56,6 +56,10 @@ module DBI
 
             DBI::TypeUtil.register_conversion(driver_name) do |obj|
                 case obj
+                when ::DBI::Binary
+                    obj = obj.to_s.gsub(/\\/) { "\\\\" }
+                    obj = obj.to_s.gsub(/'/) { "''" }
+                    "'#{obj}'"
                 when ::Time
                     "'#{obj.strftime("%H:%M:%S")}'"
                 when ::Date
