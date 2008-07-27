@@ -65,7 +65,6 @@ module DBI
                         if item.kind_of? String
                             # in strings, escapes are doubled and the quotes are different.
                             # this gets *really* ugly and needs to be well-tested
-                            generated.gsub!(/\\/) { "\\\\" }
                             generated.gsub!(/(^')|('$)/) { "\"" }
                         end
 

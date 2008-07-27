@@ -42,12 +42,25 @@ class TestPostgresArray < DBDConfig.testbase(:postgresql)
                         :type_name =>"integer", 
                         :unique =>nil,
                         :array_of_type  => true
+                    },
+                    {
+                        :array_of_type=>true,
+                        :unique=>nil,
+                        :precision=>-1,
+                        :name=>"quux",
+                        :default=>nil,
+                        :indexed=>false,
+                        :scale=>nil,
+                        :primary=>nil,
+                        :sql_type=>12,
+                        :nullable=>true,
+                        :type_name=>"character varying"
                     }
                 ], cols.collect { |x| x.reject { |key, value| key == :dbi_type } }
             )
 
-            assert_equal(([DBI::DBD::Pg::Type::Array] * 3), cols.collect { |x| x["dbi_type"].class })
-            assert_equal(([DBI::Type::Integer] * 3), cols.collect { |x| x["dbi_type"].base_type })
+            assert_equal(([DBI::DBD::Pg::Type::Array] * 4), cols.collect { |x| x["dbi_type"].class })
+            assert_equal((([DBI::Type::Integer] * 3) + [DBI::Type::Varchar]), cols.collect { |x| x["dbi_type"].base_type })
         end
     end
 
@@ -66,15 +79,32 @@ class TestPostgresArray < DBDConfig.testbase(:postgresql)
         end
 
         assert_nothing_raised do
+            sth = @dbh.prepare('insert into array_test (quux) values (?)')
+            sth.execute(["Hello\\ World", "Again\\"])
+            sth.finish
+        end
+
+        assert_nothing_raised do
             # FIXME this test should eventually have a typed result
-            sth = @dbh.prepare('select foo from array_test')
+            sth = @dbh.prepare('select foo from array_test where foo is not null')
             sth.execute
             assert_equal(
                 [
                     [[1,2,3]],
-                    [[1,2,3]]
+                    [[1,2,3]],
                 ], sth.fetch_all
             )
+            sth.finish
+
+            sth = @dbh.prepare('select quux from array_test where quux is not null')
+            sth.execute
+
+            assert_equal(
+                [
+                    [["Hello\\ World", "Again\\"]]
+                ], sth.fetch_all
+            )
+
             sth.finish
         end
     end
