@@ -19,6 +19,11 @@ module DBI
                            pagebreak_after=nil,
                            output=STDOUT)
 
+                if rows.size == 0 or rows[0].size == 0
+                    output.puts "No rows selected"
+                    return
+                end
+
                 header_orient ||= :left
                 rows_orient   ||= :left
                 indent        ||= 2
