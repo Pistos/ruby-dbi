@@ -31,7 +31,7 @@ module DBI
                         /[*] .*? [*]/                       (?# matches C-style comments )
                         |   /                                   (?# matches single slash )    
                         |
-                        ' ( [^'\\]  |  ''  |  \\. )* '      (?# match strings surrounded by apostophes )
+                        ' ( [^'\\]  |  ''  |  \\. )* '  (?# match strings surrounded by apostophes )
                         |
                         " ( [^"\\]  |  ""  |  \\. )* "      (?# match strings surrounded by " )
                         |

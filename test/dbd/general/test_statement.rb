@@ -1,9 +1,13 @@
 @class = Class.new(DBDConfig.testbase(DBDConfig.current_dbtype)) do
-    def skip_quoting # FIXME breaks sqlite-ruby to a segfault - research
+    def test_quoting # FIXME breaks sqlite-ruby to a segfault - research
         @sth = nil
 
         assert_nothing_raised do
-            @sth = @dbh.prepare("select '\\'") #wrong
+            if dbtype == "postgresql"
+                @sth = @dbh.prepare('select E\'\\\\\'')
+            else
+                @sth = @dbh.prepare('select \'\\\\\'')
+            end
             @sth.execute
             row = @sth.fetch
             assert_equal ['\\'], row

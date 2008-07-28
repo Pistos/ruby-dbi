@@ -55,6 +55,7 @@ module DBI
 
             # FIXME plucked from SQLite driver, this needs to be in DBI proper 
             def self.parse_type(type_name)
+                return ['varchar'] unless type_name
                 type_name.match(/^([^\(]+)(\((\d+)(,(\d+))?\))?$/)
             end
 

@@ -36,6 +36,9 @@ class DBI::DBD::SQLite::Statement < DBI::BaseStatement
 
     def execute
         sql = @statement.bind(@params)
+        # XXX sqlite re-escapes this for us automatically, it's causing trouble with everything else.
+        #     this will probably break in a horrible manner and I will be forced to "fix" it again.
+        sql.gsub!(/\\\\/) { '\\' } 
         DBI::DBD::SQLite.check_sql(sql)
 
         begin

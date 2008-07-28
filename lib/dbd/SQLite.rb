@@ -16,7 +16,7 @@
 
 begin
     require 'rubygems'
-    gem 'sqlite'
+    gem 'sqlite-ruby'
     gem 'dbi'
 rescue Exception => e
 end
