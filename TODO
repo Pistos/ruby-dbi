@@ -1,9 +1,9 @@
 * Cleanup:
  * Pg
   * Tests:
-      * LOB tests don't clean up LOBs, just the tables that hold the OIDs
-      * Transaction Tests (AutoCommit on and off, ensuring rollback, etc)
-      * more fetch tests
+      x LOB tests don't clean up LOBs, just the tables that hold the OIDs
+      x Transaction Tests (AutoCommit on and off, ensuring rollback, etc)
+      x more fetch tests
   * Arrays:
       * Find some way to get the extents of an array type
        * checked pg_type, pg_attribute and pg_class, can't find anything.
@@ -22,8 +22,8 @@ x Remove all other drivers
  x DBI tests
  * bind_coltype (see prototypes/types.rb)
  * You should be able to turn off the type management system
- * Find a better way to leverage lower-level binding APIs
-  * Binding API for PostgreSQL in particular
+ x Find a better way to leverage lower-level binding APIs
+  x Binding API for PostgreSQL in particular
  x Unify ColumnInfo
   x see "Mysql" above
   * Should we enforce ColumnInfo requirements at the DBI level?
