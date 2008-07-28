@@ -29,5 +29,8 @@ class TestPostgresBlob < DBDConfig.testbase(:postgresql)
         end
 
         assert_equal 3, index
+
+        File.unlink("/tmp/pg_dbi_read_test")
+        File.unlink("/tmp/pg_dbi_import_test")
     end
 end
