@@ -8,15 +8,15 @@ module DBI
         end
 
         def self.convert(driver_name, obj)
-            newobj = obj
             if @@conversions[driver_name]
-                newobj = @@conversions[driver_name].call(obj)
-            end
-            if newobj.object_id == obj.object_id
-                return @@conversions["default"].call(newobj)
+                newobj, cascade = @@conversions[driver_name].call(obj)
+                if cascade
+                    return @@conversions["default"].call(newobj)
+                end
+                return newobj
             end
 
-            return newobj
+            return @@conversions["default"].call(obj)
         end
 
         def self.type_name_to_module(type_name)

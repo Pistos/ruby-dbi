@@ -64,8 +64,8 @@ require 'dbd/sqlite/statement'
 DBI::TypeUtil.register_conversion(DBI::DBD::SQLite.driver_name) do |obj|
     case obj
     when ::NilClass
-        "NULL"
+        ["NULL", false]
     else 
-        obj
+        [obj, true]
     end
 end

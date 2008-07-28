@@ -55,21 +55,21 @@ module DBI
             end
 
             DBI::TypeUtil.register_conversion(driver_name) do |obj|
-                #p obj
-                if obj.nil?
-                    nil
-                else
-                    case obj
-                    when ::Date
-                        ::ODBC::Date.new(obj)
-                    when ::Time
-                        ::ODBC::Time.new(obj)
-                    when ::DateTime
-                        ::ODBC::Timestamp.new(obj)
-                    else
-                        obj.to_s.dup
-                    end
-                end
+                newobj = if obj.nil?
+                             nil
+                         else
+                             case obj
+                             when ::Date
+                                 ::ODBC::Date.new(obj)
+                             when ::Time
+                                 ::ODBC::Time.new(obj)
+                             when ::DateTime
+                                 ::ODBC::Timestamp.new(obj)
+                             else
+                                 obj.to_s
+                             end
+                         end
+                [newobj, false]
             end
 
             ODBCErr = ::ODBC::Error

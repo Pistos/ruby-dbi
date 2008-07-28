@@ -12,8 +12,6 @@ module DBI
 
         class Varchar 
             def self.parse(obj)
-                # XXX if the varchar contains "NULL" and nothing else, this
-                # could cause a problem.
                 return obj unless obj
                 return obj.to_s if obj.respond_to? :to_s
                 return obj.to_str if obj.respond_to? :to_str

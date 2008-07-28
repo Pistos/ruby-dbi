@@ -62,12 +62,14 @@ module DBI
                         output += generate_array(item)
                     else
                         generated = DBI::TypeUtil.convert(driver_name, item)
-                        if item.kind_of? String
-                            # in strings, escapes are doubled and the quotes are different.
-                            # this gets *really* ugly and needs to be well-tested
-                            generated.gsub!(/(^')|('$)/) { "\"" }
-                        end
-
+                        generated = case item
+                                    when String
+                                        # in strings, escapes are doubled and the quotes are different.
+                                        # this gets *really* ugly and needs to be well-tested
+                                        "\"#{generated.gsub(/\\/) { "\\\\" }}\""
+                                    when Fixnum
+                                        generated.to_s
+                                    end
                         output += generated
                     end
                     output += "," # FIXME technically, delimiters are variable
@@ -137,26 +139,22 @@ require 'dbd/pg/type'
 require 'dbd/pg/database'
 require 'dbd/pg/statement'
 require 'dbd/pg/tuples'
+require 'dbd/pg/exec'
 
 pg = DBI::DBD::Pg
 
 DBI::TypeUtil.register_conversion(pg.driver_name) do |obj|
-    case obj
-    when ::DateTime
-        pg.quote(obj.strftime("%m/%d/%Y %H:%M:%S.%N"))
-    when ::Time, ::Date
-        pg.quote(::DateTime.parse(obj.to_s).strftime("%m/%d/%Y %H:%M:%S.%N"))
-    when ::Array
-        pg.quote(pg.generate_array(obj))
-    when ::TrueClass
-        "'t'"
-    when ::FalseClass
-        "'f'"
-    when ::NilClass
-        "NULL"
-    when DBI::DBD::Pg::Type::ByteA
-        "E'#{obj.escaped}'"
-    else
-        obj
-    end
+    newobj = case obj
+             when ::DateTime
+                 obj.strftime("%m/%d/%Y %H:%M:%S.%N")
+             when ::Time, ::Date
+                 ::DateTime.parse(obj.to_s).strftime("%m/%d/%Y %H:%M:%S.%N")
+             when ::Array
+                 pg.generate_array(obj)
+             when DBI::DBD::Pg::Type::ByteA
+                 obj.escaped
+             else
+                 obj
+             end
+    [newobj, false]
 end

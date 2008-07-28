@@ -84,13 +84,18 @@ require 'dbd/sqlite3/database'
 require 'dbd/sqlite3/statement'
 
 DBI::TypeUtil.register_conversion(DBI::DBD::SQLite3.driver_name) do |obj|
-    case obj
-    when ::TrueClass
-        '1'
-    when ::FalseClass
-        '0'
+    newobj = case obj
+             when ::TrueClass
+                '1'
+             when ::FalseClass
+                '0'
+             else
+                 # SQLite3 is managing its own conversion right now, until I'm happy let's keep it that way
+                 obj.dup rescue obj
+             end
+    if newobj.object_id == obj.object_id
+        [newobj, true]
     else
-        # SQLite3 is managing its own conversion right now, until I'm happy let's keep it that way
-        obj.dup rescue obj
+        [newobj, false]
     end
 end

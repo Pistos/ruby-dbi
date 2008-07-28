@@ -39,14 +39,28 @@ class DBI::DBD::Pg::Database < DBI::BaseDatabase
                                  hash['dbname'] || hash['database'], user, auth)
 
         @exec_method = :exec
+        @in_transaction = false
 
-        @attr = attr
-        @attr['NonBlocking'] ||= false
+        # set attribute defaults, and look for pg_* attrs in the DSN
+        @attr = { 'AutoCommit' => true, 'pg_async' => false }
+        hash.each do |key, value|
+            @attr[key] = value if key =~ /^pg_./
+        end
+        @attr.merge!(attr || {})
+        if @attr['pg_async'].is_a?(String)
+            case @attr['pg_async'].downcase
+            when 'true'
+                @attr['pg_async'] = true
+            when 'false'
+                @attr['pg_async'] = false
+            else
+                raise InterfaceError, %q{'pg_async' must be 'true' or 'false'}
+            end
+        end
+
         @attr.each { |k,v| self[k] = v} 
-
         @type_map = __types
 
-        @in_transaction = false
         self['AutoCommit'] = true    # Postgres starts in unchained mode (AutoCommit=on) by default 
 
     rescue PGError => err
@@ -121,6 +135,7 @@ class DBI::DBD::Pg::Database < DBI::BaseDatabase
         ]
 
         dbh = DBI::DatabaseHandle.new(self)
+        dbh.driver_name = DBI::DBD::Pg.driver_name
         indices = {}
         default_values = {}
 
@@ -190,6 +205,8 @@ class DBI::DBD::Pg::Database < DBI::BaseDatabase
         case attr
         when 'pg_client_encoding'
             @connection.client_encoding
+        when 'NonBlocking'
+            @attr['pg_async']
         else
             @attr[attr]
         end
@@ -210,8 +227,11 @@ class DBI::DBD::Pg::Database < DBI::BaseDatabase
                 end
             end
         # value is assigned below
-        when 'NonBlocking'
-            @exec_method = if value then :async_exec else :exec end
+        when 'NonBlocking', 'pg_async'
+            # booleanize input
+            value = value ? true : false
+            @pgexec = (value ? DBI::DBD::Pg::PgExecutorAsync : DBI::DBD::Pg::PgExecutor).new(@connection)
+            # value is assigned to @attr below
         when 'pg_client_encoding'
             @connection.set_client_encoding(value)
         else
@@ -253,8 +273,16 @@ class DBI::DBD::Pg::Database < DBI::BaseDatabase
         @in_transaction = true
     end
 
-    def _exec(sql)
-        @connection.send(@exec_method, sql)
+    def _exec(sql, *parameters)
+        @pgexec.exec(sql, parameters)
+    end
+
+    def _exec_prepared(stmt_name, *parameters)
+        @pgexec.exec_prepared(stmt_name, parameters)
+    end
+
+    def _prepare(stmt_name, sql)
+        @pgexec.prepare(stmt_name, sql)
     end
 
     private # ----------------------------------------------------
@@ -291,33 +319,33 @@ class DBI::DBD::Pg::Database < DBI::BaseDatabase
     def load_type_map
         @type_map = Hash.new
 
-        res = _exec("SELECT oid, typname, typelem FROM pg_type WHERE typtype = 'b';")
+        res = _exec("SELECT oid, typname, typelem FROM pg_type WHERE typtype = 'b'")
 
         res.each do |row|
             rowtype = parse_type_name(row["typname"])
             @type_map[row["oid"].to_i] = 
                 { 
-                                "type_name" => row["typname"],
-                                "dbi_type" => 
-            if rowtype
-                rowtype
-            elsif row["typname"] =~ /^_/ and row["typelem"].to_i > 0 then
-                # arrays are special and have a subtype, as an
-                # oid held in the "typelem" field.
-                # Since we may not have a mapping for the
-                # subtype yet, defer by storing the typelem
-                # integer as a base type in a constructed
-                # Type::Array object. dirty, i know.
-                #
-                # These array objects will be reconstructed
-                # after all rows are processed and therefore
-                # the oid -> type mapping is complete.
-                # 
-                DBI::DBD::Pg::Type::Array.new(row["typelem"].to_i)
-            else
-                DBI::Type::Varchar
-            end
-            }
+                    "type_name" => row["typname"],
+                    "dbi_type" => 
+                        if rowtype
+                            rowtype
+                        elsif row["typname"] =~ /^_/ and row["typelem"].to_i > 0 then
+                            # arrays are special and have a subtype, as an
+                            # oid held in the "typelem" field.
+                            # Since we may not have a mapping for the
+                            # subtype yet, defer by storing the typelem
+                            # integer as a base type in a constructed
+                            # Type::Array object. dirty, i know.
+                            #
+                            # These array objects will be reconstructed
+                            # after all rows are processed and therefore
+                            # the oid -> type mapping is complete.
+                            # 
+                            DBI::DBD::Pg::Type::Array.new(row["typelem"].to_i)
+                        else
+                            DBI::Type::Varchar
+                        end
+                }
         end 
         # additional conversions
         @type_map[705]  ||= DBI::Type::Varchar       # select 'hallo'

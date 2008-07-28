@@ -190,13 +190,13 @@ end
 DBI::TypeUtil.register_conversion("test") do |obj|
     case obj
     when ::NilClass
-        "Custom Nil"
+        ["Custom Nil", false]
     when ::TrueClass
-        "Custom True"
+        ["Custom True", false]
     when ::FalseClass
-        "Custom False"
+        ["Custom False", false]
     else
-        obj
+        [obj, true]
     end
 end
 

@@ -38,7 +38,6 @@ module DBI
            []
        end
 
-
        def execute(statement, *bindvars)
            stmt = prepare(statement)
            stmt.bind_params(*bindvars)
@@ -60,6 +59,5 @@ module DBI
        def []=(attr, value)
            raise NotSupportedError
        end
-
    end # class BaseDatabase
 end

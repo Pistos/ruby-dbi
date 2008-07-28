@@ -55,19 +55,25 @@ module DBI
             end
 
             DBI::TypeUtil.register_conversion(driver_name) do |obj|
-                case obj
-                when ::DBI::Binary
-                    obj = obj.to_s.gsub(/\\/) { "\\\\" }
-                    obj = obj.to_s.gsub(/'/) { "''" }
-                    "'#{obj}'"
-                when ::Time
-                    "'#{obj.strftime("%H:%M:%S")}'"
-                when ::Date
-                    "'#{obj.strftime("%m/%d/%Y")}'"
-                when ::NilClass
-                    "NULL"
+                newobj = case obj
+                         when ::DBI::Binary
+                             obj = obj.to_s.gsub(/\\/) { "\\\\" }
+                             obj = obj.to_s.gsub(/'/) { "''" }
+                            "'#{obj}'"
+                         when ::Time
+                            "'#{obj.strftime("%H:%M:%S")}'"
+                         when ::Date
+                            "'#{obj.strftime("%m/%d/%Y")}'"
+                         when ::NilClass
+                            "NULL"
+                         else
+                             obj
+                         end
+
+                if newobj.object_id == obj.object_id
+                    [newobj, true]
                 else
-                    obj
+                    [newobj, false]
                 end
             end
         end
