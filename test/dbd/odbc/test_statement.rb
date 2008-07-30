@@ -12,19 +12,19 @@ class TestODBCStatement < DBDConfig.testbase(:odbc)
         assert_kind_of DBI::ColumnInfo, sth.column_info[1]
         assert_equal [
             {
-                :table=>"", 
+                :table=>"names", 
                 :precision=>255, 
                 :searchable=>true, 
                 :name=>"name", 
                 :unsigned=>true, 
                 :length=>255, 
-                :sql_type=>4294967295, 
+                :sql_type=>12, 
                 :scale=>0, 
                 :nullable=>true, 
-                :type_name=>nil
+                :type_name=>"VARCHAR"
             },
             {
-                :table=>"", 
+                :table=>"names", 
                 :precision=>10, 
                 :searchable=>true, 
                 :name=>"age", 
