@@ -6,6 +6,13 @@ require 'rake/rdoctask'
 
 DEFAULT_TASKS = [:clobber_package, :package, :gem]
 
+DBD_GEM_DEP_MAP = {
+    'pg'      => 'pg',
+    'mysql'   => 'mysql',
+    'sqlite'  => 'sqlite-ruby',
+    'sqlite3' => 'sqlite3-ruby'
+}
+
 #
 # Packaging
 #
@@ -89,6 +96,12 @@ def dbd_gem_spec(dbd, dbd_const, code_files)
     spec.summary     = dbd_description(dbd_const)
     spec.description = dbd_description(dbd_const) 
     spec.add_dependency 'dbi', '>= 0.4.0'
+
+    dcdbd = dbd.downcase
+
+    if DBD_GEM_DEP_MAP[dcdbd]
+        spec.add_dependency DBD_GEM_DEP_MAP[dcdbd]
+    end
 
     return spec
 end
