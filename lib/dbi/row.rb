@@ -24,8 +24,9 @@ module DBI
         # instance methods are available to your DBI::Row object (keeping in
         # mind that initialize, [], and []= have been explicitly overridden).
         #
-        def initialize(columns, column_types, size_or_array=nil)
+        def initialize(columns, column_types, size_or_array=nil, convert_types=true)
             @column_types = column_types
+            @convert_types = convert_types
             size_or_array ||= columns.size 
 
             case size_or_array
@@ -48,6 +49,8 @@ module DBI
 
         # converts the types in the array to their specified representation from @col_types
         def convert_types(arr)
+            return arr unless @convert_types
+
             if arr.size != @column_types.size
                 raise TypeError, "Type mapping is not consistent with result"
             end

@@ -11,16 +11,13 @@ module DBI
            @prepared  = prepared     # only false if immediate execute was used
            @cols = nil
            @coltypes = nil
+           @convert_types = convert_types
 
-           # TODO: problems with other DB's?
-           #@row = DBI::Row.new(column_names,nil)
            if @fetchable
-               @row = DBI::Row.new(column_names, column_types, nil)
+               @row = DBI::Row.new(column_names, column_types, nil, @convert_types)
            else
                @row = nil
            end
-
-           @convert_types = convert_types
        end
 
        def finished?
@@ -57,7 +54,7 @@ module DBI
 
            # TODO:?
            #if @row.nil?
-           @row = DBI::Row.new(column_names, column_types, nil)
+           @row = DBI::Row.new(column_names, column_types, nil, @convert_types)
            #end
            return nil
        end
@@ -197,7 +194,7 @@ module DBI
                @fetchable = false
                return []
            else
-               return rows.collect{|r| Row.new(cols, column_types, r)}
+               return rows.collect{|r| Row.new(cols, column_types, r, @convert_types)}
            end
        end
 
