@@ -2,14 +2,16 @@ module DBI
     module SQL
         class PreparedStatement
             attr_accessor :unbound
+            attr_accessor :type_hints
 
             def self.tokens(sql)
-                self.new(nil, sql).tokens
+                self.new(nil, sql, nil).tokens
             end
 
-            def initialize(quoter, sql)
+            def initialize(quoter, sql, do_prepare=true)
                 @quoter, @sql = quoter, sql
-                prepare
+                @type_hints = []
+                prepare if do_prepare
             end
 
             ## Break the sql string into parts.
