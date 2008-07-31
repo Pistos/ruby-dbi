@@ -29,11 +29,12 @@ module DBI
             @convert_types = convert_types
             size_or_array ||= columns.size 
 
+            @arr = []
             case size_or_array
             when Integer
                 @arr = Array.new(size_or_array)
             when Array
-                @arr = size_or_array
+                set_values(size_or_array)
             else
                 raise TypeError, "parameter must be either Integer or Array"
             end
@@ -56,7 +57,7 @@ module DBI
             end
             new_arr = []
             arr.each_with_index do |item, i|
-                new_arr.push(@column_types[i].parse(item))
+                new_arr.push((@column_types[i] || DBI::Type::Varchar).parse(item))
             end
 
             return new_arr

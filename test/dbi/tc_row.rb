@@ -10,7 +10,7 @@ $LOAD_PATH.unshift("../../lib/dbi")
 $LOAD_PATH.unshift("lib")
 
 require 'test/unit'
-require 'dbi/row'
+require 'dbi'
 
 class TC_DBI_Row < Test::Unit::TestCase
    def setup
@@ -18,12 +18,25 @@ class TC_DBI_Row < Test::Unit::TestCase
       @cols = %w/first last age/
       @coltypes = [DBI::Type::Varchar, DBI::Type::Varchar, DBI::Type::Integer]
       @row  = DBI::Row.new(@cols, @coltypes, @data.clone)
+      @row_noconv = DBI::Row.new(@cols, @coltypes, @data.clone, false) 
    end
 
    def teardown
       @data = nil
       @cols = nil
       @row  = nil
+   end
+
+   def test_row_noconv
+       assert_nothing_raised do
+           assert_equal(
+               [
+                   'Daniel',
+                   'Berger',
+                   36
+               ], @row
+           )
+       end
    end
    
    # Ensure that constructor only allows Integers or Arrays (or nil)
@@ -41,10 +54,10 @@ class TC_DBI_Row < Test::Unit::TestCase
    # latter method is (hopefully) removed, this test can be removed as well.
    def test_at
       assert_respond_to(@row, :at)
-      assert_equal(@data[0], @row.at(0))
-      assert_equal(@data[1], @row.at(1))
-      assert_equal(@data[2], @row.at(2))
-      assert_equal(@data[99], @row.at(99))
+      assert_equal(@data[0].to_s, @row.at(0).to_s)
+      assert_equal(@data[1].to_s, @row.at(1).to_s)
+      assert_equal(@data[2].to_s, @row.at(2).to_s)
+      assert_equal(@data[99].to_s, @row.at(99).to_s)
    end
    
    # Should respond to Array and Enumerable methods
@@ -62,14 +75,14 @@ class TC_DBI_Row < Test::Unit::TestCase
    def test_row_data_by_index
       assert_equal(@data[0], @row.by_index(0))
       assert_equal(@data[1], @row.by_index(1))
-      assert_equal(@data[2], @row.by_index(2))
+      assert_equal(@data[2], @row.by_index(2).to_s)
       assert_nil(@row.by_index(3))
    end
    
    def test_row_data_by_field
       assert_equal @data[0], @row.by_field('first')
       assert_equal @data[1], @row.by_field('last')
-      assert_equal @data[2], @row.by_field('age')
+      assert_equal @data[2], @row.by_field('age').to_s
       assert_equal nil, @row.by_field('unknown')
    end
    
@@ -85,7 +98,7 @@ class TC_DBI_Row < Test::Unit::TestCase
       assert_respond_to(@row, :to_h)
       assert_nothing_raised{ @row.to_h }
       assert_kind_of(Hash, @row.to_h)
-      assert_equal({"first"=>"Daniel", "last"=>"Berger", "age"=>"36"}, @row.to_h)
+      assert_equal({"first"=>"Daniel", "last"=>"Berger", "age"=>36}, @row.to_h)
    end
    
    def test_row_column_names
@@ -106,21 +119,21 @@ class TC_DBI_Row < Test::Unit::TestCase
    def test_indexing_numeric
       assert_equal(@data[0], @row[0])   
       assert_equal(@data[1], @row[1])  
-      assert_equal(@data[2], @row[2])      
+      assert_equal(@data[2], @row[2].to_s)      
    end
    
    def test_indexing_string_or_symbol
       assert_equal(@data[0], @row['first'])
       assert_equal(@data[0], @row[:first])
       assert_equal(@data[1], @row['last'])
-      assert_equal(@data[2], @row['age'])
+      assert_equal(@data[2], @row['age'].to_s)
       assert_equal(nil, @row['unknown'])
    end
    
    def test_indexing_regexp
       assert_equal(["Daniel"], @row[/first/])
       assert_equal(["Berger"], @row[/last/])
-      assert_equal(["36"], @row[/age/])
+      assert_equal([36], @row[/age/])
       assert_equal(["Daniel", "Berger"], @row[/first|last/])
       assert_equal([], @row[/bogus/])
    end
@@ -129,16 +142,16 @@ class TC_DBI_Row < Test::Unit::TestCase
       assert_equal(["Daniel"], @row[[0]])
       assert_equal(["Daniel"], @row[["first"]])
       assert_equal(["Berger"], @row[[1]])
-      assert_equal(["36"], @row[[2]])
+      assert_equal([36], @row[[2]])
       assert_equal([nil], @row[[3]])
-      assert_equal(["Daniel", "36"], @row[[0,2]])
-      assert_equal(["Daniel", "36"], @row[[0,:age]])
+      assert_equal(["Daniel", 36], @row[[0,2]])
+      assert_equal(["Daniel", 36], @row[[0,:age]])
    end
 
    def test_indexing_range
       assert_equal(["Daniel","Berger"], @row[0..1])
-      assert_equal(["Berger","36"], @row[1..2])
-      assert_equal(["Berger","36"], @row[1..99])
+      assert_equal(["Berger",36], @row[1..2])
+      assert_equal(["Berger",36], @row[1..99])
       assert_equal(nil, @row[90..100])
    end
 
@@ -147,17 +160,17 @@ class TC_DBI_Row < Test::Unit::TestCase
       assert_equal([], @row[0,0])
       assert_equal(["Daniel"], @row[0,1])
       assert_equal(["Daniel", "Berger"], @row[0,2])
-      assert_equal(["Daniel", "Berger", "36"], @row[0,3])
-      assert_equal(["Daniel", "Berger", "36"], @row[0,99])
+      assert_equal(["Daniel", "Berger", 36], @row[0,3])
+      assert_equal(["Daniel", "Berger", 36], @row[0,99])
    end
 
    def test_indexing_multiple_args
-      assert_equal(["Berger", "36", "Daniel"], @row[:last, :age, :first])
-      assert_equal(["Berger", "36", "Daniel"], @row[1, :age, :first])
-      assert_equal(["Berger", "36", "Daniel"], @row[1, 2, :first])
-      assert_equal(["Berger", "36", "Daniel"], @row[1, 2, 0])
-      assert_equal(["Berger", "36", "Daniel", nil], @row[1, 2, 0, 9])
-      assert_equal(["Berger", "36", "Daniel", nil], @row[1, 2, 0, :bogus])
+      assert_equal(["Berger", 36, "Daniel"], @row[:last, :age, :first])
+      assert_equal(["Berger", 36, "Daniel"], @row[1, :age, :first])
+      assert_equal(["Berger", 36, "Daniel"], @row[1, 2, :first])
+      assert_equal(["Berger", 36, "Daniel"], @row[1, 2, 0])
+      assert_equal(["Berger", 36, "Daniel", nil], @row[1, 2, 0, 9])
+      assert_equal(["Berger", 36, "Daniel", nil], @row[1, 2, 0, :bogus])
    end
 
    def test_indexing_assignment
@@ -184,7 +197,7 @@ class TC_DBI_Row < Test::Unit::TestCase
    def test_iteration
       expect = @data.clone
       @row.each { |value|
-         assert_equal(expect.shift, value)
+         assert_equal(expect.shift, value.to_s)
       }
       assert_equal([], expect)
       @row.collect { |value| "Field=#{value}" }
@@ -196,13 +209,13 @@ class TC_DBI_Row < Test::Unit::TestCase
 
       @row.each_with_name{ |value, column|
          assert(@cols.include?(column))
-         assert(@data.include?(value))
+         assert(@data.include?(value.to_s))
       }
    end
 
    def test_to_a
       assert_respond_to(@row, :to_a)
-      assert_equal(@data, DBI::Row.new(@cols, @coltypes, @data).to_a)
+      assert_equal(@data, DBI::Row.new(@cols, @coltypes, @data).to_a.collect { |x| x.to_s })
    end
 
    def test_dup_clone
@@ -213,8 +226,8 @@ class TC_DBI_Row < Test::Unit::TestCase
       assert_nothing_raised{ cloned = @row.clone }
       assert_nothing_raised{ @row.set_values(["Bill", "Jones", 16])}
 
-      assert_equal(@data, dupped.to_a)
-      assert_equal(@data, cloned.to_a)
+      assert_equal(@data, dupped.to_a.collect { |x| x.to_s })
+      assert_equal(@data, cloned.to_a.collect { |x| x.to_s })
 
       assert(dupped.object_id != @row.object_id)
       assert(cloned.object_id != @row.object_id)
@@ -230,6 +243,6 @@ class TC_DBI_Row < Test::Unit::TestCase
          res << r.dup
       end
 
-      assert_equal res, [["one", 1], ["two", 2], ["three", 3]]
+      assert_equal res, [["one", "1"], ["two", "2"], ["three", "3"]]
    end
 end
