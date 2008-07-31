@@ -36,6 +36,7 @@ class TC_DBI_Row < Test::Unit::TestCase
                    36
                ], @row
            )
+           assert_equal(@data, @row_noconv)
        end
    end
    
