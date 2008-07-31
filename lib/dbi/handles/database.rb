@@ -1,6 +1,5 @@
 module DBI
    class DatabaseHandle < Handle
-
        def driver_name
            return @driver_name.dup if @driver_name
            return nil
@@ -40,7 +39,12 @@ module DBI
 
        def execute(stmt, *bindvars)
            raise InterfaceError, "Database connection was already closed!" if @handle.nil?
-           sth = StatementHandle.new(@handle.execute(stmt, *DBI::Utils::ConvParam.conv_param(driver_name, *bindvars)), true, false)
+
+           if convert_types
+               bindvars = DBI::Utils::ConvParam.conv_param(driver_name, *bindvars)
+           end
+
+           sth = StatementHandle.new(@handle.execute(stmt, *bindvars), true, false)
            sth.trace(@trace_mode, @trace_output)
            sth.dbh = self
 

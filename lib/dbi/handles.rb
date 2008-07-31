@@ -6,10 +6,12 @@ module DBI
    class Handle
       attr_reader :trace_mode, :trace_output
       attr_reader :handle 
+      attr :convert_types
       
       def initialize(handle)
          @handle = handle
          @trace_mode = @trace_output = nil
+         @convert_types = true
       end
       
       def trace(mode=nil, output=nil)

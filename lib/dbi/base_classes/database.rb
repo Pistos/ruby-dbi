@@ -35,7 +35,7 @@ module DBI
        end
 
        def columns(table)
-           []
+           raise NotSupportedError
        end
 
        def execute(statement, *bindvars)
