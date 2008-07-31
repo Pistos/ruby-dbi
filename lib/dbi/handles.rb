@@ -8,10 +8,10 @@ module DBI
       attr_reader :handle 
       attr :convert_types
       
-      def initialize(handle)
+      def initialize(handle, convert_types=true)
          @handle = handle
          @trace_mode = @trace_output = nil
-         @convert_types = true
+         @convert_types = convert_types
       end
       
       def trace(mode=nil, output=nil)

@@ -22,7 +22,7 @@ module DBI
 
        def prepare(stmt)
            raise InterfaceError, "Database connection was already closed!" if @handle.nil?
-           sth = StatementHandle.new(@handle.prepare(stmt), false)
+           sth = StatementHandle.new(@handle.prepare(stmt), false, true, @convert_types)
            sth.trace(@trace_mode, @trace_output)
            sth.dbh = self
 
@@ -40,11 +40,11 @@ module DBI
        def execute(stmt, *bindvars)
            raise InterfaceError, "Database connection was already closed!" if @handle.nil?
 
-           if convert_types
+           if @convert_types
                bindvars = DBI::Utils::ConvParam.conv_param(driver_name, *bindvars)
            end
 
-           sth = StatementHandle.new(@handle.execute(stmt, *bindvars), true, false)
+           sth = StatementHandle.new(@handle.execute(stmt, *bindvars), true, false, @convert_types)
            sth.trace(@trace_mode, @trace_output)
            sth.dbh = self
 

@@ -17,9 +17,12 @@ module DBI
            new_params = @handle.default_attributes
            params.each {|k,v| new_params[k] = v} 
 
+           if params.has_key?(:_convert_types)
+               @convert_types = params[:_convert_types]
+           end
 
            db = @handle.connect(db_args, user, auth, new_params)
-           dbh = DatabaseHandle.new(db)
+           dbh = DatabaseHandle.new(db, @convert_types)
            dbh.trace(@trace_mode, @trace_output)
            dbh.driver_name = @driver_name
 

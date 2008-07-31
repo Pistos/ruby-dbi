@@ -5,7 +5,7 @@ module DBI
 
        attr_accessor :dbh
 
-       def initialize(handle, fetchable=false, prepared=true)
+       def initialize(handle, fetchable=false, prepared=true, convert_types=true)
            super(handle)
            @fetchable = fetchable
            @prepared  = prepared     # only false if immediate execute was used
@@ -19,6 +19,8 @@ module DBI
            else
                @row = nil
            end
+
+           @convert_types = convert_types
        end
 
        def finished?
@@ -32,14 +34,24 @@ module DBI
        def bind_param(param, value, attribs=nil)
            raise InterfaceError, "Statement was already closed!" if @handle.nil?
            raise InterfaceError, "Statement wasn't prepared before." unless @prepared
-           @handle.bind_param(param, DBI::Utils::ConvParam.conv_param(dbh.driver_name, value)[0], attribs)
+
+           if @convert_types
+               value = DBI::Utils::ConvParam.conv_param(dbh.driver_name, value)[0]
+           end
+
+           @handle.bind_param(param, value, attribs)
        end
 
        def execute(*bindvars)
            cancel     # cancel before 
            raise InterfaceError, "Statement was already closed!" if @handle.nil?
            raise InterfaceError, "Statement wasn't prepared before." unless @prepared
-           @handle.bind_params(*DBI::Utils::ConvParam.conv_param(dbh.driver_name, *bindvars))
+
+           if @convert_types
+               bindvars = DBI::Utils::ConvParam.conv_param(dbh.driver_name, *bindvars)
+           end
+
+           @handle.bind_params(*bindvars)
            @handle.execute
            @fetchable = true
 
