@@ -25,6 +25,93 @@
         end
     end
 
+    def test_noconv
+        # XXX this test will fail the whole test suite miserably if it fails at any point.
+        assert(DBI.convert_types)
+
+        DBI.convert_types = false
+        @sth.finish rescue nil
+        @dbh.disconnect
+        set_base_dbh
+
+        assert(!@dbh.convert_types)
+
+        assert_nothing_raised do
+            @sth = @dbh.prepare("select * from names order by age")
+            assert(!@sth.convert_types)
+            @sth.execute
+            assert_equal(
+                [
+                    ["Joe", "19"], 
+                    ["Bob", "21"],
+                    ["Jim", "30"], 
+                ], @sth.fetch_all
+            )
+            @sth.finish
+        end
+
+        DBI.convert_types = true
+        @sth.finish rescue nil
+        @dbh.disconnect
+        set_base_dbh
+
+        assert(DBI.convert_types)
+        assert(@dbh.convert_types)
+
+        assert_nothing_raised do
+            @sth = @dbh.prepare("select * from names order by age")
+            assert(@sth.convert_types)
+            @sth.execute
+            assert_equal(
+                [
+                    ["Joe", 19], 
+                    ["Bob", 21],
+                    ["Jim", 30], 
+                ], @sth.fetch_all
+            )
+            @sth.finish
+        end
+
+        @dbh.convert_types = false
+
+        assert_nothing_raised do
+            @sth = @dbh.prepare("select * from names order by age")
+            assert(!@sth.convert_types)
+            @sth.execute
+            assert_equal(
+                [
+                    ["Joe", "19"], 
+                    ["Bob", "21"],
+                    ["Jim", "30"], 
+                ], @sth.fetch_all
+            )
+            @sth.finish
+        end
+
+        @dbh.convert_types = true
+
+        assert_nothing_raised do
+            @sth = @dbh.prepare("select * from names order by age")
+            assert(@sth.convert_types)
+            @sth.convert_types = false
+            @sth.execute
+            assert_equal(
+                [
+                    ["Joe", "19"], 
+                    ["Bob", "21"],
+                    ["Jim", "30"], 
+                ], @sth.fetch_all
+            )
+            @sth.finish
+        end
+    rescue Exception => e
+        DBI.convert_types = true
+        @sth.finish
+        @dbh.disconnect
+        set_base_dbh
+        raise e
+    end
+
     def test_null
         assert_nothing_raised do
             @sth = @dbh.prepare('insert into names (name, age) values (?, ?)')

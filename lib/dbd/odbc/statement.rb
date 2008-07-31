@@ -1,6 +1,4 @@
 class DBI::DBD::ODBC::Statement < DBI::BaseStatement
-    include DBI::DBD::ODBC::Converter
-
     def initialize(handle, statement)
         @statement = statement
         @handle = handle
@@ -14,8 +12,7 @@ class DBI::DBD::ODBC::Statement < DBI::BaseStatement
     end
 
     def execute
-        bindvars = @params.collect{|v| convert(v)}
-        @handle.execute(*bindvars)
+        @handle.execute(*@params)
     rescue DBI::DBD::ODBC::ODBCErr => err
         raise DBI::DatabaseError.new(err.message)
     end
@@ -87,16 +84,8 @@ class DBI::DBD::ODBC::Statement < DBI::BaseStatement
     def convert_row(row)
         return nil if row.nil?
         row.collect do |col|
-            if col.is_a? ::ODBC::Date
-                DBI::Date.new(col.year, col.month, col.day)
-            elsif col.is_a? ::ODBC::Time
-                DBI::Time.new(col.hour, col.minute, col.second)
-            elsif col.is_a? ::ODBC::TimeStamp
-                DBI::Timestamp.new(col.year, col.month, col.day,
-                                   col.hour, col.minute, col.second, col.fraction)
-            else
-                col
-            end
+            col = col.to_s unless col.nil?
+            col
         end
     end 
 end

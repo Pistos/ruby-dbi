@@ -73,23 +73,6 @@ module DBI
             end
 
             ODBCErr = ::ODBC::Error
-
-            module Converter
-                def convert(val)
-                    if val.is_a? DBI::Date
-                        ::ODBC::Date.new(val.year, val.month, val.day)
-                    elsif val.is_a? DBI::Time
-                        ::ODBC::Time.new(val.hour, val.minute, val.second)
-                    elsif val.is_a? DBI::Timestamp
-                        ::ODBC::TimeStamp.new(val.year, val.month, val.day,
-                                              val.hour, val.minute, val.second, val.fraction)
-                    elsif val.is_a? DBI::Binary
-                        val.to_s
-                    else
-                        val
-                    end
-                end
-            end
         end # module ODBC
     end # module DBD
 end # module DBI

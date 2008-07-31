@@ -235,109 +235,107 @@ module DBI::DBD::Mysql
 #                     end
 #                 end
 
-                def []=(attr, value)
-                    case attr
-                    when 'AutoCommit'
-                        if @have_transactions
-                            self.do("SET AUTOCOMMIT=" + (value ? "1" : "0"))
-                            else
-                                raise NotSupportedError
-                            end
-                        else
-                            raise NotSupportedError
-                        end
-                    @attr[attr] = value
-                    end
-
-                    private # -------------------------------------------------
-
-                    # Eli Green
-                    # Parse column type string (from SHOW FIELDS) to extract type info:
-                    # - sqltype: XOPEN type number
-                    # - type: MySQL type name
-                    # - size: column length (or precision)
-                    # - decimal: number of decimals (scale)
-                    def mysql_type_info(typedef)
-                        sqltype, type, size, decimal = nil, nil, nil, nil
-
-                        pos = typedef.index('(')
-                        if not pos.nil?
-                            type = typedef[0..pos-1]
-                            size = typedef[pos+1..-2]
-                            pos = size.index(',')
-                            if not pos.nil?
-                                size, decimal = size.split(',', 2)
-                                decimal = decimal.to_i
-                            end
-                            size = size.to_i
-                        else
-                            type = typedef
-                        end
-
-                        type_info = MYSQL_to_XOPEN[type.upcase] || MYSQL_to_XOPEN[nil]
-                        sqltype = type_info[0]
-                        if size.nil? then size = type_info[1] end
-                        if decimal.nil? then decimal = type_info[2] end
-                        return sqltype, type, size, decimal
-                    end
-
-
-                    # Driver-specific functions ------------------------------------------------
-
-                    public
-
-                    def __createdb(db)
-                        @handle.create_db(db)
-                    end
-
-                    def __dropdb(db)
-                        @handle.drop_db(db)
-                    end
-
-                    def __shutdown
-                        @handle.shutdown
-                    end
-
-                    def __reload
-                        @handle.reload
-                    end
-
-                    def __insert_id
-                        @handle.insert_id
-                    end
-
-                    def __thread_id
-                        @handle.thread_id
-                    end
-
-                    def __info
-                        @handle.info
-                    end
-
-                    def __host_info
-                        @handle.host_info
-                    end
-
-                    def __proto_info
-                        @handle.proto_info
-                    end
-
-                    def __server_info
-                        @handle.server_info
-                    end
-
-                    def __client_info
-                        @handle.client_info
-                    end
-
-                    def __client_version
-                        @handle.client_version
-                    end
-
-                    def __stat
-                        @handle.stat
-                    end
-
-
-                end # class Database
+        def []=(attr, value)
+            case attr
+            when 'AutoCommit'
+                if @have_transactions
+                    self.do("SET AUTOCOMMIT=" + (value ? "1" : "0"))
+                else
+                    raise NotSupportedError
+                end
+            else
+                raise NotSupportedError
             end
+
+            @attr[attr] = value
+        end
+
+        private # -------------------------------------------------
+
+        # Eli Green
+        # Parse column type string (from SHOW FIELDS) to extract type info:
+        # - sqltype: XOPEN type number
+        # - type: MySQL type name
+        # - size: column length (or precision)
+        # - decimal: number of decimals (scale)
+        def mysql_type_info(typedef)
+            sqltype, type, size, decimal = nil, nil, nil, nil
+
+            pos = typedef.index('(')
+            if not pos.nil?
+                type = typedef[0..pos-1]
+                size = typedef[pos+1..-2]
+                pos = size.index(',')
+                if not pos.nil?
+                    size, decimal = size.split(',', 2)
+                    decimal = decimal.to_i
+                end
+                size = size.to_i
+            else
+                type = typedef
+            end
+
+            type_info = MYSQL_to_XOPEN[type.upcase] || MYSQL_to_XOPEN[nil]
+            sqltype = type_info[0]
+            if size.nil? then size = type_info[1] end
+            if decimal.nil? then decimal = type_info[2] end
+            return sqltype, type, size, decimal
+        end
+
+        # Driver-specific functions ------------------------------------------------
+
+        public
+
+        def __createdb(db)
+            @handle.create_db(db)
+        end
+
+        def __dropdb(db)
+            @handle.drop_db(db)
+        end
+
+        def __shutdown
+            @handle.shutdown
+        end
+
+        def __reload
+            @handle.reload
+        end
+
+        def __insert_id
+            @handle.insert_id
+        end
+
+        def __thread_id
+            @handle.thread_id
+        end
+
+        def __info
+            @handle.info
+        end
+
+        def __host_info
+            @handle.host_info
+        end
+
+        def __proto_info
+            @handle.proto_info
+        end
+
+        def __server_info
+            @handle.server_info
+        end
+
+        def __client_info
+            @handle.client_info
+        end
+
+        def __client_version
+            @handle.client_version
+        end
+
+        def __stat
+            @handle.stat
+        end
+    end # class Database
+end

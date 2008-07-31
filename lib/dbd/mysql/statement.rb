@@ -37,19 +37,7 @@ module DBI::DBD::Mysql
 
         def fill_array(rowdata)
             return nil if rowdata.nil?
-            row = []
-            rowdata.each_with_index { |value, index|
-                info = @column_info[index]
-                type = info['mysql_type']
-                type_symbol =
-                    if DBI::SQL_TINYINT == info['sql_type'] and 1 == info['precision']
-                        DBI::Type::Boolean
-                    else
-                        Database::TYPE_MAP[type][1] || DBI::Type::Varchar rescue DBI::Type::Varchar
-                    end
-                row[index] = type_symbol.parse(value)
-            }
-            row
+            return rowdata.dup
         end
 
         def fetch
@@ -129,6 +117,10 @@ module DBI::DBD::Mysql
                     'mysql_max_length' => col.max_length,
                     'mysql_flags'      => col.flags
                 }
+
+                if retval[-1]['sql_type'] == DBI::SQL_TINYINT and retval[-1]['precision'] == 1
+                    retval[-1]['dbi_type'] = DBI::Type::Boolean
+                end
             }
             retval
         rescue MyError => err

@@ -1,6 +1,4 @@
 class DBI::DBD::ODBC::Database < DBI::BaseDatabase
-    include DBI::DBD::ODBC::Converter
-
     def disconnect
         @handle.rollback
         @handle.disconnect 
@@ -64,14 +62,12 @@ class DBI::DBD::ODBC::Database < DBI::BaseDatabase
     end
 
     def do(statement, *bindvars)
-        bindvars = bindvars.collect{|v| convert(v)}
         @handle.do(statement, *bindvars) 
     rescue DBI::DBD::ODBC::ODBCErr => err
         raise DBI::DatabaseError.new(err.message)
     end
 
     def execute(statement, *bindvars)
-        bindvars = bindvars.collect{|v| convert(v)}
         stmt = @handle.run(statement, *bindvars) 
         DBI::DBD::ODBC::Statement.new(stmt)
     rescue DBI::DBD::ODBC::ODBCErr => err

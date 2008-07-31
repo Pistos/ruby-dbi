@@ -12,9 +12,13 @@ DBDConfig.set_testbase(:postgresql, Class.new(Test::Unit::TestCase) do
             assert_kind_of(DBI::DBD::Pg::Database, @dbh.instance_variable_get(:@handle))
         end
 
-        def setup
+        def set_base_dbh
             config = DBDConfig.get_config['postgresql']
             @dbh = DBI.connect("dbi:Pg:#{config['dbname']}", config['username'], config['password'])
+        end
+
+        def setup
+            set_base_dbh
             DBDConfig.inject_sql(@dbh, dbtype, "dbd/postgresql/up.sql")
         end
 

@@ -11,10 +11,14 @@ DBDConfig.set_testbase(:odbc, Class.new(Test::Unit::TestCase) do
             assert_equal(@dbh.driver_name, "odbc")
             assert_kind_of(DBI::DBD::ODBC::Database, @dbh.instance_variable_get(:@handle))
         end
-
-        def setup
+        
+        def set_base_dbh
             config = DBDConfig.get_config['odbc']
             @dbh = DBI.connect("dbi:ODBC:#{config['dbname']}", config['username'], config['password'])
+        end
+
+        def setup
+            set_base_dbh
             DBDConfig.inject_sql(@dbh, dbtype, "dbd/odbc/up.sql")
         end
 

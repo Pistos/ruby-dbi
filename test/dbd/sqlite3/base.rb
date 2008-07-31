@@ -13,9 +13,13 @@ DBDConfig.set_testbase(:sqlite3, Class.new(Test::Unit::TestCase) do
             end
         end
 
-        def setup
+        def set_base_dbh
             config = DBDConfig.get_config['sqlite3']
             @dbh = DBI.connect('dbi:SQLite3:'+config['dbname'], nil, nil, { }) 
+        end
+
+        def setup
+            set_base_dbh
             DBDConfig.inject_sql(@dbh, dbtype, "dbd/sqlite3/up.sql")
         end
 

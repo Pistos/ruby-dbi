@@ -96,7 +96,7 @@ module DBI
     @@trace_mode     = DEFAULT_TRACE_MODE
     @@trace_output   = DEFAULT_TRACE_OUTPUT
     @@caseless_driver_name_map = nil
-    @@convert_types = true
+    @@convert_types  = true
 
     def self.convert_types
         @@convert_types
@@ -113,6 +113,7 @@ module DBI
         def connect(driver_url, user=nil, auth=nil, params=nil, &p)
             dr, db_args = _get_full_driver(driver_url)
             dh = dr[0] # driver-handle
+            dh.convert_types = @@convert_types
             dh.connect(db_args, user, auth, params, &p)
         end
 
