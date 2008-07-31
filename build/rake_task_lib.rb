@@ -140,7 +140,7 @@ def build_dbd_tasks(dbd)
         # FIXME: convert to a rake_test_loader sooner or later
         task :test do
             ENV["DBTYPES"] = dbd
-            system("ruby", 'test/ts_dbd.rb')
+            ruby "test/ts_dbd.rb"
         end
     rescue LoadError => e
         DEFAULT_TASKS.each do |x|
