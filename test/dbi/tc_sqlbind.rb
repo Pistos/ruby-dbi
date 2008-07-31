@@ -24,7 +24,10 @@ class TestSqlBindType < Test::Unit::TestCase
         )
 
         assert_equal(
-            {1=>0, 3=>1},
+            {
+                1 => 0,
+                3 => 1
+            },
             ps.unbound
         )
 
@@ -55,7 +58,10 @@ class TestSqlBindType < Test::Unit::TestCase
         )
 
         assert_equal(
-            {1=>0, 3=>1},
+            {
+                1 => 0,
+                3 => 1
+            },
             ps.unbound
         )
     end
