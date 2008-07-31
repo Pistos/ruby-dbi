@@ -37,7 +37,7 @@ module DBI
                         |
                         " ( [^"\\]  |  ""  |  \\. )* "      (?# match strings surrounded by " )
                         |
-                        (?:\?\?|\?(?:\{[^\}]+\})?)          (?# match ??, or ?, or ?{Type} )
+                        (?:\?\?|\?(?:\{[^\}]*\})?)          (?# match ??, or ?, or ?{Type} )
                         |
                         [^-/'"?]+                           (?# match all characters except ' " ? - and / )
 
@@ -60,6 +60,19 @@ module DBI
 
             private
 
+            def parse_type(type)
+                if m = type.match(/\{([^\}]*)\}/)
+                    klass = DBI::Type.const_get(m[1])
+                    if klass.nil?
+                        # FIXME what's the right exception?
+                        raise "Invalid Type in SQL parse: #{m[0]}"
+                    end
+
+                    return klass
+                end
+                return nil
+            end
+
             def prepare
                 @result = [] 
                 @unbound = {}
@@ -68,6 +81,17 @@ module DBI
 
                 tokens.each { |part|
                     case part
+                    when /^\?\{[^\}]*\}$/ # ?{Type}
+                        hint = parse_type(part)
+                        unless hint
+                            raise "Type expected in query '#{@sql}' but could not be parsed at this part: #{part}"
+                        end
+
+                        @type_hints[@arg_index] = hint
+                        @result[pos] = nil
+                        @unbound[pos] = @arg_index
+                        pos += 1
+                        @arg_index += 1
                     when '?'
                         @result[pos] = nil
                         @unbound[pos] = @arg_index

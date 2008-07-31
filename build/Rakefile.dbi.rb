@@ -13,6 +13,16 @@ end
 task :package         => (map_task("package") + map_task("gem"))
 task :clobber_package => map_task("clobber_package")
 
+task :test_dbi do 
+    ruby "test/ts_dbi.rb"
+end
+
+task :test_dbd do
+    ruby "test/ts_dbd.rb"
+end
+
+task :test => [:test_dbi, :test_dbd]
+
 build_dbi_tasks
 
 #

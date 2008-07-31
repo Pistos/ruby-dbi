@@ -152,12 +152,6 @@ def build_dbd_tasks(dbd)
 end
 
 def build_dbi_tasks
-    # FIXME: convert to a rake_test_loader sooner or later
-    task :test do
-        Dir["test/ts_*.rb"].each do |file|
-            system("ruby", file)
-        end
-    end
 end
 
 #
