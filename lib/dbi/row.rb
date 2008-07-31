@@ -28,29 +28,28 @@ module DBI
             @column_types = column_types
             @convert_types = convert_types
             size_or_array ||= columns.size 
-
-            @arr = []
-            case size_or_array
-            when Integer
-                @arr = Array.new(size_or_array)
-            when Array
-                set_values(size_or_array)
-            else
-                raise TypeError, "parameter must be either Integer or Array"
-            end
-
+            
             # The '@column_map' is used to map column names to integer values so
             # that users can reference row values by name or number.
 
             @column_map   = {}
             @column_names = columns
             columns.each_with_index { |c,i| @column_map[c] = i }
-            super(@arr)
+
+            case size_or_array
+            when Integer
+                super(@arr = Array.new(size_or_array))
+            when Array
+                super(@arr = size_or_array.dup)
+                set_values(size_or_array.dup)
+            else
+                raise TypeError, "parameter must be either Integer or Array"
+            end
         end
 
         # converts the types in the array to their specified representation from @col_types
         def convert_types(arr)
-            return arr unless @convert_types
+            return arr.dup unless @convert_types
 
             if arr.size != @column_types.size
                 raise TypeError, "Type mapping is not consistent with result"
@@ -89,8 +88,11 @@ module DBI
         end
 
         # Create a new row with 'new_values', reusing the field name hash.
-        def clone_with(new_values)    
-            Row.new(@column_names, @column_types, new_values)
+        def clone_with(new_values)
+            obj = Marshal.load(Marshal.dump(self))
+            obj.set_values(new_values)
+
+            return obj
         end
 
         alias field_names column_names
@@ -198,7 +200,7 @@ module DBI
         end
 
         def clone
-            clone_with(@arr.dup)
+            Marshal.load(Marshal.dump(self))
         end
 
         alias dup clone

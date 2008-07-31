@@ -4,7 +4,7 @@ class DBI::DBD::Pg::Tuples
         @db = db
         @pg_result = pg_result
         @index = -1
-        @row = Array.new
+        @row = []
     end
 
     def column_info

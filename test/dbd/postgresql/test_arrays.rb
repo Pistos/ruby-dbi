@@ -85,7 +85,6 @@ class TestPostgresArray < DBDConfig.testbase(:postgresql)
         end
 
         assert_nothing_raised do
-            # FIXME this test should eventually have a typed result
             sth = @dbh.prepare('select foo from array_test where foo is not null')
             sth.execute
             assert_equal(

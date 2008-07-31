@@ -243,6 +243,6 @@ class TC_DBI_Row < Test::Unit::TestCase
          res << r.dup
       end
 
-      assert_equal res, [["one", "1"], ["two", "2"], ["three", "3"]]
+      assert_equal res, [["one", 1], ["two", 2], ["three", 3]]
    end
 end
