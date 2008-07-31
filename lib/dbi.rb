@@ -80,180 +80,189 @@ Deprecate.set_action(
 )
 
 module DBI
-   VERSION = "0.4.0"
-   
-   module DBD
-      API_VERSION = "0.3"
-   end
-   
-   #  Module functions (of DBI)
-   DEFAULT_TRACE_MODE = 2
-   DEFAULT_TRACE_OUTPUT = STDERR
-   
-   # TODO: Is using class variables within a module such a wise idea? - Dan B.
-   @@driver_map     = Hash.new
-   @@driver_monitor = ::Monitor.new()
-   @@trace_mode     = DEFAULT_TRACE_MODE
-   @@trace_output   = DEFAULT_TRACE_OUTPUT
-   @@caseless_driver_name_map = nil
-   
-   class << self
-      
-      # Establish a database connection.  This is mostly a facade for the
-      # DBD's connect method.
-      def connect(driver_url, user=nil, auth=nil, params=nil, &p)
-         dr, db_args = _get_full_driver(driver_url)
-         dh = dr[0] # driver-handle
-         dh.connect(db_args, user, auth, params, &p)
-      end
-      
-      # Load a DBD and returns the DriverHandle object
-      def get_driver(driver_url)
-         _get_full_driver(driver_url)[0][0]  # return DriverHandle
-      end
-      
-      # Extracts the db_args from driver_url and returns the correspondeing
-      # entry of the @@driver_map.
-      def _get_full_driver(driver_url)
-         db_driver, db_args = parse_url(driver_url)
-         db_driver = load_driver(db_driver)
-         dr = @@driver_map[db_driver]
-         [dr, db_args]
-      end
-      
-      def trace(mode=nil, output=nil)
-         @@trace_mode   = mode   || @@trace_mode   || DBI::DEFAULT_TRACE_MODE
-         @@trace_output = output || @@trace_output || DBI::DEFAULT_TRACE_OUTPUT
-      end
-     
-      def collect_drivers
-         drivers = { }
-         # FIXME rewrite this to leverage require and be more intelligent
-         path = File.join(File.dirname(__FILE__), "dbd", "*.rb")
-         Dir[path].each do |f|
-            if File.file?(f)
-               driver = File.basename(f, ".rb")
-               drivers[driver] = f
+    VERSION = "0.4.0"
+
+    module DBD
+        API_VERSION = "0.3"
+    end
+
+    #  Module functions (of DBI)
+    DEFAULT_TRACE_MODE = 2
+    DEFAULT_TRACE_OUTPUT = STDERR
+
+    # TODO: Is using class variables within a module such a wise idea? - Dan B.
+    @@driver_map     = Hash.new
+    @@driver_monitor = ::Monitor.new()
+    @@trace_mode     = DEFAULT_TRACE_MODE
+    @@trace_output   = DEFAULT_TRACE_OUTPUT
+    @@caseless_driver_name_map = nil
+    @@convert_types = true
+
+    def self.convert_types
+        @@convert_types
+    end
+
+    def self.convert_types=(bool)
+        @@convert_types = bool
+    end
+
+    class << self
+
+        # Establish a database connection.  This is mostly a facade for the
+        # DBD's connect method.
+        def connect(driver_url, user=nil, auth=nil, params=nil, &p)
+            dr, db_args = _get_full_driver(driver_url)
+            dh = dr[0] # driver-handle
+            dh.connect(db_args, user, auth, params, &p)
+        end
+
+        # Load a DBD and returns the DriverHandle object
+        def get_driver(driver_url)
+            _get_full_driver(driver_url)[0][0]  # return DriverHandle
+        end
+
+        # Extracts the db_args from driver_url and returns the correspondeing
+        # entry of the @@driver_map.
+        def _get_full_driver(driver_url)
+            db_driver, db_args = parse_url(driver_url)
+            db_driver = load_driver(db_driver)
+            dr = @@driver_map[db_driver]
+            [dr, db_args]
+        end
+
+        def trace(mode=nil, output=nil)
+            @@trace_mode   = mode   || @@trace_mode   || DBI::DEFAULT_TRACE_MODE
+            @@trace_output = output || @@trace_output || DBI::DEFAULT_TRACE_OUTPUT
+        end
+
+        def collect_drivers
+            drivers = { }
+            # FIXME rewrite this to leverage require and be more intelligent
+            path = File.join(File.dirname(__FILE__), "dbd", "*.rb")
+            Dir[path].each do |f|
+                if File.file?(f)
+                    driver = File.basename(f, ".rb")
+                    drivers[driver] = f
+                end
             end
-         end
 
-         return drivers
-      end
+            return drivers
+        end
 
-      # Returns a list of the currently available drivers on your system in
-      # 'dbi:driver:' format.
-      def available_drivers
-          drivers = []
-          collect_drivers.each do |key, value|
-              drivers.push("dbi:#{key}:")
-          end
+        # Returns a list of the currently available drivers on your system in
+        # 'dbi:driver:' format.
+        def available_drivers
+            drivers = []
+            collect_drivers.each do |key, value|
+                drivers.push("dbi:#{key}:")
+            end
 
-          return drivers
-      end
-      
-      def data_sources(driver)
-         db_driver, = parse_url(driver)
-         db_driver = load_driver(db_driver)
-         dh = @@driver_map[db_driver][0]
-         dh.data_sources
-      end
-      
-      def disconnect_all( driver = nil )
-         if driver.nil?
-            @@driver_map.each {|k,v| v[0].disconnect_all}
-         else
+            return drivers
+        end
+
+        def data_sources(driver)
             db_driver, = parse_url(driver)
-            @@driver_map[db_driver][0].disconnect_all
-         end
-      end
-      
-      private
-     
-      def load_driver(driver_name)
-          @@driver_monitor.synchronize do
-              unless @@driver_map[driver_name]
-                  dc = driver_name.downcase
-                  
-                  # caseless look for drivers already loaded
-                  found = @@driver_map.keys.find {|key| key.downcase == dc}
-                  return found if found
+            db_driver = load_driver(db_driver)
+            dh = @@driver_map[db_driver][0]
+            dh.data_sources
+        end
 
-                  begin
-                      require "dbd/#{driver_name}"
-                  rescue LoadError => e1
-                      # see if you can find it in the path
-                      unless @@caseless_driver_name_map
-                          @@caseless_driver_name_map = { } 
-                          collect_drivers.each do |key, value|
-                              @@caseless_driver_name_map[key.downcase] = value
-                          end
-                      end
-                      
-                      begin
-                          require @@caseless_driver_name_map[dc] if @@caseless_driver_name_map[dc]
-                      rescue LoadError => e2
-                          raise e.class, "Could not find driver #{driver_name} or #{driver_name.downcase} (error: #{e1.message})"
-                      end
-                  end
+        def disconnect_all( driver = nil )
+            if driver.nil?
+                @@driver_map.each {|k,v| v[0].disconnect_all}
+            else
+                db_driver, = parse_url(driver)
+                @@driver_map[db_driver][0].disconnect_all
+            end
+        end
 
-                  # On a filesystem that is not case-sensitive (e.g., HFS+ on Mac OS X),
-                  # the initial require attempt that loads the driver may succeed even
-                  # though the lettercase of driver_name doesn't match the actual
-                  # filename. If that happens, const_get will fail and it become
-                  # necessary to look though the list of constants and look for a
-                  # caseless match.  The result of this match provides the constant
-                  # with the proper lettercase -- which can be used to generate the
-                  # driver handle.
+        private
 
-                  dr = nil
-                  begin
-                      dr = DBI::DBD.const_get(driver_name.intern)
-                  rescue NameError
-                      # caseless look for constants to find actual constant
-                      dc = driver_name.downcase
-                      found = DBI::DBD.constants.find { |e| e.downcase == dc }
-                      dr = DBI::DBD.const_get(found.intern) unless found.nil?
-                  end
-                  
-                  # If dr is nil at this point, it means the underlying driver
-                  # failed to load.  This usually means it's not installed, but
-                  # can fail for other reasons.
-                  if dr.nil?
-                      err = "Unable to load driver '#{driver_name}'"
-                      raise DBI::InterfaceError, err
-                  end
+        def load_driver(driver_name)
+            @@driver_monitor.synchronize do
+                unless @@driver_map[driver_name]
+                    dc = driver_name.downcase
 
-                  dbd_dr = dr::Driver.new
-                  drh = DBI::DriverHandle.new(dbd_dr)
-                  drh.driver_name = dr.driver_name
-                  drh.trace(@@trace_mode, @@trace_output)
-                  @@driver_map[driver_name] = [drh, dbd_dr]
-                  return driver_name 
-              else
-                  return driver_name
-              end
-          end
-      rescue LoadError, NameError
-          if $SAFE >= 1
-              raise InterfaceError, "Could not load driver (#{$!.message}). Note that in SAFE mode >= 1, driver URLs have to be case sensitive!"
-          else
-              raise InterfaceError, "Could not load driver (#{$!.message})"
-          end
-      end
-      
-      # Splits a DBI URL into two components - the database driver name
-      # and the datasource (along with any options, if any) and returns
-      # a two element array, e.g. 'dbi:foo:bar' would return ['foo','bar'].
-      #
-      # A regular expression is used instead of a simple split to validate
-      # the proper format for the URL.  If it isn't correct, an Interface
-      # error is raised.
-      def parse_url(driver_url)
-         if driver_url =~ /^(DBI|dbi):([^:]+)(:(.*))$/ 
-            [$2, $4]
-         else
-            raise InterfaceError, "Invalid Data Source Name"
-         end
-      end
-   end # self
+                    # caseless look for drivers already loaded
+                    found = @@driver_map.keys.find {|key| key.downcase == dc}
+                    return found if found
+
+                    begin
+                        require "dbd/#{driver_name}"
+                    rescue LoadError => e1
+                        # see if you can find it in the path
+                        unless @@caseless_driver_name_map
+                            @@caseless_driver_name_map = { } 
+                            collect_drivers.each do |key, value|
+                                @@caseless_driver_name_map[key.downcase] = value
+                            end
+                        end
+
+                        begin
+                            require @@caseless_driver_name_map[dc] if @@caseless_driver_name_map[dc]
+                        rescue LoadError => e2
+                            raise e.class, "Could not find driver #{driver_name} or #{driver_name.downcase} (error: #{e1.message})"
+                        end
+                    end
+
+                    # On a filesystem that is not case-sensitive (e.g., HFS+ on Mac OS X),
+                    # the initial require attempt that loads the driver may succeed even
+                    # though the lettercase of driver_name doesn't match the actual
+                    # filename. If that happens, const_get will fail and it become
+                    # necessary to look though the list of constants and look for a
+                    # caseless match.  The result of this match provides the constant
+                    # with the proper lettercase -- which can be used to generate the
+                    # driver handle.
+
+                    dr = nil
+                    begin
+                        dr = DBI::DBD.const_get(driver_name.intern)
+                    rescue NameError
+                        # caseless look for constants to find actual constant
+                        dc = driver_name.downcase
+                        found = DBI::DBD.constants.find { |e| e.downcase == dc }
+                        dr = DBI::DBD.const_get(found.intern) unless found.nil?
+                    end
+
+                    # If dr is nil at this point, it means the underlying driver
+                    # failed to load.  This usually means it's not installed, but
+                    # can fail for other reasons.
+                    if dr.nil?
+                        err = "Unable to load driver '#{driver_name}'"
+                        raise DBI::InterfaceError, err
+                    end
+
+                    dbd_dr = dr::Driver.new
+                    drh = DBI::DriverHandle.new(dbd_dr, @@convert_types)
+                    drh.driver_name = dr.driver_name
+                    drh.trace(@@trace_mode, @@trace_output)
+                    @@driver_map[driver_name] = [drh, dbd_dr]
+                    return driver_name 
+                else
+                    return driver_name
+                end
+            end
+        rescue LoadError, NameError
+            if $SAFE >= 1
+                raise InterfaceError, "Could not load driver (#{$!.message}). Note that in SAFE mode >= 1, driver URLs have to be case sensitive!"
+            else
+                raise InterfaceError, "Could not load driver (#{$!.message})"
+            end
+        end
+
+        # Splits a DBI URL into two components - the database driver name
+        # and the datasource (along with any options, if any) and returns
+        # a two element array, e.g. 'dbi:foo:bar' would return ['foo','bar'].
+        #
+        # A regular expression is used instead of a simple split to validate
+        # the proper format for the URL.  If it isn't correct, an Interface
+        # error is raised.
+        def parse_url(driver_url)
+            if driver_url =~ /^(DBI|dbi):([^:]+)(:(.*))$/ 
+                [$2, $4]
+            else
+                raise InterfaceError, "Invalid Data Source Name"
+            end
+        end
+    end # self
 end # module DBI
