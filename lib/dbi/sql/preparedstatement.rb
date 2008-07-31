@@ -31,11 +31,11 @@ module DBI
                         /[*] .*? [*]/                       (?# matches C-style comments )
                         |   /                                   (?# matches single slash )    
                         |
-                        ' ( [^'\\]  |  ''  |  \\. )* '  (?# match strings surrounded by apostophes )
+                        ' ( [^'\\]  |  ''  |  \\. )* '      (?# match strings surrounded by apostophes )
                         |
                         " ( [^"\\]  |  ""  |  \\. )* "      (?# match strings surrounded by " )
                         |
-                        \?\??                               (?# match one or two question marks )
+                        (?:\?\?|\?(?:\{[^\}]+\})?)          (?# match ??, or ?, or ?{Type} )
                         |
                         [^-/'"?]+                           (?# match all characters except ' " ? - and / )
 
