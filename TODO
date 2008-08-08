@@ -20,8 +20,8 @@ x Remove all other drivers
   x Slated for 0.6.0
 * Finish type management system
  x DBI tests
- * bind_coltype (see prototypes/types.rb)
- * You should be able to turn off the type management system
+ x bind_coltype (see prototypes/types.rb)
+ x You should be able to turn off the type management system
  x Find a better way to leverage lower-level binding APIs
   x Binding API for PostgreSQL in particular
  x Unify ColumnInfo
@@ -34,8 +34,10 @@ x Remove all other drivers
  x Remove DBI::DIR crap
  * Require code is a mess
   * Just remove the case-sensitivity from the DBDs in general
+   * 0.6.0
  * Find a good clean way to enumerate drivers in separate gems
   * Some registration-on-require would be cleaner and safer
+   * 0.6.0
 x Packaging
  x Add stock setup.rb to all tarballs, including drivers
  x Ideally, move DBD-specific tests to DBD packages
