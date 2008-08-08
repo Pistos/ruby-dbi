@@ -3,29 +3,35 @@
    It is similar, but not identical to, Perl's DBI module.
    
 = Prerequisites  
-   Ruby 1.8.0 or later.
+   Ruby 1.8.0 or later. Ruby 1.8.6 or better is probably more realistic.
 
 = RubyForge Project
-   General information: http://rubyforge.org/projects/ruby-dbi/
+   General information: http://ruby-dbi.rubyforge.org
+   Project information: http://rubyforge.org/projects/ruby-dbi/
    Downloads: http://rubyforge.org/frs/?group_id=234
 
 = Installation
    Many available DBDs come with this package, but you should only install
    the DBDs you really need.
 
-   To install everything:
+== Gem setup:
+
+   gem install dbi
+   gem install dbd-mysql
+   gem install dbd-pg
+   gem install dbd-sqlite3
+   gem install dbd-sqlite
+
+== Without rubygems:
 
    ruby setup.rb config
    ruby setup.rb setup
    ruby setup.rb install
 
-   To install dbi and some DBDs:
+== The bleeding edge:
 
-   ruby setup.rb config --with=dbi,dbd_pg, ...
-   ruby setup.rb setup
-   ruby setup.rb install
-
-   Choose the packages to install by specifing them after the option --with.
+   git clone git://hollensbe.org/git/ruby-dbi.git
+   git checkout -b development origin/development
 
 = Synopsis
    require 'dbi'
@@ -75,25 +81,6 @@
    end
 
 = Available Database Drivers (DBDs)
-== DBD::ADO
-   ADO (ActiveX Data Objects)
-   Requires win32ole, part of the Ruby standard library.
-
-== DBD::DB2
-   DB2
-   Depends on the ruby-db2 package, available on the RAA.
-
-== DBD::Frontbase
-   Frontbase
-   Depends on the ruby-frontbase package, available on the RAA.
-
-== DBD::InterBase
-   Interbase
-   Depends on the interbase package, available on the RAA.
-
-== DBD::mSQL
-   mSQL
-   Depends on the msql package, available on the RAA.
 
 == DBD::MySQL
    MySQL
@@ -106,11 +93,6 @@
    http://www.ch-werner.de/rubyodbc or available from the RAA.  Works together
    with unix-odbc.
 
-== DBD::Oracle
-   Oracle
-   Depends on the oracle package 0.2.11 or later, available on the RAA.  This
-   driver is deprecated in favor of DBD::OCI8.
-
 == DBD::OCI8
    OCI8 (Oracle)
    Depends on the the ruby-oci8 package, available on the RAA and RubyForge.
@@ -120,39 +102,31 @@
    Depends on either the postgres or postgres-pr package, both available on
    the RAA.
 
-== DBD::Proxy
-   Proxy/Server
-   Depends on distributed Ruby (DRb), part of the Ruby standard library.
-
 == DBD::SQLite
    SQLite (versions 2.x and earlier)
    Depends on the sqlite-ruby package, available on rubyforge.
 
-== DBD::SQLite
+== DBD::SQLite3
    SQLite 3.x
    Depends on the sqlite3-ruby package, available on rubyforge.
 
-== DBD::SQLRelay
-   SQLRelay
-   Depends on the sqlrelay package at http://www.firstworks.com/sqlrelay
-
 = Additional Documentation
-   See the directories lib/*/doc or ext/*/doc for DBI and DBD specific information.
-   The DBI specification is at lib/dbi/doc/DBI_SPEC.
-   The DBD specification is at lib/dbi/doc/DBD_SPEC.
+   See the directories doc/* for DBI and DBD specific information.
+   The DBI specification is at doc/DBI_SPEC.
+   The DBD specification is at doc/DBD_SPEC.
 
 = Articles
 == Using the Ruby DBI Module
    http://www.kitebird.com/articles/ruby-dbi.html
    
 = Applications
-== sqlsh.rb
-   The SQL command line interpreter sqlsh.rb is available in directory
-   bin/commandline. It gets installed by default.
+== dbi
+   The SQL command line interpreter dbi is available in directory
+   bin/. It gets installed by default.
 
 = License
 
-   Copyright (c) 2008 Erik Hollensbe and Christopher Maujean.
+   Copyright (c) 2008 Erik Hollensbe
 
    Copyright (c) 2005-2006 Kirk Haines, Francis Hwang, Patrick May and Daniel
    Berger.
@@ -188,6 +162,12 @@
    (General Public License).
 
 = Contributors
+   
+   Pistos
+      Too much to specify.
+
+   Christopher Maujean
+      Lots of initial help when reviving the project.
 
    Jun Mukai <mukai@jmuk.org>
       Contributed initial SQLite3 DBD.
