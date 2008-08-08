@@ -14,6 +14,7 @@
  * Tracing
   * WTH do we want to do with this
    * Wow, this module has *serious issues*. Crashes DBI without warning. Redo this completely.
+    * 0.6.0
 x Remove all other drivers
  x ODBC
  x Proxy
