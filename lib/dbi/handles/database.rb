@@ -23,7 +23,7 @@ module DBI
        def prepare(stmt)
            raise InterfaceError, "Database connection was already closed!" if @handle.nil?
            sth = StatementHandle.new(@handle.prepare(stmt), false, true, @convert_types)
-           sth.trace(@trace_mode, @trace_output)
+           # FIXME trace sth.trace(@trace_mode, @trace_output)
            sth.dbh = self
 
            if block_given?
@@ -45,7 +45,7 @@ module DBI
            end
 
            sth = StatementHandle.new(@handle.execute(stmt, *bindvars), true, false, @convert_types)
-           sth.trace(@trace_mode, @trace_output)
+           # FIXME trace sth.trace(@trace_mode, @trace_output)
            sth.dbh = self
 
            if block_given?

@@ -132,6 +132,8 @@ module DBI
         end
 
         def trace(mode=nil, output=nil)
+            # FIXME trace
+            raise InterfaceError, "the trace module has been removed until it actually works."
             @@trace_mode   = mode   || @@trace_mode   || DBI::DEFAULT_TRACE_MODE
             @@trace_output = output || @@trace_output || DBI::DEFAULT_TRACE_OUTPUT
         end
@@ -236,7 +238,8 @@ module DBI
                     dbd_dr = dr::Driver.new
                     drh = DBI::DriverHandle.new(dbd_dr, @@convert_types)
                     drh.driver_name = dr.driver_name
-                    drh.trace(@@trace_mode, @@trace_output)
+                    # FIXME trace
+                    # drh.trace(@@trace_mode, @@trace_output)
                     @@driver_map[driver_name] = [drh, dbd_dr]
                     return driver_name 
                 else

@@ -23,7 +23,8 @@ module DBI
 
            db = @handle.connect(db_args, user, auth, new_params)
            dbh = DatabaseHandle.new(db, @convert_types)
-           dbh.trace(@trace_mode, @trace_output)
+           # FIXME trace
+           # dbh.trace(@trace_mode, @trace_output)
            dbh.driver_name = @driver_name
 
            if block_given?
