@@ -25,6 +25,48 @@
         end
     end
 
+    # FIXME
+    # Ideally, this test should be split across the DBI tests and DBD, but for
+    # now testing against the DBDs really doesn't cost us anything other than
+    # debugging time if something breaks.
+    def test_bind_coltype
+        # ensure type conv didn't get turned off somewhere.
+        assert(DBI.convert_types)
+        assert(@dbh.convert_types)
+
+        assert_nothing_raised do
+            @sth = @dbh.prepare("select name, age from names order by age")
+            assert(@sth.convert_types) # again
+            @sth.execute
+            @sth.bind_coltype(2, DBI::Type::Varchar)
+            assert_equal(
+                [
+                    ["Joe", "19"], 
+                    ["Bob", "21"],
+                    ["Jim", "30"], 
+                ], @sth.fetch_all
+            )
+            @sth.finish
+        end
+
+        # just to be sure..
+        assert_nothing_raised do
+            @sth = @dbh.prepare("select name, age from names order by age")
+            @sth.execute
+            @sth.bind_coltype(2, DBI::Type::Float)
+            @sth.fetch_all.collect { |x| assert_kind_of(Float, x[1]) }
+            @sth.finish
+        end
+
+        # now, let's check some failure cases
+        @sth = @dbh.prepare("select name, age from names order by age")
+
+        # can't bind_coltype before execute
+        assert_raise(DBI::InterfaceError) { @sth.bind_coltype(1, DBI::Type::Float) }
+        # can't index < 1
+        assert_raise(DBI::InterfaceError) { @sth.bind_coltype(0, DBI::Type::Float) }
+    end
+
     def test_noconv
         # XXX this test will fail the whole test suite miserably if it fails at any point.
         assert(DBI.convert_types)

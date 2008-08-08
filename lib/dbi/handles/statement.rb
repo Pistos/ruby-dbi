@@ -28,6 +28,19 @@ module DBI
            @fetchable
        end
 
+       def bind_coltype(pos, type)
+           raise InterfaceError, "statement must be executed before using this command" unless @executed
+
+           coltypes = column_types
+
+           if (pos - 1) < 1
+               raise InterfaceError, "bind positions index starting at 1"
+           end
+
+           coltypes[pos-1] = type
+           @row = DBI::Row.new(column_names, coltypes, nil, @convert_types)
+       end
+
        def bind_param(param, value, attribs=nil)
            raise InterfaceError, "Statement was already closed!" if @handle.nil?
            raise InterfaceError, "Statement wasn't prepared before." unless @prepared
@@ -51,6 +64,7 @@ module DBI
            @handle.bind_params(*bindvars)
            @handle.execute
            @fetchable = true
+           @executed = true
 
            # TODO:?
            #if @row.nil?
