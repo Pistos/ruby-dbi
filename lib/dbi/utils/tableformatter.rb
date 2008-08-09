@@ -1,15 +1,32 @@
 module DBI
     module Utils
+        # Formats a resultset in a textual table, suitable for printing.
         module TableFormatter
 
-            # FIXME this is probably short-sighted.
-            def self.coerce(obj)
+            def self.coerce(obj) # :nodoc:
+                # FIXME this is probably short-sighted.
                 obj = "NULL" if obj.nil?
                 obj = (obj.kind_of?(Array) or obj.kind_of?(Hash)) ? obj.inspect : obj.to_s
                 return obj
             end
 
+            # Perform the formatting.
+            #
+            # * +header+: table headers, as you'd expect they correspond to each column in the row.
+            # * +rows+: array of array (or DBI::Row) which represent the data.
+            # * +header_orient+: jusification of the header. :left, :right, or :center.
+            # * +rows_orient+: justification of the rows. same as +header_orient+.
+            # * +indent+: number of spaces to indent each line in the output.
+            # * +cellspace+: number of spaces to pad the cell on the left and right.
+            # * +pagebreak_after+: introduce a pagebreak each +n+ rows.
+            # * +output+: object that responds to `<<` which will contain the output. Default is STDOUT.
+            #
+            # If a block is provided, +output+ will be yielded each row if
+            # +pagebreak+ is nil, otherwise it will be yielded when the output
+            # is complete.
+            #--
             # TODO: add a nr-column where the number of the column is shown
+            #++
             def self.ascii(header, 
                            rows, 
                            header_orient=:left, 

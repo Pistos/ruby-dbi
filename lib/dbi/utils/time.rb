@@ -1,4 +1,8 @@
 module DBI
+    #
+    # Represents a Time
+    #
+    # DEPRECATED: Please use a regular Time or DateTime object.
    class Time
       attr_accessor :hour, :minute, :second
 

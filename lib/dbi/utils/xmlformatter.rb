@@ -1,6 +1,13 @@
 module DBI
     module Utils
+        # Formats results in XML.
         module XMLFormatter
+            # Generate XML for a row. The column names will surround the the values as tags.
+            #
+            # * +dbrow+: the array of the result row.
+            # * +rowtag+: the name of the tag that encapsulates a row.
+            # * +output+: Object that responds to `<<`.
+            #
             def self.row(dbrow, rowtag="row", output=STDOUT)
                 #XMLFormatter.extended_row(dbrow, "row", [],  
                 output << "<#{rowtag}>\n"
@@ -10,6 +17,8 @@ module DBI
                 output << "</#{rowtag}>\n"
             end
 
+            # good lord, what a mess.
+            #
             # nil in cols_as_tag, means "all columns expect those listed in cols_in_row_tag"
             # add_row_tag_attrs are additional attributes which are inserted into the row-tag
             def self.extended_row(dbrow, rowtag="row", cols_in_row_tag=[], cols_as_tag=nil, add_row_tag_attrs={}, output=STDOUT)
@@ -34,8 +43,11 @@ module DBI
                 output << "</#{rowtag}>\n"
             end
 
-
-
+            # generate a full XML representation of the table.
+            # 
+            # Arguments and output are similar to #row, with the exception of
+            # +roottag+, which is a container for the individual row tags.
+            #
             def self.table(rows, roottag = "rows", rowtag = "row", output=STDOUT)
                 output << '<?xml version="1.0" encoding="UTF-8" ?>'
                 output << "\n<#{roottag}>\n"
@@ -47,7 +59,7 @@ module DBI
 
             class << self
                 private
-                # from xmloracle.rb 
+                # Your standard XML entity conversions.
                 def textconv(str)
                     str = str.to_s.gsub('&', "&#38;")
                     str = str.gsub('\'', "&#39;")

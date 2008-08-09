@@ -3,19 +3,27 @@
 #
 
 module DBI
+    #
+    # Utility classes and methods for use by both DBDs and consumers.
+    #
     module Utils
+        #
+        # Given a block, returns the execution time for the block.
+        #
         def self.measure
             start = ::Time.now
             yield
             ::Time.now - start
         end
 
-        ##
+        #
         # parse a string of the form "database=xxx;key=val;..."
         # or database:host and return hash of key/value pairs
         #
-        # improved by John Gorman <jgorman@webbysoft.com>
+        # Used in DBI.connect and offspring.
+        #
         def self.parse_params(str)
+            # improved by John Gorman <jgorman@webbysoft.com>
             params = str.split(";")
             hash = {}
             params.each do |param| 
@@ -32,8 +40,14 @@ module DBI
     end # module Utils
 end # module DBI
 
+#
+# Type converter.
+#
 # FIXME this really needs to go into DBI::TypeUtil or similar
 module DBI::Utils::ConvParam
+    #
+    # Wrapper to convert arrays of bound objects via DBI::TypeUtil#convert.
+    #
     def self.conv_param(driver_name, *params)
         params.collect { |param| DBI::TypeUtil.convert(driver_name, param) }
     end

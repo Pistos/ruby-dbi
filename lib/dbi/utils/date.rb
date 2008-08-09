@@ -1,4 +1,9 @@
 module DBI
+    #
+    # Represents a Date.
+    #
+    # DEPRECATED: Please use a regular Date or DateTime object.
+    #
     class Date
         attr_accessor :year, :month, :day
 
