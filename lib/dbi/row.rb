@@ -1,12 +1,18 @@
 require "delegate"
 
-# The DBI::Row class is a delegate of Array, rather than a subclass, because
-# there are times when it should act like an Array, and others when it should
-# act like a Hash (and still others where it should act like String, Regexp,
-# etc).  It also needs to store metadata about the row, such as
-# column data type and index information, that users can then access.
-#
 module DBI
+    # DBI::Row is the representation of a row in a result set returned by the
+    # database.
+    #
+    # It is responsible for containing and representing the result set, converting
+    # it to native Ruby types, and providing methods to sanely move through itself. 
+    #
+    # The DBI::Row class is a delegate of Array, rather than a subclass, because
+    # there are times when it should act like an Array, and others when it should
+    # act like a Hash (and still others where it should act like String, Regexp,
+    # etc).  It also needs to store metadata about the row, such as
+    # column data type and index information, that users can then access.
+    #
     class Row < DelegateClass(Array)
         attr_reader :column_names
 
@@ -47,7 +53,8 @@ module DBI
             end
         end
 
-        # converts the types in the array to their specified representation from @col_types
+        # converts the types in the array to their specified representation
+        # from column types provided at construction time.
         def convert_types(arr)
             return arr.dup unless @convert_types
 
@@ -62,7 +69,8 @@ module DBI
             return new_arr
         end
 
-        # Replaces the contents of @arr with +new_values+
+        # Replaces the contents of the internal array with +new_values+.
+        # elements are type converted at this time.
         def set_values(new_values)
             @arr.replace(convert_types(new_values))
         end
@@ -80,7 +88,7 @@ module DBI
             @arr.dup
         end
 
-        # Returns the Row object as a hash
+        # Returns the Row object as a hash, created by #each_with_name.
         def to_h
             hash = {}
             each_with_name{ |v, n| hash[n] = v}
@@ -88,6 +96,7 @@ module DBI
         end
 
         # Create a new row with 'new_values', reusing the field name hash.
+        # Initial cloning is done deeply, via Marshal.
         def clone_with(new_values)
             obj = Marshal.load(Marshal.dump(self))
             obj.set_values(new_values)
@@ -199,6 +208,11 @@ module DBI
             end
         end
 
+        #
+        # See Object#clone.
+        #
+        # #clone and #dup here, however, are both deep copies via Marshal.
+        #
         def clone
             Marshal.load(Marshal.dump(self))
         end
@@ -209,7 +223,7 @@ module DBI
 
         # Simple helper method to grab the proper value from @column_map
         # NOTE this does something completely different than DBI::Utils::ConvParam
-        def conv_param(arg)
+        def conv_param(arg) # :nodoc:
             case arg
             when String, Symbol
                 @column_map[arg.to_s]

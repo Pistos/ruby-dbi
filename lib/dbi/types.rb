@@ -2,6 +2,9 @@ require 'time'
 require 'bigdecimal'
 
 module DBI
+    #
+    # Interface to convert SQL result sets to native Ruby types.
+    #
     module Type
         class Null
             def self.parse(obj)

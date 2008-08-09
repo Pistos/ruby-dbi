@@ -9,8 +9,11 @@ require "parsedate"
 require "time"
 
 module DBI
+    # the SQL package contains assistance for DBDs and generally will not be
+    # needed outside of them.
     module SQL
-        ## Is the SQL statement a query?
+        # Helper to determine if the statement is a query. Very crude and
+        # should not be relied on for accuracy.
         def self.query?(sql)
             sql =~ /^\s*select\b/i
         end
