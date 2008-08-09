@@ -143,13 +143,13 @@ module DBI
         end
 
         # Load a DBD and returns the DriverHandle object
-        def get_driver(driver_url)
+        def get_driver(driver_url) #:nodoc:
             _get_full_driver(driver_url)[0][0]  # return DriverHandle
         end
 
         # Extracts the db_args from driver_url and returns the correspondeing
         # entry of the @@driver_map.
-        def _get_full_driver(driver_url)
+        def _get_full_driver(driver_url) #:nodoc:
             db_driver, db_args = parse_url(driver_url)
             db_driver = load_driver(db_driver)
             dr = @@driver_map[db_driver]
@@ -170,7 +170,7 @@ module DBI
         end
 
         #
-        # Return a list of the available drivers.
+        # Return a list (of String) of the available drivers.
         #
         # NOTE:: This is non-functional for gem installations, due to the
         #        nature of how it currently works. A better solution for 
@@ -189,7 +189,7 @@ module DBI
             return drivers
         end
 
-        # Returns a list of the currently available drivers on your system in
+        # Returns a list (of String) of the currently available drivers on your system in
         # 'dbi:driver:' format.
         #
         # This currently does not work for rubygems installations, please see

@@ -3,7 +3,8 @@
    It is similar, but not identical to, Perl's DBI module.
    
 = Prerequisites  
-   Ruby 1.8.0 or later. Ruby 1.8.6 or better is probably more realistic.
+   Ruby 1.8.6 or later is the test target, however you may have success with
+   earlier 1.8.x revisions.
 
 = RubyForge Project
    General information: http://ruby-dbi.rubyforge.org
