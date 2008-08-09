@@ -1,31 +1,46 @@
 module DBI
-   class BaseDriver < Base
-       def initialize(dbd_version)
-           major, minor = dbd_version.split(".")
-           unless major.to_i == DBD::API_VERSION.split(".")[0].to_i
-               raise InterfaceError, "Wrong DBD API version used"
-           end
-       end
 
-       def connect(dbname, user, auth, attr)
-           raise NotImplementedError
-       end
+    # Implements the basic functionality that constitutes a Driver
+    #
+    # Drivers do not have a direct interface exposed to the user; these methods
+    # are mostly for DBD authors.
+    #
+    # As with DBI::BaseDatabase, "DBD Required" and "DBD Optional" will be used
+    # to explain the same requirements.
+    #
+    class BaseDriver < Base
+        def initialize(dbd_version)
+            major, minor = dbd_version.split(".")
+            unless major.to_i == DBD::API_VERSION.split(".")[0].to_i
+                raise InterfaceError, "Wrong DBD API version used"
+            end
+        end
 
-       def default_user
-           ['', '']
-       end
+        # Connect to the database. DBD Required.
+        def connect(dbname, user, auth, attr)
+            raise NotImplementedError
+        end
 
-       def default_attributes
-           {}
-       end
+        # Default u/p information in an array.
+        def default_user
+            ['', '']
+        end
 
-       def data_sources
-           []
-       end
+        # Default attributes to set on the DatabaseHandle.
+        def default_attributes
+            {}
+        end
 
-       def disconnect_all
-           raise NotImplementedError
-       end
+        # Return the data sources available to this driver. Returns an empty
+        # array per default.
+        def data_sources
+            []
+        end
 
-   end # class BaseDriver
+        # Disconnect all DatabaseHandles. DBD Required.
+        def disconnect_all
+            raise NotImplementedError
+        end
+
+    end # class BaseDriver
 end

@@ -1,9 +1,9 @@
-#
+#--
 # Fallback classes for default behavior of DBD driver
 # must be inherited by the DBD driver classes
-#
+#++
 module DBI
-    class Base
+    class Base #:nodoc:
     end
 end
 

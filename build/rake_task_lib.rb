@@ -175,6 +175,6 @@ Rake::RDocTask.new do |rd|
     rd.rdoc_files.include("./doc/**/*.rdoc")
     rd.rdoc_files.include("./lib/**/*.rb")
     rd.rdoc_files.include("./ext/**/*.c")
-    rd.options = %w(-ap)
+    rd.options = %w(-apMN)
 end
 

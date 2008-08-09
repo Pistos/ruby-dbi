@@ -1,5 +1,10 @@
 $LOAD_PATH.unshift(File.dirname(__FILE__))
 #
+# DBI - Database Interface for Ruby. Please see the files README, DBI_SPEC,
+# DBD_SPEC for more information.
+#
+module DBI; end
+#--
 # Ruby/DBI
 #
 # Copyright (c) 2001, 2002, 2003 Michael Neumann <mneumann@ntecs.de>
@@ -29,14 +34,16 @@ $LOAD_PATH.unshift(File.dirname(__FILE__))
 # OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 # ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
-# $Id: dbi.rb,v 1.8 2006/09/03 04:05:29 pdubois Exp $
-#
 
 begin
     require "rubygems"
     gem "deprecated"
 rescue LoadError
 end
+
+#
+# NOTE see the end of the file for requires that live in the DBI namespace.
+#
 
 require "deprecated"
 require "dbi/row"
@@ -55,6 +62,8 @@ require "thread"
 require 'monitor'
 
 class Class
+    # Given a Class, returns if the object's (another Class) ancestors contain
+    # that class.
     def inherits_from?(klass)
         self.ancestors.include?(klass)
     end
@@ -79,6 +88,7 @@ Deprecate.set_action(
     end
 )
 
+#++
 module DBI
     VERSION = "0.4.0"
 
@@ -98,18 +108,33 @@ module DBI
     @@caseless_driver_name_map = nil
     @@convert_types  = true
 
+    # Return the current status of type conversion at this level. This status
+    # will be propogated to any new DatabaseHandles created.
     def self.convert_types
         @@convert_types
     end
 
+    # Set the current status of type conversion at this level. This status
+    # will be propogated to any new DatabaseHandles created.
     def self.convert_types=(bool)
         @@convert_types = bool
     end
 
     class << self
 
-        # Establish a database connection.  This is mostly a facade for the
-        # DBD's connect method.
+        # Establish a database connection.  
+        #
+        # Format goes as such: "dbi:Driver:database_conn_args"
+        #
+        # * "dbi" is the literal string "dbi". Case is unimportant.
+        # * "Driver" is the case-dependent name of your database driver class.
+        #   The file "dbd/#{Driver}" will be required. If you are using rubygems to
+        #   control your DBDs and DBI, you must make the gem's file path available
+        #   via the "gem" command before this will work.
+        # * database_conn_args can be:
+        #   * The database name.
+        #   * A more complex key/value association (to indicate host, etc). This
+        #     is driver dependent; you should consult your DBD documentation.
         def connect(driver_url, user=nil, auth=nil, params=nil, &p)
             dr, db_args = _get_full_driver(driver_url)
             dh = dr[0] # driver-handle
@@ -131,6 +156,12 @@ module DBI
             [dr, db_args]
         end
 
+        #
+        # Enable tracing mode. Requires that 'dbi/trace' be required before it does anything.
+        #
+        # As of 0.4.0, this mode does not do anything either way, so this currently just
+        # throws an InterfaceError. This issue is expected to be resolved in the next release.
+        #
         def trace(mode=nil, output=nil)
             # FIXME trace
             raise InterfaceError, "the trace module has been removed until it actually works."
@@ -138,6 +169,12 @@ module DBI
             @@trace_output = output || @@trace_output || DBI::DEFAULT_TRACE_OUTPUT
         end
 
+        #
+        # Return a list of the available drivers.
+        #
+        # NOTE:: This is non-functional for gem installations, due to the
+        #        nature of how it currently works. A better solution for 
+        #        this will be provided in DBI 0.6.0.
         def collect_drivers
             drivers = { }
             # FIXME rewrite this to leverage require and be more intelligent
@@ -154,15 +191,22 @@ module DBI
 
         # Returns a list of the currently available drivers on your system in
         # 'dbi:driver:' format.
+        #
+        # This currently does not work for rubygems installations, please see
+        # DBI.collect_drivers for reasons.
         def available_drivers
             drivers = []
             collect_drivers.each do |key, value|
                 drivers.push("dbi:#{key}:")
-            end
-
+            end 
             return drivers
         end
 
+        # Attempt to collect the available data sources to the driver,
+        # specified in DBI.connect format.
+        #
+        # The result is heavily dependent on the driver's ability to enumerate
+        # these sources, and results will vary.
         def data_sources(driver)
             db_driver, = parse_url(driver)
             db_driver = load_driver(db_driver)
@@ -170,6 +214,11 @@ module DBI
             dh.data_sources
         end
 
+        #
+        # Attempt to disconnect all database handles. If a driver is provided,
+        # disconnections will happen under that scope. Otherwise, all loaded
+        # drivers (and their handles) will be attempted.
+        #
         def disconnect_all( driver = nil )
             if driver.nil?
                 @@driver_map.each {|k,v| v[0].disconnect_all}
@@ -181,6 +230,8 @@ module DBI
 
         private
 
+        # Given a driver name, locate and load the associated DBD package,
+        # generate a DriverHandle and return it.
         def load_driver(driver_name)
             @@driver_monitor.synchronize do
                 unless @@driver_map[driver_name]
