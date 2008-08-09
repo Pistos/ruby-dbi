@@ -99,8 +99,7 @@
 
 == DBD::Pg
    PostgreSQL
-   Depends on either the postgres or postgres-pr package, both available on
-   the RAA.
+   Depends on the pg package, available on RubyForge.
 
 == DBD::SQLite
    SQLite (versions 2.x and earlier)
@@ -112,8 +111,8 @@
 
 = Additional Documentation
    See the directories doc/* for DBI and DBD specific information.
-   The DBI specification is at doc/DBI_SPEC.
-   The DBD specification is at doc/DBD_SPEC.
+   The DBI specification is at doc/DBI_SPEC.rdoc.
+   The DBD specification is at doc/DBD_SPEC.rdoc.
 
 = Articles
 == Using the Ruby DBI Module
@@ -164,7 +163,7 @@
 = Contributors
    
    Pistos
-      Too much to specify.
+      Too much to specify. Infinite patience and help.
 
    Christopher Maujean
       Lots of initial help when reviving the project.
