@@ -92,7 +92,7 @@ Deprecate.set_action(
 module DBI
     VERSION = "0.4.0"
 
-    module DBD
+    module DBD # :nodoc:
         API_VERSION = "0.3"
     end
 

@@ -1,143 +1,211 @@
 module DBI
-   class DatabaseHandle < Handle
-       def driver_name
-           return @driver_name.dup if @driver_name
-           return nil
-       end
+    # DatabaseHandle is the interface the consumer sees after connecting to the
+    # database via DBI.connect.
+    #
+    # It is strongly discouraged that DBDs inherit from this class directly;
+    # please inherit from the DBI::BaseDatabase instead.
+    #
+    # Note: almost all methods in this class will raise InterfaceError if the
+    # database is not connected.
+    class DatabaseHandle < Handle
+        # This is the driver name as supplied by the DBD's driver_name method.
+        # Its primary utility is in DBI::TypeUtil#convert.
+        def driver_name
+            return @driver_name.dup if @driver_name
+            return nil
+        end
 
-       def driver_name=(name)
-           @driver_name = name
-           @driver_name.freeze
-       end
+        # Assign the driver name. This can be leveraged to create custom type
+        # management via DBI::TypeUtil#convert.
+        def driver_name=(name)
+            @driver_name = name
+            @driver_name.freeze
+        end
 
-       def connected?
-           not @handle.nil?
-       end
+        #
+        # Boolean if we are still connected to the database. See #ping.
+        #
+        def connected?
+            not @handle.nil?
+        end
 
-       def disconnect
-           raise InterfaceError, "Database connection was already closed!" if @handle.nil?
-           @handle.disconnect
-           @handle = nil
-       end
+        #
+        # Disconnect from the database. Will raise InterfaceError if this was
+        # already done prior.
+        #
+        def disconnect
+            raise InterfaceError, "Database connection was already closed!" if @handle.nil?
+            @handle.disconnect
+            @handle = nil
+        end
 
-       def prepare(stmt)
-           raise InterfaceError, "Database connection was already closed!" if @handle.nil?
-           sth = StatementHandle.new(@handle.prepare(stmt), false, true, @convert_types)
-           # FIXME trace sth.trace(@trace_mode, @trace_output)
-           sth.dbh = self
+        #
+        # Prepare a StatementHandle and return it. If given a block, it will
+        # supply that StatementHandle as the first argument to the block, and
+        # BaseStatement#finish it when the block is done executing.
+        #
+        def prepare(stmt)
+            raise InterfaceError, "Database connection was already closed!" if @handle.nil?
+            sth = StatementHandle.new(@handle.prepare(stmt), false, true, @convert_types)
+            # FIXME trace sth.trace(@trace_mode, @trace_output)
+            sth.dbh = self
 
-           if block_given?
-               begin
-                   yield sth
-               ensure
-                   sth.finish unless sth.finished?
-               end
-           else
-               return sth
-           end 
-       end
+            if block_given?
+                begin
+                    yield sth
+                ensure
+                    sth.finish unless sth.finished?
+                end
+            else
+                return sth
+            end 
+        end
 
-       def execute(stmt, *bindvars)
-           raise InterfaceError, "Database connection was already closed!" if @handle.nil?
+        #
+        # Prepare and execute a statement. It has block semantics equivalent to #prepare.
+        #
+        def execute(stmt, *bindvars)
+            raise InterfaceError, "Database connection was already closed!" if @handle.nil?
 
-           if @convert_types
-               bindvars = DBI::Utils::ConvParam.conv_param(driver_name, *bindvars)
-           end
+            if @convert_types
+                bindvars = DBI::Utils::ConvParam.conv_param(driver_name, *bindvars)
+            end
 
-           sth = StatementHandle.new(@handle.execute(stmt, *bindvars), true, false, @convert_types)
-           # FIXME trace sth.trace(@trace_mode, @trace_output)
-           sth.dbh = self
+            sth = StatementHandle.new(@handle.execute(stmt, *bindvars), true, false, @convert_types)
+            # FIXME trace sth.trace(@trace_mode, @trace_output)
+            sth.dbh = self
 
-           if block_given?
-               begin
-                   yield sth
-               ensure
-                   sth.finish unless sth.finished?
-               end
-           else
-               return sth
-           end 
-       end
+            if block_given?
+                begin
+                    yield sth
+                ensure
+                    sth.finish unless sth.finished?
+                end
+            else
+                return sth
+            end 
+        end
 
-       def do(stmt, *bindvars)
-           raise InterfaceError, "Database connection was already closed!" if @handle.nil?
-           @handle.do(stmt, *DBI::Utils::ConvParam.conv_param(driver_name, *bindvars))
-       end
+        #
+        # Perform a statement. This goes straight to the DBD's implementation
+        # of #do (and consequently, BaseDatabase#do), and does not work like
+        # #execute and #prepare. Should return a row modified count.
+        #
+        def do(stmt, *bindvars)
+            raise InterfaceError, "Database connection was already closed!" if @handle.nil?
+            @handle.do(stmt, *DBI::Utils::ConvParam.conv_param(driver_name, *bindvars))
+        end
 
-       def select_one(stmt, *bindvars)
-           raise InterfaceError, "Database connection was already closed!" if @handle.nil?
-           row = nil
-           execute(stmt, *bindvars) do |sth|
-               row = sth.fetch 
-           end
-           row
-       end
+        #
+        # Executes a statement and returns the first row from the result.
+        #
+        def select_one(stmt, *bindvars)
+            raise InterfaceError, "Database connection was already closed!" if @handle.nil?
+            row = nil
+            execute(stmt, *bindvars) do |sth|
+                row = sth.fetch 
+            end
+            row
+        end
 
-       def select_all(stmt, *bindvars, &p)
-           raise InterfaceError, "Database connection was already closed!" if @handle.nil?
-           rows = nil
-           execute(stmt, *bindvars) do |sth|
-               if block_given?
-                   sth.each(&p)
-               else
-                   rows = sth.fetch_all 
-               end
-           end
-           return rows
-       end
+        #
+        # Executes a statement and returns all rows from the result. If a block
+        # is given, it is executed for each row.
+        # 
+        def select_all(stmt, *bindvars, &p)
+            raise InterfaceError, "Database connection was already closed!" if @handle.nil?
+            rows = nil
+            execute(stmt, *bindvars) do |sth|
+                if block_given?
+                    sth.each(&p)
+                else
+                    rows = sth.fetch_all 
+                end
+            end
+            return rows
+        end
 
-       def tables
-           raise InterfaceError, "Database connection was already closed!" if @handle.nil?
-           @handle.tables
-       end
+        #
+        # Return the tables available to this DatabaseHandle as an array of strings.
+        #
+        def tables
+            raise InterfaceError, "Database connection was already closed!" if @handle.nil?
+            @handle.tables
+        end
 
-       def columns( table )
-           raise InterfaceError, "Database connection was already closed!" if @handle.nil?
-           @handle.columns( table ).collect {|col| ColumnInfo.new(col) }
-       end
+        #
+        # Returns the columns of the provided table as an array of ColumnInfo
+        # objects. See BaseDatabase#columns for the minimum parameters that
+        # this method must provide.
+        #
+        def columns( table )
+            raise InterfaceError, "Database connection was already closed!" if @handle.nil?
+            @handle.columns( table ).collect {|col| ColumnInfo.new(col) }
+        end
 
-       def ping
-           raise InterfaceError, "Database connection was already closed!" if @handle.nil?
-           @handle.ping
-       end
+        #
+        # Attempt to establish if the database is still connected. While
+        # #connected? returns the state the DatabaseHandle thinks is true, this
+        # is an active operation that will contact the database.
+        #
+        def ping
+            raise InterfaceError, "Database connection was already closed!" if @handle.nil?
+            @handle.ping
+        end
 
-       def quote(value)
-           raise InterfaceError, "Database connection was already closed!" if @handle.nil?
-           @handle.quote(value)
-       end
+        #
+        # Attempt to escape the value, rendering it suitable for inclusion in a SQL statement.
+        #
+        def quote(value)
+            raise InterfaceError, "Database connection was already closed!" if @handle.nil?
+            @handle.quote(value)
+        end
 
-       def commit
-           raise InterfaceError, "Database connection was already closed!" if @handle.nil?
-           @handle.commit
-       end
+        #
+        # Force a commit to the database immediately.
+        #
+        def commit
+            raise InterfaceError, "Database connection was already closed!" if @handle.nil?
+            @handle.commit
+        end
 
-       def rollback
-           raise InterfaceError, "Database connection was already closed!" if @handle.nil?
-           @handle.rollback
-       end
+        #
+        # Force a rollback to the database immediately.
+        #
+        def rollback
+            raise InterfaceError, "Database connection was already closed!" if @handle.nil?
+            @handle.rollback
+        end
 
-       def transaction
-           raise InterfaceError, "Database connection was already closed!" if @handle.nil?
-           raise InterfaceError, "No block given" unless block_given?
+        #
+        # Commits, runs the block provided, yielding the DatabaseHandle as it's
+        # argument. If an exception is raised through the block, rollback occurs.
+        # Otherwise, commit occurs.
+        #
+        def transaction
+            raise InterfaceError, "Database connection was already closed!" if @handle.nil?
+            raise InterfaceError, "No block given" unless block_given?
 
-           commit
-           begin
-               yield self
-               commit
-           rescue Exception
-               rollback
-               raise
-           end
-       end
+            commit
+            begin
+                yield self
+                commit
+            rescue Exception
+                rollback
+                raise
+            end
+        end
 
-       def [] (attr)
-           raise InterfaceError, "Database connection was already closed!" if @handle.nil?
-           @handle[attr]
-       end
+        # Get an attribute from the DatabaseHandle.
+        def [] (attr)
+            raise InterfaceError, "Database connection was already closed!" if @handle.nil?
+            @handle[attr]
+        end
 
-       def []= (attr, val)
-           raise InterfaceError, "Database connection was already closed!" if @handle.nil?
-           @handle[attr] = val
-       end
-   end
+        # Set an attribute on the DatabaseHandle.
+        def []= (attr, val)
+            raise InterfaceError, "Database connection was already closed!" if @handle.nil?
+            @handle[attr] = val
+        end
+    end
 end

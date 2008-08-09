@@ -8,15 +8,33 @@ end
 require 'deprecated'
 
 module DBI
+    # This represents metadata for columns within a given table, such as the
+    # data type, whether or not the the column is a primary key, etc.
+    #
+    # ColumnInfo is a delegate of Hash, but represents its keys indifferently,
+    # coercing all strings to symbols. It also has ostruct-like features, f.e.:
+    #
+    #   h = ColumnInfo.new({ "foo" => "bar" })
+    #   h[:foo] => "bar"
+    #   h["foo"] => "bar"
+    #   h.foo => "bar"
+    #
+    # All of these forms have assignment forms as well.
+    #
     class ColumnInfo < DelegateClass(Hash)
-        # Creates and returns a ColumnInfo object.  This represents metadata for
-        # columns within a given table, such as the data type, whether or not the
-        # the column is a primary key, etc.
+
+        # Create a new ColumnInfo object.
         #
-        # ColumnInfo is a subclass of Hash.
+        # If no Hash is provided, one will be created for you. The hash will be
+        # shallow cloned for storage inside the object, and an attempt will be
+        # made to convert all string keys to symbols.
+        #
+        # In the event that both string and symbol keys are provided in the
+        # initial hash, we cannot safely route around collisions and therefore
+        # a TypeError is raised.
         #
         def initialize(hash=nil)
-            @hash = hash
+            @hash = hash.dup rescue nil
             @hash ||= Hash.new
 
             # coerce all strings to symbols
@@ -43,7 +61,7 @@ module DBI
             @hash[key.to_sym] = value
         end
 
-        def default # :nodoc; XXX hack to get around Hash#default
+        def default() # :nodoc; XXX hack to get around Hash#default
             method_missing(:default)
         end
 
@@ -60,7 +78,7 @@ module DBI
         end
 
         # Aliases - XXX soon to be deprecated
-        def self.deprecated_alias(target, source)
+        def self.deprecated_alias(target, source) # :nodoc:
             define_method(target) { |*args| method_missing(source, *args) }
             deprecate target 
         end
