@@ -1,261 +1,375 @@
 module DBI
-   class StatementHandle < Handle
+    #
+    # StatementHandle is the interface the consumer sees after successfully
+    # issuing a DatabaseHandle#prepare. They may also be exposed through other
+    # methods that send statements to the database.
+    #
+    # Almost all methods in this class will raise InterfaceError if the
+    # statement is already finished.
+    #
+    class StatementHandle < Handle
 
-       include Enumerable
+        include Enumerable
 
-       attr_accessor :dbh
+        attr_accessor :dbh
 
-       def initialize(handle, fetchable=false, prepared=true, convert_types=true)
-           super(handle)
-           @fetchable = fetchable
-           @prepared  = prepared     # only false if immediate execute was used
-           @cols = nil
-           @coltypes = nil
-           @convert_types = convert_types
+        def initialize(handle, fetchable=false, prepared=true, convert_types=true)
+            super(handle)
+            @fetchable = fetchable
+            @prepared  = prepared     # only false if immediate execute was used
+            @cols = nil
+            @coltypes = nil
+            @convert_types = convert_types
 
-           if @fetchable
-               @row = DBI::Row.new(column_names, column_types, nil, @convert_types)
-           else
-               @row = nil
-           end
-       end
+            if @fetchable
+                @row = DBI::Row.new(column_names, column_types, nil, @convert_types)
+            else
+                @row = nil
+            end
+        end
 
-       def finished?
-           @handle.nil?
-       end
+        # Returns true if the StatementHandle has had #finish called on it,
+        # explicitly or otherwise.
+        def finished?
+            @handle.nil?
+        end
 
-       def fetchable?
-           @fetchable
-       end
+        # Returns true if the statement is believed to return data upon #fetch.
+        #
+        # The current reliability of this (and the concept in general) is
+        # suspect.
+        def fetchable?
+            @fetchable
+        end
 
-       def bind_coltype(pos, type)
-           raise InterfaceError, "statement must be executed before using this command" unless @executed
+        #
+        # Instruct successive calls to #fetch to cast the type returned into
+        # `type`, for row position `pos`. Like all bind_* calls, `pos` indexes
+        # starting at 1.
+        #
+        # `type` is an object with the DBI::Type calling convention.
+        #
+        # This call must be called after #execute has successfully ran,
+        # otherwise it will raise InterfaceError.
+        #
+        # Example:
+        #  # `foo` is an integer and this statement will return two rows. 
+        #  sth = dbh.prepare("select foo from bar") 
+        #  # would raise InterfaceError if called here
+        #  sth.execute
+        #
+        #  sth.bind_coltype(1, DBI::Type::Varchar) 
+        #  # would normally use DBI::Type::Integer and return a Fixnum. We'll make it a string.
+        #  sth.fetch => ["1"]
+        #
+        #  # Here we coerce it to Float.
+        #  sth.bind_coltype(1, DBI::Type::Float)
+        #  sth.fetch => [1.0]
+        #  sth.finish
+        #
+        def bind_coltype(pos, type)
+            raise InterfaceError, "statement must be executed before using this command" unless @executed
 
-           coltypes = column_types
+            coltypes = column_types
 
-           if (pos - 1) < 1
-               raise InterfaceError, "bind positions index starting at 1"
-           end
+            if (pos - 1) < 1
+                raise InterfaceError, "bind positions index starting at 1"
+            end
 
-           coltypes[pos-1] = type
-           @row = DBI::Row.new(column_names, coltypes, nil, @convert_types)
-       end
+            coltypes[pos-1] = type
+            @row = DBI::Row.new(column_names, coltypes, nil, @convert_types)
+        end
 
-       def bind_param(param, value, attribs=nil)
-           raise InterfaceError, "Statement was already closed!" if @handle.nil?
-           raise InterfaceError, "Statement wasn't prepared before." unless @prepared
+        #
+        # Just like BaseStatement#bind_param, but will attempt to convert the
+        # type if it's supposed to, adhering to the DBD's current ruleset.
+        #
+        def bind_param(param, value, attribs=nil)
+            raise InterfaceError, "Statement was already closed!" if @handle.nil?
+            raise InterfaceError, "Statement wasn't prepared before." unless @prepared
 
-           if @convert_types
-               value = DBI::Utils::ConvParam.conv_param(dbh.driver_name, value)[0]
-           end
+            if @convert_types
+                value = DBI::Utils::ConvParam.conv_param(dbh.driver_name, value)[0]
+            end
 
-           @handle.bind_param(param, value, attribs)
-       end
+            @handle.bind_param(param, value, attribs)
+        end
 
-       def execute(*bindvars)
-           cancel     # cancel before 
-           raise InterfaceError, "Statement was already closed!" if @handle.nil?
-           raise InterfaceError, "Statement wasn't prepared before." unless @prepared
 
-           if @convert_types
-               bindvars = DBI::Utils::ConvParam.conv_param(dbh.driver_name, *bindvars)
-           end
+        # Execute the statement.
+        #
+        # This generally means that the statement will be sent to the database
+        # and some form of result cursor will be obtained, but is ultimately
+        # driver-dependent.
+        #
+        # If arguments are supplied, these are fed to #bind_param.
+        def execute(*bindvars)
+            cancel     # cancel before 
+            raise InterfaceError, "Statement was already closed!" if @handle.nil?
+            raise InterfaceError, "Statement wasn't prepared before." unless @prepared
 
-           @handle.bind_params(*bindvars)
-           @handle.execute
-           @fetchable = true
-           @executed = true
+            if @convert_types
+                bindvars = DBI::Utils::ConvParam.conv_param(dbh.driver_name, *bindvars)
+            end
 
-           # TODO:?
-           #if @row.nil?
-           @row = DBI::Row.new(column_names, column_types, nil, @convert_types)
-           #end
-           return nil
-       end
+            @handle.bind_params(*bindvars)
+            @handle.execute
+            @fetchable = true
+            @executed = true
 
-       def finish
-           raise InterfaceError, "Statement was already closed!" if @handle.nil?
-           @handle.finish
-           @handle = nil
-       end
+            # TODO:?
+            #if @row.nil?
+            @row = DBI::Row.new(column_names, column_types, nil, @convert_types)
+            #end
+            return nil
+        end
 
-       def cancel
-           raise InterfaceError, "Statement was already closed!" if @handle.nil?
-           @handle.cancel if @fetchable
-           @fetchable = false
-       end
+        #
+        # Finish the statement, causing the database to release all assets
+        # related to it (any result cursors, normally).
+        #
+        # StatementHandles that have already been finished will normally be
+        # inoperable and unavailable for further use.
+        #
+        def finish
+            raise InterfaceError, "Statement was already closed!" if @handle.nil?
+            @handle.finish
+            @handle = nil
+        end
 
-       def column_names
-           raise InterfaceError, "Statement was already closed!" if @handle.nil?
-           return @cols unless @cols.nil?
-           @cols = @handle.column_info.collect {|col| col['name'] }
-       end
+        #
+        # Cancel the query, closing any open result cursors and truncating any result sets.
+        #
+        # The difference between this and #finish is that cancelled statements
+        # may be re-executed.
+        #
+        def cancel
+            raise InterfaceError, "Statement was already closed!" if @handle.nil?
+            @handle.cancel if @fetchable
+            @fetchable = false
+        end
 
-       def column_types
-           raise InterfaceError, "Statement was already closed!" if @handle.nil?
-           return @coltypes unless @coltypes.nil?
-           @coltypes = @handle.column_info.collect do |col| 
-               if col['dbi_type']
-                   col['dbi_type']
-               else
-                   DBI::TypeUtil.type_name_to_module(col['type_name'])
-               end
-           end
-       end
+        #
+        # Obtains the column names for this query as an array.
+        #
+        def column_names
+            raise InterfaceError, "Statement was already closed!" if @handle.nil?
+            return @cols unless @cols.nil?
+            @cols = @handle.column_info.collect {|col| col['name'] }
+        end
 
-       def column_info
-           raise InterfaceError, "Statement was already closed!" if @handle.nil?
-           @handle.column_info.collect {|col| ColumnInfo.new(col) }
-       end
+        #
+        # Obtain the type mappings for the columns in this query based on
+        # ColumnInfo data on the query.
+        #
+        # The result will be a position-dependent array of objects that conform
+        # to the DBI::Type calling syntax.
+        #
+        def column_types
+            raise InterfaceError, "Statement was already closed!" if @handle.nil?
+            return @coltypes unless @coltypes.nil?
+            @coltypes = @handle.column_info.collect do |col| 
+                if col['dbi_type']
+                    col['dbi_type']
+                else
+                    DBI::TypeUtil.type_name_to_module(col['type_name'])
+                end
+            end
+        end
 
-       def rows
-           raise InterfaceError, "Statement was already closed!" if @handle.nil?
-           @handle.rows
-       end
+        #
+        # See BaseStatement#column_info.
+        #
+        def column_info
+            raise InterfaceError, "Statement was already closed!" if @handle.nil?
+            @handle.column_info.collect {|col| ColumnInfo.new(col) }
+        end
 
-       def fetch(&p)
-           raise InterfaceError, "Statement was already closed!" if @handle.nil?
+        #
+        # Should return the row modified count as the result of statement execution.
+        #
+        # However, some low-level drivers do not supply this information or
+        # supply misleading information (> 0 rows for read-only select
+        # statements, f.e.)
+        #
+        def rows
+            raise InterfaceError, "Statement was already closed!" if @handle.nil?
+            @handle.rows
+        end
 
-           if block_given? 
-               while (res = @handle.fetch) != nil
-                   @row = @row.dup
-                   @row.set_values(res)
-                   yield @row
-               end
-               @handle.cancel
-               @fetchable = false
-               return nil
-           else
-               res = @handle.fetch
-               if res.nil?
-                   @handle.cancel
-                   @fetchable = false
-               else
-                   @row = @row.dup
-                   @row.set_values(res)
-                   res = @row
-               end
-               return res
-           end
-       end
 
-       def each(&p)
-           raise InterfaceError, "Statement was already closed!" if @handle.nil?
-           raise InterfaceError, "Statement must first be executed" unless @fetchable
-           raise InterfaceError, "No block given" unless block_given?
+        #
+        # See BaseStatement#fetch.
+        #
+        # fetch can also take a block which will be applied to each row in a
+        # similar fashion to Enumerable#collect. See #each.
+        #
+        def fetch(&p)
+            raise InterfaceError, "Statement was already closed!" if @handle.nil?
 
-           fetch(&p)
-       end
+            if block_given? 
+                while (res = @handle.fetch) != nil
+                    @row = @row.dup
+                    @row.set_values(res)
+                    yield @row
+                end
+                @handle.cancel
+                @fetchable = false
+                return nil
+            else
+                res = @handle.fetch
+                if res.nil?
+                    @handle.cancel
+                    @fetchable = false
+                else
+                    @row = @row.dup
+                    @row.set_values(res)
+                    res = @row
+                end
+                return res
+            end
+        end
 
-       def fetch_array
-           raise InterfaceError, "Statement was already closed!" if @handle.nil?
-           raise InterfaceError, "Statement must first be executed" unless @fetchable
+        #
+        # Synonym for #fetch with a block.
+        #
+        def each(&p)
+            raise InterfaceError, "Statement was already closed!" if @handle.nil?
+            raise InterfaceError, "Statement must first be executed" unless @fetchable
+            raise InterfaceError, "No block given" unless block_given?
 
-           if block_given? 
-               while (res = @handle.fetch) != nil
-                   yield res
-               end
-               @handle.cancel
-               @fetchable = false
-               return nil
-           else
-               res = @handle.fetch
-               if res.nil?
-                   @handle.cancel
-                   @fetchable = false
-               end
-               return res
-           end
-       end
+            fetch(&p)
+        end
 
-       def fetch_hash
-           raise InterfaceError, "Statement was already closed!" if @handle.nil?
-           raise InterfaceError, "Statement must first be executed" unless @fetchable
+        #
+        # Similar to #fetch, but returns Array of Array instead of Array of
+        # DBI::Row objects (and therefore does not perform type mapping). This
+        # is basically a way to get the raw data from the DBD.
+        #
+        def fetch_array
+            raise InterfaceError, "Statement was already closed!" if @handle.nil?
+            raise InterfaceError, "Statement must first be executed" unless @fetchable
 
-           cols = column_names
+            if block_given? 
+                while (res = @handle.fetch) != nil
+                    yield res
+                end
+                @handle.cancel
+                @fetchable = false
+                return nil
+            else
+                res = @handle.fetch
+                if res.nil?
+                    @handle.cancel
+                    @fetchable = false
+                end
+                return res
+            end
+        end
 
-           if block_given? 
-               while (row = @handle.fetch) != nil
-                   hash = {}
-                   row.each_with_index {|v,i| hash[cols[i]] = v} 
-                   yield hash
-               end
-               @handle.cancel
-               @fetchable = false
-               return nil
-           else
-               row = @handle.fetch
-               if row.nil?
-                   @handle.cancel
-                   @fetchable = false
-                   return nil
-               else
-                   hash = {}
-                   row.each_with_index {|v,i| hash[cols[i]] = v} 
-                   return hash
-               end
-           end
-       end
+        #
+        # Map the columns and results into an Array of Hash resultset.
+        #
+        # No type conversion is performed here. Expect this to change in 0.6.0.
+        #
+        def fetch_hash
+            raise InterfaceError, "Statement was already closed!" if @handle.nil?
+            raise InterfaceError, "Statement must first be executed" unless @fetchable
 
-       def fetch_many(cnt)
-           raise InterfaceError, "Statement was already closed!" if @handle.nil?
-           raise InterfaceError, "Statement must first be executed" unless @fetchable
+            cols = column_names
 
-           cols = column_names
-           rows = @handle.fetch_many(cnt)
-           if rows.nil?
-               @handle.cancel
-               @fetchable = false
-               return []
-           else
-               return rows.collect{|r| Row.new(cols, column_types, r, @convert_types)}
-           end
-       end
+            if block_given? 
+                while (row = @handle.fetch) != nil
+                    hash = {}
+                    row.each_with_index {|v,i| hash[cols[i]] = v} 
+                    yield hash
+                end
+                @handle.cancel
+                @fetchable = false
+                return nil
+            else
+                row = @handle.fetch
+                if row.nil?
+                    @handle.cancel
+                    @fetchable = false
+                    return nil
+                else
+                    hash = {}
+                    row.each_with_index {|v,i| hash[cols[i]] = v} 
+                    return hash
+                end
+            end
+        end
 
-       def fetch_all
-           raise InterfaceError, "Statement was already closed!" if @handle.nil?
-           raise InterfaceError, "Statement must first be executed" unless @fetchable
+        #
+        # Fetch `cnt` rows. Result is array of DBI::Row
+        #
+        def fetch_many(cnt)
+            raise InterfaceError, "Statement was already closed!" if @handle.nil?
+            raise InterfaceError, "Statement must first be executed" unless @fetchable
 
-           cols = column_names
-           fetched_rows = []
+            cols = column_names
+            rows = @handle.fetch_many(cnt)
+            if rows.nil?
+                @handle.cancel
+                @fetchable = false
+                return []
+            else
+                return rows.collect{|r| tmp = @row.dup; tmp.set_values(r); tmp }
+            end
+        end
 
-           begin
-               while row = fetch do
-                   fetched_rows.push(row)
-               end
-           rescue Exception
-           end
+        # 
+        # Fetch the entire result set. Result is array of DBI::Row.
+        #
+        def fetch_all
+            raise InterfaceError, "Statement was already closed!" if @handle.nil?
+            raise InterfaceError, "Statement must first be executed" unless @fetchable
 
-           @handle.cancel
-           @fetchable = false
+            cols = column_names
+            fetched_rows = []
 
-           return fetched_rows
-       end
+            begin
+                while row = fetch do
+                    fetched_rows.push(row)
+                end
+            rescue Exception
+            end
 
-       def fetch_scroll(direction, offset=1)
-           raise InterfaceError, "Statement was already closed!" if @handle.nil?
-           raise InterfaceError, "Statement must first be executed" unless @fetchable
+            @handle.cancel
+            @fetchable = false
 
-           row = @handle.fetch_scroll(direction, offset)
-           if row.nil?
-               #@handle.cancel
-               #@fetchable = false
-               return nil
-           else
-               @row.set_values(row)
-               return @row
-           end
-       end
+            return fetched_rows
+        end
 
-       def [] (attr)
-           raise InterfaceError, "Statement was already closed!" if @handle.nil?
-           @handle[attr]
-       end
+        #
+        # See BaseStatement#fetch_scroll.
+        #
+        def fetch_scroll(direction, offset=1)
+            raise InterfaceError, "Statement was already closed!" if @handle.nil?
+            raise InterfaceError, "Statement must first be executed" unless @fetchable
 
-       def []= (attr, val)
-           raise InterfaceError, "Statement was already closed!" if @handle.nil?
-           @handle[attr] = val
-       end
+            row = @handle.fetch_scroll(direction, offset)
+            if row.nil?
+                #@handle.cancel
+                #@fetchable = false
+                return nil
+            else
+                @row.set_values(row)
+                return @row
+            end
+        end
 
-   end # class StatementHandle
+        # Get an attribute from the StatementHandle object.
+        def [] (attr)
+            raise InterfaceError, "Statement was already closed!" if @handle.nil?
+            @handle[attr]
+        end
+
+        # Set an attribute on the StatementHandle object.
+        def []= (attr, val)
+            raise InterfaceError, "Statement was already closed!" if @handle.nil?
+            @handle[attr] = val
+        end
+    end # class StatementHandle
 end
