@@ -1,15 +1,15 @@
 = Description
-   The DBI package is a vendor independent interface for accessing databases.
-   It is similar, but not identical to, Perl's DBI module.
+    The DBI package is a vendor independent interface for accessing databases.
+    It is similar, but not identical to, Perl's DBI module.
    
-= Prerequisites  
-   Ruby 1.8.6 or later is the test target, however you may have success with
-   earlier 1.8.x versions of Ruby.
+= Prerequisites
+    Ruby 1.8.6 or later is the test target, however you may have success with
+    earlier 1.8.x versions of Ruby.
 
 = RubyForge Project
-   General information: http://ruby-dbi.rubyforge.org
-   Project information: http://rubyforge.org/projects/ruby-dbi/
-   Downloads: http://rubyforge.org/frs/?group_id=234
+    General information: http://ruby-dbi.rubyforge.org
+    Project information: http://rubyforge.org/projects/ruby-dbi/
+    Downloads: http://rubyforge.org/frs/?group_id=234
 
 = Installation
     There are many database drivers (DBDs) available.  You only need to install
@@ -17,112 +17,112 @@
 
 == Gem setup:
 
-   gem install dbi
-   gem install dbd-mysql
-   gem install dbd-pg
-   gem install dbd-sqlite3
-   gem install dbd-sqlite
+    gem install dbi
+    gem install dbd-mysql
+    gem install dbd-pg
+    gem install dbd-sqlite3
+    gem install dbd-sqlite
 
 == Without rubygems:
 
-   ruby setup.rb config
-   ruby setup.rb setup
-   ruby setup.rb install
+    ruby setup.rb config
+    ruby setup.rb setup
+    ruby setup.rb install
 
 == The bleeding edge:
 
-   git clone git://hollensbe.org/git/ruby-dbi.git
-   git checkout -b development origin/development
+    git clone git://hollensbe.org/git/ruby-dbi.git
+    git checkout -b development origin/development
 
 = Synopsis
-   require 'dbi'
-
-   # Connect to a database, old style
-   dbh = DBI.connect('DBI:Mysql:test', 'testuser', 'testpwd')
-
-   # Insert some rows, use placeholders
-   1.upto(13) do |i|
-      sql = "insert into simple01 (SongName, SongLength_s) VALUES (?, ?)"
-      dbh.do(sql, "Song #{i}", "#{i*10}")
-   end 
-
-   # Select all rows from simple01
-   sth = dbh.prepare('select * from simple01')
-   sth.execute
-
-   # Print out each row
-   while row=sth.fetch do
-      p row
-   end
-
-   # Close the statement handle when done
-   sth.finish
-
-   # Don't prepare, just do it!
-   dbh.do('delete from simple01 where internal_id > 10')
-
-   # And finally, disconnect
-   dbh.disconnect
-
-   # Same example, but a little more Ruby-ish
-   DBI.connect('DBI:Mysql:test', 'testuser', 'testpwd') do | dbh |
-
-      sql = "insert into simple01 (SongName, SongLength_s) VALUES (?, ?)"
-
-      dbh.prepare(sql) do | sth | 
-         1.upto(13) { |i| sth.execute("Song #{i}", "#{i*10}") }
-      end 
-
-      dbh.select_all('select * from simple01') do | row |
-         p row
-      end
-
-      dbh.do('delete from simple01 where internal_id > 10')
-
-   end
-
+    require 'dbi'
+    
+    # Connect to a database, old style
+    dbh = DBI.connect('DBI:Mysql:test', 'testuser', 'testpwd')
+    
+    # Insert some rows, use placeholders
+    1.upto(13) do |i|
+        sql = "insert into simple01 (SongName, SongLength_s) VALUES (?, ?)"
+        dbh.do(sql, "Song #{i}", "#{i*10}")
+    end 
+    
+    # Select all rows from simple01
+    sth = dbh.prepare('select * from simple01')
+    sth.execute
+    
+    # Print out each row
+    while row=sth.fetch do
+        p row
+    end
+    
+    # Close the statement handle when done
+    sth.finish
+    
+    # Don't prepare, just do it!
+    dbh.do('delete from simple01 where internal_id > 10')
+      
+    # And finally, disconnect
+    dbh.disconnect
+        
+    # Same example, but a little more Ruby-ish
+    DBI.connect('DBI:Mysql:test', 'testuser', 'testpwd') do | dbh |
+      
+        sql = "insert into simple01 (SongName, SongLength_s) VALUES (?, ?)"
+        
+        dbh.prepare(sql) do | sth | 
+            1.upto(13) { |i| sth.execute("Song #{i}", "#{i*10}") }
+        end 
+        
+        dbh.select_all('select * from simple01') do | row |
+            p row
+        end
+        
+        dbh.do('delete from simple01 where internal_id > 10')
+      
+    end
+      
 = Available Database Drivers (DBDs)
 
 == DBD::MySQL
-   MySQL
-   Depends on the mysql-ruby package from http://www.tmtm.org/mysql or
-   available from the RAA.
+    MySQL
+    Depends on the mysql-ruby package from http://www.tmtm.org/mysql or
+    available from the RAA.
 
 == DBD::ODBC
-   ODBC
-   Depends on the ruby-odbc package (0.5 or later, 0.9.3 or later recommended) at
-   http://www.ch-werner.de/rubyodbc or available from the RAA.  Works together
-   with unix-odbc.
+    ODBC
+    Depends on the ruby-odbc package (0.5 or later, 0.9.3 or later recommended) at
+    http://www.ch-werner.de/rubyodbc or available from the RAA.  Works together
+    with unix-odbc.
 
 == DBD::OCI8
-   OCI8 (Oracle)
-   Depends on the the ruby-oci8 package, available on the RAA and RubyForge.
+    OCI8 (Oracle)
+    Depends on the the ruby-oci8 package, available on the RAA and RubyForge.
 
 == DBD::Pg
-   PostgreSQL
-   Depends on the pg package, available on RubyForge.
+    PostgreSQL
+    Depends on the pg package, available on RubyForge.
 
 == DBD::SQLite
-   SQLite (versions 2.x and earlier)
-   Depends on the sqlite-ruby package, available on rubyforge.
+    SQLite (versions 2.x and earlier)
+    Depends on the sqlite-ruby package, available on rubyforge.
 
 == DBD::SQLite3
-   SQLite 3.x
-   Depends on the sqlite3-ruby package, available on rubyforge.
+    SQLite 3.x
+    Depends on the sqlite3-ruby package, available on rubyforge.
 
 = Additional Documentation
-   See the directories doc/* for DBI and DBD specific information.
-   The DBI specification is at doc/DBI_SPEC.rdoc.
-   The DBD specification is at doc/DBD_SPEC.rdoc.
+    See the directories doc/* for DBI and DBD specific information.
+    The DBI specification is at doc/DBI_SPEC.rdoc.
+    The DBD specification is at doc/DBD_SPEC.rdoc.
 
 = Articles
 == Using the Ruby DBI Module
-   http://www.kitebird.com/articles/ruby-dbi.html
+    http://www.kitebird.com/articles/ruby-dbi.html
    
 = Applications
 == dbi
-   The SQL command line interpreter dbi is available in directory
-   bin/. It gets installed by default.
+    The SQL command line interpreter dbi is available in directory
+    bin/. It gets installed by default.
 
 = License
 
