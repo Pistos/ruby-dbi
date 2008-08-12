@@ -97,14 +97,14 @@ DBI has a slew of custom exceptions it uses to control program flow,
 and alert the user to specific classes of problems.
 
 They currently all live in the DBI namespace, although it's expected
-this will change eventually to have an exception namespace.
+that there will eventually be an exception namespace.
 
 === DBI::Warning < RuntimeError
     For important warnings such as data truncation, etc.
 
 === DBI::Error < RuntimeError
     Base class of all other error exceptions.
-    Use this to catch all errors.
+    Rescue this to rescue all DBI errors.
 
 === DBI::InterfaceError < DBI::Error
     Exception for errors related to the DBI interface rather 
@@ -112,7 +112,7 @@ this will change eventually to have an exception namespace.
 
 === DBI::NotImplementedError < DBI::InterfaceError
     Exception raised if the DBD driver has not specified
-    a mandatory method (not in Python API 2.0).
+    a mandatory method.
 
 === DBI::DatabaseError < DBI::Error
     Exception for errors related to the database.
@@ -121,22 +121,22 @@ this will change eventually to have an exception namespace.
 
 === DBI::DataError < DBI::DatabaseError
     Exception for errors due to problems with the processed 
-    data, such ase division by zero, numeric value out of range, etc.
+    data, such as division by zero, numeric value out of range, etc.
 
 === DBI::OperationalError < DBI::DatabaseError
     Exception for errors related to the database's operation which
-    are not necessarily under the control of the programmer, such as
-    unexpected disconnect, datasource name not found, transaction
-    could not be processed, a memory allocation error occurred during
-    processing, etc.
+    are not necessarily under the control of the programmer.  This would include
+    such things as unexpected disconnection, failure to find a datasource name,
+    failure to process a transaction, memory allocation errors, etc.
 
 === DBI::IntegrityError < DBI::DatabaseError
     Exception raised when the relational integrity of the database
-    is affected, e.g., a foreign key check fails.
+    is affected, such as when a foreign key constraint is violated.
 
 === DBI::InternalError < DBI::DatabaseError
     Exception raised when the database encounters an internal error, 
-    e.g., the cursor is not valid anymore, the transaction is out of sync.
+    such as a cursor not being valid anymore, or a transaction going out of
+    sync.
 
 === DBI::ProgrammingError < DBI::DatabaseError
     Exception raised for programming errors, e.g., table not found
