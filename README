@@ -121,7 +121,7 @@
     The DBD specification is at doc/DBD_SPEC.rdoc.
 
 = Articles
-== Using the Ruby DBI Module
+== Tutorial: Using the Ruby DBI Module
     http://www.kitebird.com/articles/ruby-dbi.html
    
 = Applications
