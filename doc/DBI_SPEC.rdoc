@@ -45,8 +45,8 @@ care as long as valid data is returned.
 
 == Classes
 
-There are many classes that make up the core of DBI and provide
-different functionality:
+These are the classes that make up the core of DBI and provide
+various functionality:
 
 === DBI
 Core module, responsible for everything underneath it, kickstarting
@@ -74,22 +74,22 @@ queries and table descriptions.
 === DBI::Type
 
 Namespace for typecasting classes. These classes are provided with a
-parse method which converts them to a native ruby type from a string.
+parse method which converts them to a native Ruby type from a string.
 
 === DBI::TypeUtil
 
 The inverse of DBI::Type, this provides functionality to turn native
-ruby types into a representation suitable for the DBD's queries.
+Ruby types into a representation suitable for the DBD's queries.
 
 === DBI::Binary
 
-The representation of a BLOB/CLOB in a ruby object. This will
+The representation of a BLOB/CLOB in a Ruby object. This will
 eventually be rolled into DBI::Type::, but remains here currently for
 compatibility purposes.
 
 === DBI::Base* and DBI::*Handle
 
-Please see "DESIGN" above for the description of these modules.
+Please see the Design section above for the description of these modules.
 
 == Exceptions
 
