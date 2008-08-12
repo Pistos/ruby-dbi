@@ -17,18 +17,15 @@ yourself (and the DBI authors) a lot of time.
 
 == DESIGN
 
-DBI owns the concept of a driver, database, and statement. The core
+With DBI, there are the concepts of driver, database, and statement. The core
 functionality for these concepts is provided by a database driver, or
-DBD.
-
-These concepts cascade in ownership: for example, a driver has
-databases, a database may have statements. DBI may control many
-drivers at once.
+DBD.  DBI controls one or more drivers at once, a driver has databases, a
+database may have statements.
 
 DBI uses a delegation model to communicate with its DBDs through a
-series of handles. To elaborate, when someone requests a connection to
-a database, DBI contacts the appropriate DBD and builds a handle in
-it's name that it aligns with a DBI base class for that concept. The
+series of handles.  When a connection to a database is requested, DBI contacts
+the appropriate DBD and builds a handle in
+its name that it aligns with a DBI base class for that concept. The
 handle provided by the DBD is the first-class method of communication,
 otherwise it resorts to calling the base class methods.  This allows
 DBI to provide a level of consistency unless the DBD author finds it
@@ -41,7 +38,7 @@ may have an internal representation of fetch_scroll (as is the case
 with the ODBC driver) that may be more suited to direct use, and
 therefore DBI will never see the base class method. This is similar to
 inheritance, but there is a distinct disconnect between the handles
-and the base classes, intentionally so. This way the DBD's have no
+and the base classes, intentionally so. This way the DBDs have no
 access to the base class and DBI does all the delegation work. Also,
 DBI has no idea what the DBD is doing underneath, nor does it need to
 care as long as valid data is returned.
