@@ -4,7 +4,7 @@
    
 = Prerequisites  
    Ruby 1.8.6 or later is the test target, however you may have success with
-   earlier 1.8.x revisions.
+   earlier 1.8.x versions of Ruby.
 
 = RubyForge Project
    General information: http://ruby-dbi.rubyforge.org
