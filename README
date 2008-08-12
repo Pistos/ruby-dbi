@@ -12,8 +12,8 @@
    Downloads: http://rubyforge.org/frs/?group_id=234
 
 = Installation
-   Many available DBDs come with this package, but you should only install
-   the DBDs you really need.
+    There are many database drivers (DBDs) available.  You only need to install
+    the DBDs for the database software that you will be using.
 
 == Gem setup:
 
