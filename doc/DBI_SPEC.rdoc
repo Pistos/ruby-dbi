@@ -2,7 +2,7 @@
 
 by Erik Hollensbe <erik@hollensbe.org>
 
-== FOREWORD
+== Foreword
 
 DBI is still in a large state of flux. Previous versions of this
 specification rarely reflected reality, and the 0.4.0 release is an
@@ -15,7 +15,7 @@ for DBI, please bring it to our attention (in IRC or on the mailing list)
 to get the spec revised. Doing this will save
 yourself (and the DBI authors) a lot of time.
 
-== DESIGN
+== Design
 
 With DBI, there are the concepts of driver, database, and statement. The core
 functionality for these concepts is provided by a database driver, or
@@ -91,7 +91,7 @@ compatibility purposes.
 
 Please see "DESIGN" above for the description of these modules.
 
-== EXCEPTIONS
+== Exceptions
 
 DBI has a slew of custom exceptions it uses to control program flow,
 and alert the user to specific classes of problems.
