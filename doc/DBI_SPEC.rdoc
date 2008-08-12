@@ -6,15 +6,14 @@ by Erik Hollensbe <erik@hollensbe.org>
 
 DBI is still in a large state of flux. Previous versions of this
 specification rarely reflected reality, and the 0.4.0 release is an
-attempt to get the code and documentation in touch with each other to
-better reflect said reality.
+attempt to get the code and documentation more in sync.
 
-While this is a goal, nobody's perfect and there is still a lot of
+While this is the goal, there is still a lot of
 code to check, sanitize, and otherwise clean up. If you find something
 missing in these specifications while working on a new DBD or a patch
-for DBI, please, do not do what everything else is doing; alert the
-appropriate person to get the spec revised. Doing this will save
-yourself (and the DBI authors) infinite amounts of time.
+for DBI, please bring it to our attention (in IRC or on the mailing list)
+to get the spec revised. Doing this will save
+yourself (and the DBI authors) a lot of time.
 
 == DESIGN
 
