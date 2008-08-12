@@ -33,8 +33,13 @@
 
     git clone git://hollensbe.org/git/ruby-dbi.git
     git checkout -b development origin/development
+    
+    Also available at
+    
+    git clone git://github.com/erikh/ruby-dbi.git
 
 = Synopsis
+
     require 'dbi'
     
     # Connect to a database, old style
