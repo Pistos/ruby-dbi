@@ -1,4 +1,25 @@
+#
+# See DBI::BaseDatabase.
+#
 class DBI::DBD::SQLite3::Database < DBI::BaseDatabase
+    #
+    # Constructor. Valid attributes:
+    #
+    # * AutoCommit: Commit after every statement execution.
+    #
+    # The following attributes go directly to the low-level SQLite3 driver. 
+    # Please consult it's documentation for more information.
+    #
+    # * auto_vacuum
+    # * cache_size
+    # * default_cache_size
+    # * default_synchronous
+    # * default_temp_store
+    # * full_column_names
+    # * synchronous
+    # * temp_store
+    # * type_translation
+    #
     def initialize(dbname, attr)
         @db = ::SQLite3::Database.new(dbname)
 
@@ -38,6 +59,16 @@ class DBI::DBD::SQLite3::Database < DBI::BaseDatabase
         end
     end
 
+    #
+    # See DBI::BaseDatabase#rollback.
+    #
+    # If all statements were not closed before the rollback occurs, a
+    # DBI::Warning may be raised if the database encounters an error because of
+    # it.
+    #
+    # This method will also raise DBI::ProgrammingError if not in a
+    # transaction.
+    #
     def rollback()
         if @db.transaction_active?
             begin 
@@ -62,6 +93,16 @@ class DBI::DBD::SQLite3::Database < DBI::BaseDatabase
         ret
     end
 
+    #
+    # See DBI::BaseDatabase#columns.
+    #
+    # Additional Attributes:
+    #
+    # * sql_type: XOPEN integer SQL Type.
+    # * nullable: true if NULL is allowed in this column.
+    # * default: the value that will be used in new rows if this column
+    #   receives no data.
+    #
     def columns(table)
         @db.type_translation = false
         ret =
@@ -95,6 +136,10 @@ class DBI::DBD::SQLite3::Database < DBI::BaseDatabase
         ::SQLite3::Database.quote(value.to_s)
     end
 
+    #
+    # This method is used to aid the constructor and probably should not be
+    # used independently.
+    #
     def __generate_attr__()
         tt = @db.type_translation
         @db.type_translation = false
@@ -108,6 +153,12 @@ class DBI::DBD::SQLite3::Database < DBI::BaseDatabase
         @db.type_translation = tt
     end
 
+    #
+    # See #new for valid attributes.
+    #
+    # If Autocommit is set to true, commit happens immediately if a transaction
+    # is open.
+    #
     def []=(attr, value)
         case attr
         when 'AutoCommit'

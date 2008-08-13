@@ -1,3 +1,6 @@
+#
+# See DBI::BaseStatement.
+#
 class DBI::DBD::SQLite3::Statement < DBI::BaseStatement
     def initialize(sql, db)
         sql.gsub!(/\\\\/) { '\\' } # sqlite underneath does this for us automatically, and it's causing trouble with the rest of the system.

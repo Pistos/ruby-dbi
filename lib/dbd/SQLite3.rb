@@ -1,4 +1,4 @@
-#
+#--
 # DBD::SQLite3
 # 
 # copyright (c) 2005 Jun Mukai <mukai@jmuk.org>
@@ -27,9 +27,7 @@
 # WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
 # OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 # ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-#
-# $Id$
-#
+#++
 
 begin
   require 'rubygems'
@@ -44,21 +42,43 @@ require 'sqlite3/version'
 
 module DBI
     module DBD
+        #
+        # DBD::SQLite3 - Database Driver for SQLite versions 3.x
+        #
+        # Requires DBI and the 'sqlite3-ruby' gem to work.
+        #
+        # Only things that extend DBI's results are documented.
+        #
         module SQLite3
             VERSION = ::SQLite3::Version::STRING
             USED_DBD_VERSION='0.2'
             DESCRIPTION = "SQLite 3.x DBD for DBI"
 
+            #
+            # returns 'SQLite3'
+            #
+            # See DBI::TypeUtil#convert for more information.
+            #
             def self.driver_name
                 "SQLite3"
             end
 
-            # FIXME plucked from SQLite driver, this needs to be in DBI proper 
+            #
+            # Validates that the SQL has no literal NUL characters. (ASCII 0)
+            #
+            # SQLite apparently really hates it when you do that.
+            #
+            # It will raise DBI::DatabaseError should it find any.
+            #
             def self.parse_type(type_name)
+                # FIXME plucked from SQLite driver, this needs to be in DBI proper 
                 return ['varchar'] unless type_name
                 type_name.match(/^([^\(]+)(\((\d+)(,(\d+))?\))?$/)
             end
 
+            #
+            # See DBI::BaseDriver.
+            #
             class Driver < DBI::BaseDriver
                 def initialize
                     @dbs = []
