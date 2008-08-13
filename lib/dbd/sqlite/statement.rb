@@ -1,3 +1,6 @@
+#
+# See DBI::BaseStatement.
+#
 class DBI::DBD::SQLite::Statement < DBI::BaseStatement
     DBI_TYPE_MAP = [
         [ /^INT(EGER)?$/i,          DBI::SQL_INTEGER ],
@@ -24,6 +27,11 @@ class DBI::DBD::SQLite::Statement < DBI::BaseStatement
         @dbh.open_handles += 1
     end
 
+    #
+    # See DBI::BaseStatement#bind_param. This method will also raise
+    # DBI::InterfaceError if +param+ is not a Fixnum, to prevent incorrect
+    # binding.
+    #
     def bind_param(param, value, attributes=nil)
         unless param.kind_of? Fixnum
             raise DBI::InterfaceError, "Only numeric parameters are supported"
@@ -34,6 +42,13 @@ class DBI::DBD::SQLite::Statement < DBI::BaseStatement
         # FIXME what to do with attributes? are they important in SQLite?
     end
 
+    #
+    # See DBI::BaseStatement#execute.
+    #
+    # In the event AutoCommit is off and no transaction is currently executing,
+    # one will be opened at this point. It is your responsibility to #finish,
+    # #cancel, #rollback, or #commit.
+    #
     def execute
         sql = @statement.bind(@params)
         # XXX sqlite re-escapes this for us automatically, it's causing trouble with everything else.

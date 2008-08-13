@@ -1,8 +1,16 @@
+#
+# See DBI::BaseDatabase.
+#
 class DBI::DBD::SQLite::Database < DBI::BaseDatabase
     attr_reader :db
     attr_reader :attr_hash
     attr_accessor :open_handles
 
+    #
+    # Constructor. Valid attributes:
+    #
+    # * AutoCommit: Commit after every statement execution.
+    #
     def initialize(dbname, user, auth, attr_hash)
         # FIXME why isn't this crap being done in DBI?
         unless dbname.kind_of? String
@@ -59,6 +67,11 @@ class DBI::DBD::SQLite::Database < DBI::BaseDatabase
         @db.commit if @db.transaction_active?
     end
 
+    #
+    # Rollback the transaction. SQLite has some issues with open statement
+    # handles when this happens. If there are still open handles, a
+    # DBI::Warning exception will be raised.
+    #
     def rollback
         if @open_handles > 0
             raise DBI::Warning, "Leaving unfinished select statement handles while rolling back a transaction can corrupt your database or crash your program"
@@ -71,6 +84,13 @@ class DBI::DBD::SQLite::Database < DBI::BaseDatabase
         return @attr_hash[key]
     end
 
+    #
+    # See DBI::BaseDatabase#[]=.
+    #
+    # If AutoCommit is set to +true+ using this method, was previously +false+,
+    # and we are currently in a transaction, The act of setting this will cause
+    # an immediate commit.
+    #
     def []=(key, value)
 
         old_value = @attr_hash[key]

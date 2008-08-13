@@ -1,3 +1,4 @@
+#--
 ###############################################################################
 #
 # DBD::SQLite - a DBD for SQLite for versions < 3
@@ -13,6 +14,7 @@
 # there are probably some edge cases with transactions
 #
 ################################################################################
+#++
 
 begin
     require 'rubygems'
@@ -26,25 +28,50 @@ require 'sqlite'
 
 module DBI
     module DBD
+        #
+        # DBD::SQLite - Database Driver for SQLite versions 2.x and lower.
+        #
+        # Requires DBI and the 'sqlite-ruby' gem to work.
+        #
+        # Only things that extend DBI's results are documented.
+        #
         class SQLite
             VERSION = "0.1"
             USED_DBD_VERSION = "0.1"
             DESCRIPTION = "SQLite 2.x DBI DBD"
 
+            #
+            # returns 'SQLite'
+            #
+            # See DBI::TypeUtil#convert for more information.
+            #
             def self.driver_name
                 "SQLite"
             end
 
-            # XXX I'm starting to think this is less of a problem with SQLite
-            # and more with the old C DBD
+            #
+            # Validates that the SQL has no literal NUL characters. (ASCII 0)
+            #
+            # SQLite apparently really hates it when you do that.
+            #
+            # It will raise DBI::DatabaseError should it find any.
+            #
             def self.check_sql(sql)
+                # XXX I'm starting to think this is less of a problem with SQLite
+                # and more with the old C DBD
                 raise DBI::DatabaseError, "Bad SQL: SQL cannot contain nulls" if sql =~ /\0/
             end
 
+            #
+            # Split a type definition into parts via String#match and return the whole result.
+            #
             def self.parse_type(type_name)
                 type_name.match(/^([^\(]+)(\((\d+)(,(\d+))?\))?$/)
             end
 
+            #
+            # See DBI::BaseDriver.
+            #
             class Driver < DBI::BaseDriver
                 def initialize
                     super USED_DBD_VERSION
