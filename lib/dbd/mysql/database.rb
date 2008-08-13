@@ -123,7 +123,7 @@ module DBI::DBD::Mysql
         #
         # Constructor. Attributes supported:
         #
-        # * AutoCommit:: Commit after each executed statement. This will raise
+        # * AutoCommit: Commit after each executed statement. This will raise
         #   a DBI::NotSupportedError if the backend does not support
         #   transactions.
         #

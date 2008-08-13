@@ -1,4 +1,7 @@
 module DBI::DBD::Mysql
+    #
+    # Models the DBI::BaseStatement API to create DBI::StatementHandle objects.
+    # 
     class Statement < DBI::BaseStatement
         include Util
 
@@ -11,11 +14,21 @@ module DBI::DBD::Mysql
             @prep_stmt = DBI::SQL::PreparedStatement.new(@parent, statement)
         end
 
+        #
+        # See DBI::BaseStatement#bind_param. This method will also raise
+        # DBI::InterfaceError if +param+ is not a Fixnum, to prevent incorrect
+        # binding.
+        #
         def bind_param(param, value, attribs)
             raise InterfaceError, "only ? parameters supported" unless param.is_a? Fixnum
             @params[param-1] = value 
         end
 
+        #
+        # See DBI::BaseStatement#execute. If DBI thinks this is a query via DBI::SQL.query?(), 
+        # it will force the row processed count to 0. Otherwise, it will return
+        # what MySQL thinks is the row processed count.
+        #
         def execute
             sql = @prep_stmt.bind(@params)
             @mutex.synchronize {
@@ -35,6 +48,9 @@ module DBI::DBD::Mysql
             error(err)
         end
 
+        #
+        # Helper method to aid #fetch. Do not call directly.
+        #
         def fill_array(rowdata)
             return nil if rowdata.nil?
             return rowdata.dup
@@ -47,6 +63,14 @@ module DBI::DBD::Mysql
             error(err)
         end
 
+        # 
+        # See DBI::BaseStatement#fetch_scroll. These additional constants are also supported:
+        #
+        # * DBI::SQL_FETCH_PRIOR: Fetch the row previous to the current one.
+        # * DBI::SQL_FETCH_FIRST: Fetch the first row.
+        # * DBI::SQL_FETCH_ABSOLUTE: Fetch the row at the offset provided.
+        # * DBI::SQL_FETCH_RELATIVE: Fetch the row at the current point + offset.
+        #
         def fetch_scroll(direction, offset)
             case direction
             when DBI::SQL_FETCH_NEXT
@@ -77,6 +101,20 @@ module DBI::DBD::Mysql
             #end
         end
 
+        #
+        # See DBI::BaseStatement#column_info, and DBI::DBD::Mysql::Database#columns.
+        #
+        # This method provides all the attributes the +columns+ method
+        # provides, and a few others:
+        #
+        # * mysql_type: These correspond to constants in the Mysql::Types
+        #   package, in the lower-level 'mysql' package.
+        # * mysql_type_name: A text representation of +mysql_type+. 
+        # * mysql_length: The length of the column.
+        # * mysql_max_length: The max length of the column. FIXME DESCRIBE
+        #   DIFFERENCE
+        # * mysql_flags: Internal MySQL flags on this column.
+        #
         def column_info
             retval = []
 
@@ -131,20 +169,18 @@ module DBI::DBD::Mysql
             @rows
         end
 
-=begin
-                def []=(attr, value)
-                    case attr
-                    when 'mysql_use_result'
-                        @attr['mysql_store_result'] = ! value
-                        @attr['mysql_use_result']   = value
-                    when 'mysql_store_result'
-                        @attr['mysql_use_result']   = ! value
-                        @attr['mysql_store_result'] = value
-                    else
-                        raise NotSupportedError
-                    end
-                end
-=end
+#                 def []=(attr, value)
+#                     case attr
+#                     when 'mysql_use_result'
+#                         @attr['mysql_store_result'] = ! value
+#                         @attr['mysql_use_result']   = value
+#                     when 'mysql_store_result'
+#                         @attr['mysql_use_result']   = ! value
+#                         @attr['mysql_store_result'] = value
+#                     else
+#                         raise NotSupportedError
+#                     end
+#                 end
 
     end # class Statement
 end
