@@ -1,6 +1,4 @@
-#
-# DBD::Mysql
-#
+#--
 # Copyright (c) 2001, 2002 Michael Neumann <neumann@s-direktnet.de>
 # 
 # All rights reserved.
@@ -28,7 +26,7 @@
 # ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 # $Id$
-#
+#++
 
 begin
     require 'rubygems'
@@ -43,6 +41,13 @@ require "thread"   # for Mutex
 
 module DBI
     module DBD
+        #
+        # DBD::Mysql - Database Driver for the MySQL database system.
+        #
+        # Requires DBI and the 'mysql' gem or package to work.
+        #
+        # Only things that extend DBI's results are documented.
+        #
         module Mysql
             VERSION          = "0.3.3"
             USED_DBD_VERSION = "0.2"
@@ -50,6 +55,11 @@ module DBI
 
             MyError = ::MysqlError
 
+            #
+            # returns 'Mysql'
+            # 
+            # See DBI::TypeUtil#convert for more information.
+            #
             def self.driver_name
                 "Mysql"
             end
@@ -80,13 +90,16 @@ module DBI
     end
 end
 
+#
+# Utility Methods for the MySQL DBD.
+#
+
 module DBI::DBD::Mysql::Util
     private
 
     # Raise exception using information from MysqlError object e.
     # For state value, use SQLSTATE value if mysql-ruby defines
     # sqlstate method, otherwise nil.
-
     def error(e)
         sqlstate = e.respond_to?("sqlstate") ? e.sqlstate : nil
         raise DBI::DatabaseError.new(e.message, e.errno, sqlstate)

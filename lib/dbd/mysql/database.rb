@@ -1,13 +1,23 @@
 module DBI::DBD::Mysql
+    #
+    # Models the DBI::BaseDatabase API to create DBI::DatabaseHandle objects.
+    # 
     class Database < DBI::BaseDatabase
         include Util
 
+        #
+        # Hash to translate MySQL type names to DBI SQL type constants
+        #
+        # Only used in #mysql_type_info.
+        #
+        #--
         # Eli Green:
         #   The hope is that we don't ever need to just assume the default values.
         #   However, in some cases (notably floats and doubles), I have seen
         #   "show fields from table" return absolutely zero information about size
         #   and precision. Sigh. I probably should have made a struct to store
         #   this info in ... but I didn't.
+        #++
         MYSQL_to_XOPEN = {
                     "TINYINT"    => [DBI::SQL_TINYINT, 1, nil],
                     "SMALLINT"   => [DBI::SQL_SMALLINT, 6, nil],
@@ -41,11 +51,12 @@ module DBI::DBD::Mysql
                     nil          => [DBI::SQL_OTHER, nil, nil]
         }
 
-        # Map MySQL numeric type codes to:
-        # - (uppercase) MySQL type names
-        # - coercion method
 
+        # 
+        # This maps type names to DBI Types.
+        #
         TYPE_MAP = {}
+
         ::Mysql::Field.constants.grep(/^TYPE_/).each do |const|
             mysql_type = MysqlField.const_get(const)  # numeric type code
             coercion_method = DBI::Type::Varchar                 # default coercion method
@@ -109,6 +120,13 @@ module DBI::DBD::Mysql
         TYPE_MAP[nil] = ['UNKNOWN', DBI::Type::Varchar]
         TYPE_MAP[246] = ['NUMERIC', DBI::Type::Decimal]
 
+        #
+        # Constructor. Attributes supported:
+        #
+        # * AutoCommit:: Commit after each executed statement. This will raise
+        #   a DBI::NotSupportedError if the backend does not support
+        #   transactions.
+        #
         def initialize(handle, attr)
             super
             # check server version to determine transaction capability
@@ -146,7 +164,18 @@ module DBI::DBD::Mysql
             error(err)
         end
 
-        # Eli Green (fixed up by Michael Neumann)
+        #
+        # See DBI::BaseDatabase#columns.
+        #
+        # Extra attributes:
+        #
+        # * sql_type: XOPEN integer constant relating to type.
+        # * nullable: true if the column allows NULL as a value.
+        # * indexed: true if the column belongs to an index.
+        # * primary: true if the column is a part of a primary key.
+        # * unique: true if the values in this column are unique.
+        # * default: the default value if this column is not explicitly set. 
+        #
         def columns(table)
             dbh = DBI::DatabaseHandle.new(self)
             uniques = []
@@ -199,22 +228,31 @@ module DBI::DBD::Mysql
             Statement.new(self, @handle, statement, @mutex)
         end
 
+        #
+        # MySQL has several backends, some of which may not support commits.
+        # If the backend this database uses doesn't, calling this method will
+        # raise a DBI::NotSupportedError.
+        #
         def commit
             if @have_transactions
                 self.do("COMMIT")
-                else
-                    raise NotSupportedError
-                end
+            else
+                raise NotSupportedError
+            end
         rescue MyError => err
             error(err)
         end
 
+        #
+        # See #commit for information regarding transactionless database
+        # backends.
+        #
         def rollback
             if @have_transactions
                 self.do("ROLLBACK")
-                else
-                    raise NotSupportedError
-                end
+            else
+                raise NotSupportedError
+            end
         rescue MyError => err
             error(err)
         end
@@ -235,6 +273,9 @@ module DBI::DBD::Mysql
 #                     end
 #                 end
 
+        #
+        # See DBI::DBD::MySQL::Database.new for supported attributes and usage.
+        #
         def []=(attr, value)
             case attr
             when 'AutoCommit'
@@ -252,12 +293,19 @@ module DBI::DBD::Mysql
 
         private # -------------------------------------------------
 
-        # Eli Green
-        # Parse column type string (from SHOW FIELDS) to extract type info:
-        # - sqltype: XOPEN type number
-        # - type: MySQL type name
-        # - size: column length (or precision)
-        # - decimal: number of decimals (scale)
+        #
+        # Given a type name, weans some basic information from that and returns
+        # it in a format similar to columns.
+        #
+        # Return is an array of +sqltype+, +type+, +size+, and +decimal+.
+        # +sqltype+ is the XOPEN type, and +type+ is the string with the
+        # parameters removed.
+        #
+        # +size+ and +decimal+ refer to +precision+ and +scale+ in most cases,
+        # but not always for all types. Please consult the documentation for
+        # your MySQL version.
+        #
+        #
         def mysql_type_info(typedef)
             sqltype, type, size, decimal = nil, nil, nil, nil
 
@@ -282,7 +330,9 @@ module DBI::DBD::Mysql
             return sqltype, type, size, decimal
         end
 
+        #--
         # Driver-specific functions ------------------------------------------------
+        #++
 
         public
 
