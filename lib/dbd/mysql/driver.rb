@@ -1,4 +1,7 @@
 module DBI::DBD::Mysql
+    #
+    # Models the DBI::BaseDriver API to create DBI::DriverHandle objects.
+    #
     class Driver < DBI::BaseDriver
         include Util
 
@@ -10,6 +13,20 @@ module DBI::DBD::Mysql
             ['', nil]
         end
 
+        #
+        # Parameters in the dbname as follows:
+        #
+        # * host:: host to connect to
+        # * port:: port to connect to
+        # * socket:: connect to a specific unix socket instead of a TCP socket.
+        # * flag:: an OR'd collection of flags to pass to the lower-level
+        #   connection attempt.
+        # * mysql_read_default_file:: FIXME
+        # * mysql_read_default_group:: FIXME
+        # * mysql_compression:: FIXME
+        # * mysql_local_infile:: FIXME
+        # * mysql_client_found_rows:: FIXME boolean, modifies the 'flag'
+        #   setting above.
         def connect(dbname, user, auth, attr)
             # connect to database server
             hash = DBI::Utils.parse_params(dbname)
@@ -62,7 +79,9 @@ module DBI::DBD::Mysql
             error(err)
         end
 
+        #--
         # Driver-specific functions ------------------------------------------------
+        #++
 
         public
 
