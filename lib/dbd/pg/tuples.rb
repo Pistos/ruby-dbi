@@ -47,7 +47,8 @@ class DBI::DBD::Pg::Tuples
     def fetchrow
         @index += 1
         if @index < @pg_result.num_tuples && @index >= 0
-            fill_array(@pg_result[@index])
+            @row = Array.new
+            @row.replace(@pg_result.fields.collect { |x| @pg_result[@index][x] })
             @row
         else
             nil
@@ -89,13 +90,5 @@ class DBI::DBD::Pg::Tuples
 
     def finish
         @pg_result.clear
-    end
-
-    private # ----------------------------------------------------
-
-    def fill_array(rowdata)
-        rowdata.each do |key, value|
-            @row[@pg_result.fnumber(key)] = value
-        end
     end
 end # Tuples
