@@ -734,7 +734,7 @@ module DBI
         def fetchrow
           @index += 1
           if @index < @pg_result.num_tuples && @index >= 0
-            fill_array(@pg_result[@index])
+            fill_array(@pg_result.fields.collect { |x| [ x, @pg_result[@index][x] ] })
             @row
           else
             nil
@@ -781,8 +781,10 @@ module DBI
         private # ----------------------------------------------------
 
         def fill_array(rowdata)
-            rowdata.each do |key, value|
-                @row[@pg_result.fnumber(key)] = @db.convert(value,@pg_result.ftype(@pg_result.fnumber(key)))
+            @row = Array.new
+            rowdata.each do |col|
+                key, value = col
+                @row.push(@db.convert(value,@pg_result.ftype(@pg_result.fnumber(key))))
             end
         end
 

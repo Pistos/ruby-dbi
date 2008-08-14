@@ -11,6 +11,15 @@
         end
     end
 
+    def test_duplicate_columns
+        assert_nothing_raised do
+            @sth = @dbh.prepare("select name, name from names where name = ?")
+            @sth.execute("Bob")
+            assert_equal [["Bob", "Bob"]], @sth.fetch_all
+            @sth.finish
+        end
+    end
+
     def test_rows
         sth = nil
 
