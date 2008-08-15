@@ -1,3 +1,6 @@
+#
+# See DBI::BaseDriver
+#
 class DBI::DBD::ODBC::Driver < DBI::BaseDriver
     def initialize
         super(DBI::DBD::ODBC::USED_DBD_VERSION)

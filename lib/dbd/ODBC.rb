@@ -1,4 +1,4 @@
-#
+#--
 # DBD::ODBC
 #
 # Copyright (c) 2001-2004 Michael Neumann <mneumann@ntecs.de>
@@ -28,7 +28,7 @@
 # ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 # $Id$
-#
+#++
 
 $:.delete(".") # FIXME oh for the love of pete..
 require "odbc"
@@ -44,6 +44,14 @@ require 'dbi'
 
 module DBI
     module DBD
+        #
+        # DBD::ODBC - ODBC Database Driver
+        #
+        # Requires DBI and the 'ruby-odbc' package to work, and unixodbc (iodbc
+        # WILL NOT WORK).
+        #
+        # Only things that extend DBI's results are documented.
+        #
         module ODBC
 
             VERSION          = "0.2.2"

@@ -1,3 +1,6 @@
+#
+# See DBI::BaseDatabase.
+#
 class DBI::DBD::ODBC::Database < DBI::BaseDatabase
     def disconnect
         @handle.rollback
@@ -10,6 +13,11 @@ class DBI::DBD::ODBC::Database < DBI::BaseDatabase
         @handle.connected?
     end
 
+    #
+    # See DBI::BaseDatabase#columns. Additional Attributes:
+    #
+    # * nullable: boolean, true if NULLs are allowed in this column.
+    #
     def columns(table)
         cols = []
 
@@ -74,6 +82,12 @@ class DBI::DBD::ODBC::Database < DBI::BaseDatabase
         raise DBI::DatabaseError.new(err.message)
     end
 
+    #
+    # Additional Attributes on the DatabaseHandle:
+    #
+    # * AutoCommit: force a commit after each statement execution.
+    # * odbc_ignorecase: Be case-insensitive in operations. 
+    #
     def []=(attr, value)
         case attr
         when 'AutoCommit'
