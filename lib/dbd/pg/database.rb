@@ -1,8 +1,9 @@
+#
+# See DBI::BaseDatabase.
+#
 class DBI::DBD::Pg::Database < DBI::BaseDatabase
 
-    # type map ---------------------------------------------------
-
-    # by Eli Green
+    # type map 
     POSTGRESQL_to_XOPEN = {
           "boolean"                   => [DBI::SQL_CHAR, 1, nil],
           "character"                 => [DBI::SQL_CHAR, 1, nil],
@@ -24,6 +25,16 @@ class DBI::DBD::Pg::Database < DBI::BaseDatabase
 
     attr_reader :type_map
 
+    #
+    # See DBI::BaseDatabase#new. These attributes are also supported:
+    #
+    # * pg_async: boolean or strings 'true' or 'false'. Indicates if we're to
+    #   use PostgreSQL's asyncrohonous support. 'NonBlocking' is a synonym for
+    #   this.
+    # * AutoCommit: 'unchained' mode in PostgreSQL. Commits after each
+    #   statement execution. 
+    # * pg_client_encoding: set the encoding for the client.
+    #
     def initialize(dbname, user, auth, attr)
         hash = DBI::Utils.parse_params(dbname)
 
@@ -67,8 +78,6 @@ class DBI::DBD::Pg::Database < DBI::BaseDatabase
         raise DBI::OperationalError.new(err.message)
     end
 
-    # DBD Protocol -----------------------------------------------
-
     def disconnect
         if not @attr['AutoCommit'] and @in_transaction
             _exec("ROLLBACK")   # rollback outstanding transactions
@@ -96,8 +105,18 @@ class DBI::DBD::Pg::Database < DBI::BaseDatabase
         res
     end
 
-    ##
-    # by Eli Green (cleaned up by Michael Neumann)
+    #
+    # See DBI::BaseDatabase.
+    #
+    # These additional attributes are also supported:
+    #
+    # * nullable: true if NULL values are allowed in this column.
+    # * indexed: true if this column is a part of an index.
+    # * primary: true if this column is a part of a primary key.
+    # * unique: true if this column is a part of a unique key.
+    # * default: what will be insert if this column is left out of an insert query.
+    # * array_of_type: true if this is actually an array of this type.
+    #   +dbi_type+ will be the type authority if this is the case.
     #
     def columns(table)
         sql1 = %[
@@ -262,12 +281,16 @@ class DBI::DBD::Pg::Database < DBI::BaseDatabase
         end
     end
 
-    # Other Public Methods ---------------------------------------
-
+    #
+    # Are we in an transaction?
+    #
     def in_transaction?
         @in_transaction
     end
 
+    #
+    # Forcibly initializes a new transaction.
+    #
     def start_transaction
         _exec("BEGIN")
         @in_transaction = true
@@ -285,10 +308,11 @@ class DBI::DBD::Pg::Database < DBI::BaseDatabase
         @pgexec.prepare(stmt_name, sql)
     end
 
-    private # ----------------------------------------------------
+    private 
 
     # special quoting if value is element of an array 
     def quote_array_elements( value )
+        # XXX is this method still being used?
         case value
         when Array
                         '{'+ value.collect{|v| quote_array_elements(v) }.join(',') + '}'
@@ -365,9 +389,6 @@ class DBI::DBD::Pg::Database < DBI::BaseDatabase
         end
     end
 
-
-    # Driver-specific functions ------------------------------------------------
-
     public
 
     # return the postgresql types for this session. returns an oid -> type name mapping.
@@ -375,6 +396,8 @@ class DBI::DBD::Pg::Database < DBI::BaseDatabase
         load_type_map if (!@type_map or force)
         @type_map
     end
+
+    # deprecated.
     def __types_old
         h = { } 
 
@@ -385,6 +408,9 @@ class DBI::DBD::Pg::Database < DBI::BaseDatabase
         return h
     end
 
+    #
+    # Import a BLOB from a file.
+    # 
     def __blob_import(file)
         start_transaction unless @in_transaction
         @connection.lo_import(file)
@@ -392,6 +418,9 @@ class DBI::DBD::Pg::Database < DBI::BaseDatabase
         raise DBI::DatabaseError.new(err.message) 
     end
 
+    #
+    # Export a BLOB to a file.
+    #
     def __blob_export(oid, file)
         start_transaction unless @in_transaction
         @connection.lo_export(oid.to_i, file)
@@ -399,6 +428,9 @@ class DBI::DBD::Pg::Database < DBI::BaseDatabase
         raise DBI::DatabaseError.new(err.message) 
     end
 
+    #
+    # Create a BLOB.
+    #
     def __blob_create(mode=PGconn::INV_READ)
         start_transaction unless @in_transaction
         @connection.lo_creat(mode)
@@ -406,6 +438,9 @@ class DBI::DBD::Pg::Database < DBI::BaseDatabase
         raise DBI::DatabaseError.new(err.message) 
     end
 
+    #
+    # Open a BLOB.
+    #
     def __blob_open(oid, mode=PGconn::INV_READ)
         start_transaction unless @in_transaction
         @connection.lo_open(oid.to_i, mode)
@@ -413,6 +448,9 @@ class DBI::DBD::Pg::Database < DBI::BaseDatabase
         raise DBI::DatabaseError.new(err.message) 
     end
 
+    #
+    # Remove a BLOB.
+    #
     def __blob_unlink(oid)
         start_transaction unless @in_transaction
         @connection.lo_unlink(oid.to_i)
@@ -420,6 +458,9 @@ class DBI::DBD::Pg::Database < DBI::BaseDatabase
         raise DBI::DatabaseError.new(err.message) 
     end
 
+    #
+    # Read a BLOB and return the data.
+    #
     def __blob_read(oid, length)
         blob = @connection.lo_open(oid.to_i, PGconn::INV_READ)
 
@@ -436,6 +477,9 @@ class DBI::DBD::Pg::Database < DBI::BaseDatabase
         raise DBI::DatabaseError.new(err.message) 
     end
 
+    #
+    # Write the value to the BLOB.
+    #
     def __blob_write(oid, value)
         start_transaction unless @in_transaction
         blob = @connection.lo_open(oid.to_i, PGconn::INV_WRITE)
@@ -449,6 +493,9 @@ class DBI::DBD::Pg::Database < DBI::BaseDatabase
         raise DBI::DatabaseError.new(err.message)
     end
 
+    #
+    # FIXME DOCUMENT
+    #
     def __set_notice_processor(proc)
         @connection.set_notice_processor proc
     rescue PGError => err

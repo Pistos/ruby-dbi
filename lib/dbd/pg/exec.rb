@@ -23,7 +23,7 @@ module DBI::DBD::Pg
     # Asynchronous implementation of PgExecutor, useful for 'green
     # thread' implementations (e.g., MRI <= 1.8.x) which would otherwise
     # suspend other threads while awaiting query results.
-    #
+    #--
     # FIXME:  PQsetnonblocking + select/poll would make the exec*
     #         methods truly 'async', though this is rarely needed in
     #         practice.

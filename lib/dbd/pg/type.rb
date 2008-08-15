@@ -1,9 +1,26 @@
+#
+# Type Management for PostgreSQL-specific types.
+#
+# See DBI::Type and DBI::TypeUtil for more information.
+#
 module DBI::DBD::Pg::Type
+    #
+    # ByteA is a special escaped form of binary data, suitable for inclusion in queries.
+    #
+    # This class is an attempt to abstract that type so you do not have to
+    # concern yourself with the conversion issues.
+    #
     class ByteA
 
         attr_reader :original
         attr_reader :escaped
 
+        #
+        # Build a new ByteA object.
+        #
+        # The data supplied is the unescaped binary data you wish to put in the
+        # database.
+        #
         def initialize(obj)
             @original = obj
             @escaped = escape_bytea(obj)
@@ -11,18 +28,30 @@ module DBI::DBD::Pg::Type
             @escaped.freeze
         end
 
+        #
+        # Escapes the supplied data. Has no effect on the object.
+        #
         def escape_bytea(str)
             PGconn.escape_bytea(str)
         end
 
+        #
+        # Returns the original data.
+        #
         def to_s
             return @original.dup
         end
 
+        #
+        # Class method to escape the data into ByteA format.
+        #
         def self.escape_bytea(str)
             self.new(str).escaped
         end
 
+        #
+        # Class method to unescape the ByteA data and present it as a string.
+        #
         def self.parse(obj)
 
             return nil if obj.nil?
@@ -51,14 +80,34 @@ module DBI::DBD::Pg::Type
         end
     end
 
+    #
+    # PostgreSQL arrays are simply a specification that sits on top of normal
+    # types. They have a specialized string grammar and this class facilitates
+    # converting that syntax and the types within those arrays.
+    #
     class Array
 
         attr_reader :base_type
 
+        #
+        # +base_type+ is a DBI::Type that is used to parse the inner types when
+        # a non-array one is found.
+        #
+        # For instance, if you had an array of integer, one would pass
+        # DBI::Type::Integer here.
+        #
         def initialize(base_type)
             @base_type = base_type
         end
 
+        #
+        # Object method. Please note that this is different than most DBI::Type
+        # classes! One must initialize an Array object with an appropriate
+        # DBI::Type used to convert the indices of the array before this method
+        # can be called.
+        #
+        # Returns an appropriately converted array.
+        #
         def parse(obj)
             if obj.nil?
                 nil
@@ -69,7 +118,10 @@ module DBI::DBD::Pg::Type
             end
         end
 
-        # parse a PostgreSQL-Array output and convert into ruby array
+        #
+        # Parse a PostgreSQL-Array output and convert into ruby array. This
+        # does the real parsing work.
+        #
         def convert_array(str)
 
             array_nesting = 0         # nesting level of the array

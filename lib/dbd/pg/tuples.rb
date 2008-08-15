@@ -1,3 +1,11 @@
+#
+# Tuples is a class to represent result sets.
+#
+# Many of these methods are extremely similar to the methods that deal with
+# result sets in DBI::BaseStatement and are wrapped by the StatementHandle.
+# Unless you plan on working on this driver, these methods should never be
+# called directly.
+#
 class DBI::DBD::Pg::Tuples
 
     def initialize(db,pg_result)
@@ -7,6 +15,11 @@ class DBI::DBD::Pg::Tuples
         @row = []
     end
 
+    # See DBI::BaseStatement#column_info. Additional attributes:
+    #
+    # * array_of_type: True if this is actually an array of this type. In this
+    #   case, +dbi_type+ will be the type authority for conversion.
+    #
     def column_info
         a = []
         @pg_result.fields.each_with_index do |str, i| 
@@ -55,6 +68,9 @@ class DBI::DBD::Pg::Tuples
         end
     end
 
+    #
+    # Just don't use this method. It'll be fixed soon.
+    #
     def fetch_scroll(direction, offset)
         # Exact semantics aren't too closely defined.  I attempted to follow the DBI:Mysql example.
         case direction
@@ -80,10 +96,16 @@ class DBI::DBD::Pg::Tuples
         self.fetchrow
     end
 
+    #
+    # The number of rows returned.
+    #
     def row_count
         @pg_result.num_tuples
     end
 
+    #
+    # The row processed count. This is analogue to DBI::StatementHandle#rows.
+    #
     def rows_affected
         @pg_result.cmdtuples
     end

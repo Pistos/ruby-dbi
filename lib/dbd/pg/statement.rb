@@ -1,3 +1,7 @@
+#
+# See DBI::BaseStatement, and DBI::DBD::Pg::Tuples.
+#
+#--
 # Peculiar Statement responsibilities:
 #  - Translate dbi params (?, ?, ...) to Pg params ($1, $2, ...)
 #  - Translate DBI::Binary objects to Pg large objects (lo_*)
@@ -22,6 +26,12 @@ class DBI::DBD::Pg::Statement < DBI::BaseStatement
         @bindvars[index-1] = value
     end
 
+    #
+    # See DBI::BaseDatabase#execute.
+    #
+    # This method will make use of PostgreSQL's native BLOB support if
+    # DBI::Binary objects are passed in.
+    #
     def execute
         # replace DBI::Binary object by oid returned by lo_import 
         @bindvars.collect! do |var|
@@ -59,12 +69,13 @@ class DBI::DBD::Pg::Statement < DBI::BaseStatement
         @db = nil
     end
 
-    # returns result-set column informations
+    #
+    # See DBI::DBD::Pg::Tuples#column_info.
+    #
     def column_info
         @result.column_info
     end
 
-    # Return the row processed count (or nil if RPC not available)
     def rows
         if @result
             @result.rows_affected
@@ -73,6 +84,12 @@ class DBI::DBD::Pg::Statement < DBI::BaseStatement
         end
     end
 
+    #
+    # Attributes:
+    # 
+    # If +pg_row_count+ is requested and the statement has already executed,
+    # postgres will return what it believes is the row count.
+    #
     def [](attr)
         case attr
         when 'pg_row_count'
@@ -86,12 +103,10 @@ class DBI::DBD::Pg::Statement < DBI::BaseStatement
         end
     end
 
-    private # ----------------------------------------------------
+    private 
 
-    # FIXME
     #
-    # Rewrite this
-    #
+    # A native binding helper.
     #
     class DummyQuoter
         # dummy to substitute ?-style parameter markers by :1 :2 etc.
@@ -102,6 +117,7 @@ class DBI::DBD::Pg::Statement < DBI::BaseStatement
 
     # Prepare the given SQL statement, returning its PostgreSQL string
     # handle.  ?-style parameters are translated to $1, $2, etc.
+    #--
     # TESTME  do ?::TYPE qualifers work?
     # FIXME:  DBI ought to supply a generic param converter, e.g.:
     #         sql = DBI::Utils::convert_placeholders(sql) do |i|

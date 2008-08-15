@@ -1,4 +1,4 @@
-#
+#--
 # DBD::Pg
 #
 # Copyright (c) 2001, 2002, 2003 Jim Weirich, Michael Neumann <mneumann@ntecs.de>
@@ -27,9 +27,7 @@
 # WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
 # OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 # ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-#
-# $Id$
-#
+#++
 
 begin
     require 'rubygems'
@@ -41,20 +39,34 @@ end
 require 'dbi'
 require 'pg'
 
-# XXX lots of this driver is in require statements below this module definition
 module DBI
     module DBD
+        #
+        # DBD::Pg - Database Driver for the PostgreSQL database system.
+        #
+        # Requires DBI and the 'pg' gem or package to work.
+        #
+        # Only things that extend DBI's results are documented.
+        #
         module Pg
             VERSION          = "0.3.3"
             USED_DBD_VERSION = "0.2"
             DESCRIPTION      = "PostgreSQL DBI DBD"
 
+            #
+            # returns 'Pg'
+            # 
+            # See DBI::TypeUtil#convert for more information.
+            #
             def self.driver_name
                 "Pg"
             end
 
+            #
+            # This method takes a ruby Array and converts it to PostgreSQL array syntax.
+            #
             def self.generate_array(obj)
-                # yarr, there be recursion here, and it's probably not a good idea.
+                # XXX yarr, there be recursion here, and it's probably not a good idea.
                 output = "{"
                 obj.each do |item|
                     case item
@@ -78,10 +90,22 @@ module DBI
                 output.sub(/,$/, '}')
             end
 
+            #
+            # A quote helper, this uses the new syntax in PostgreSQL 8.2 and up.
+            #
             def self.quote(value)
                 "E'#{ value.gsub(/\\/){ '\\\\' }.gsub(/'/){ '\\\'' } }'"
             end
 
+            #
+            # Parse a postgresql type. Returns a hash with these fields (as Symbol)
+            #
+            # * ftype: the full type, as passed in to this method.
+            # * type: the type stripped of all attribute information.
+            # * size: the LHS of the attribute information, typically the precision.
+            # * decimal: the RHS of the attribute information, typically the scale.
+            # * array: true if this type is actually an array of that type.
+            #
             def self.parse_type(ftype)
                 type = ftype
                 pos = ftype.index('(')
@@ -108,7 +132,7 @@ module DBI
                 end
 
                 return {
-                    :ftype   => ftype,
+                    :ftype   => ftype.dup,
                     :type    => type,
                     :size    => size,
                     :decimal => decimal,
@@ -116,6 +140,9 @@ module DBI
                 }
             end
 
+            #
+            # See DBI::BaseDriver.
+            #
             class Driver < DBI::BaseDriver
                 def initialize
                     super(USED_DBD_VERSION)
