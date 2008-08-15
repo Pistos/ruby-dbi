@@ -12,6 +12,11 @@ class DBI::DBD::SQLite3::Statement < DBI::BaseStatement
         raise DBI::ProgrammingError.new(err.message)
     end
 
+    #
+    # See DBI::BaseStatement#bind_param. This method will also raise
+    # DBI::InterfaceError if +param+ is not a Fixnum, to prevent incorrect
+    # binding.
+    #
     def bind_param(param, value, attribs=nil)
         raise DBI::InterfaceError, "Bound parameter must be an integer" unless param.kind_of? Fixnum 
         @stmt.bind_param(param, value)
