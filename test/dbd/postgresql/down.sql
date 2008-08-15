@@ -17,3 +17,5 @@ drop table field_types_test;
 drop schema schema1 cascade;
 ---
 drop schema schema2 cascade;
+---
+drop language plpgsql CASCADE;

@@ -728,13 +728,18 @@ module DBI
         end
 
         def column_info
-          @pg_result.fields.collect do |str| {'name'=>str} end
+            cols = Array.new
+            0.upto(@pg_result.num_fields-1) do |x|
+                cols.push({ "name" => @pg_result.fname(x) })
+            end
+
+            return cols
         end
 
         def fetchrow
           @index += 1
           if @index < @pg_result.num_tuples && @index >= 0
-            fill_array(@pg_result.fields.collect { |x| [ x, @pg_result[@index][x] ] })
+            fill_array(@index)
             @row
           else
             nil
@@ -780,11 +785,10 @@ module DBI
 
         private # ----------------------------------------------------
 
-        def fill_array(rowdata)
+        def fill_array(rownum)
             @row = Array.new
-            rowdata.each do |col|
-                key, value = col
-                @row.push(@db.convert(value,@pg_result.ftype(@pg_result.fnumber(key))))
+            0.upto(@pg_result.num_fields-1) do |x|
+                @row.push(@db.convert(@pg_result.getvalue(rownum, x), @pg_result.ftype(x)))
             end
         end
 
