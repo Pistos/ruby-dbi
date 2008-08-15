@@ -41,7 +41,7 @@ require "thread"
 require 'monitor'
 
 module DBI
-   VERSION = "0.2.1"
+   VERSION = "0.2.2"
    
    module DBD
       DIR         = "DBD"
