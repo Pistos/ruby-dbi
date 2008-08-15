@@ -42,15 +42,13 @@ create table schema1.tbl (foo integer);
 ---
 create table schema2.tbl (bar integer);
 ---
-create language plpgsql;
----
-create or replace function select_subproperty(value names.age%TYPE,
-subproperty names.age%TYPE) RETURNS names.age%TYPE AS $$
-    BEGIN
-        IF subproperty IS NULL THEN
-            RETURN NULL;
-        ELSE
-            RETURN value;
-        END IF;
-    END;
-$$ LANGUAGE 'plpgsql';
+create or replace function 
+    select_subproperty(value names.age%TYPE, sub names.age%TYPE, out retval names.age%TYPE) 
+    as $$ 
+        select 
+            case 
+            when $2 is not null 
+                then $1 
+            else null 
+        end 
+    $$ language sql;
