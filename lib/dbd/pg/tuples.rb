@@ -22,7 +22,9 @@ class DBI::DBD::Pg::Tuples
     #
     def column_info
         a = []
-        @pg_result.fields.each_with_index do |str, i| 
+        0.upto(@pg_result.num_fields-1) do |i|
+            str = @pg_result.fname(i)
+
             typeinfo = nil
 
             begin
@@ -61,7 +63,9 @@ class DBI::DBD::Pg::Tuples
         @index += 1
         if @index < @pg_result.num_tuples && @index >= 0
             @row = Array.new
-            @row.replace(@pg_result.fields.collect { |x| @pg_result[@index][x] })
+            0.upto(@pg_result.num_fields-1) do |x|
+                @row.push(@pg_result.getvalue(@index, x))
+            end
             @row
         else
             nil

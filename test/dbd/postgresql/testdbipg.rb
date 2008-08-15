@@ -18,6 +18,13 @@ class TestDbdPostgres < DBDConfig.testbase(:postgresql)
 #      dbd.disconnect if dbd
 #   end
 
+    def test_function_multiple_return_values
+        @sth = @dbh.prepare("SELECT age, select_subproperty(age, NULL), select_subproperty(age, 1) FROM names WHERE age = 19")
+        @sth.execute
+        assert_equal([[19, nil, 19]], @sth.fetch_all)
+        @sth.finish
+    end
+
     def test_tables
         assert_equal(
         [
