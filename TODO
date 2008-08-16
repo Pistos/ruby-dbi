@@ -7,6 +7,7 @@
   * Arrays:
       * Find some way to get the extents of an array type
        * checked pg_type, pg_attribute and pg_class, can't find anything.
+       * I don't think this is possible, but let's slate it for 0.6.0 anyways.
       x Get rid of that array parser
        x But test it first
  * Mysql
@@ -29,6 +30,7 @@ x Remove all other drivers
   x see "Mysql" above
   * Should we enforce ColumnInfo requirements at the DBI level?
    * At least test the result of statement colinfo uniformly
+   * 0.6.0
  x Gut old typing system
   x Notify user that Date/Time/Timestamp are deprecated
 * Cleanup core
