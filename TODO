@@ -2,7 +2,7 @@
     * Work
      * Postgres quoting toggles
      * Postgres binding toggles
-     * Test for #20489
+     x Test for #20489
     * Release checklist:
      * Update ChangeLog
      * rake
