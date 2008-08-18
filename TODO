@@ -1,6 +1,7 @@
 0.4.0:
     * Work
-     * Postgres quoting
+     * Postgres quoting toggles
+     * Postgres binding toggles
      * Test for #20489
     * Release checklist:
      * Update ChangeLog
