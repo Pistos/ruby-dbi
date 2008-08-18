@@ -27,6 +27,13 @@ class TC_DBI_Row < Test::Unit::TestCase
       @row  = nil
    end
 
+   def test_row_multiassign # this should only be an issue in 1.8.7 and up, if at all.
+       first, last, age = @row
+       assert_equal("Daniel", first)
+       assert_equal("Berger", last)
+       assert_equal(36, age)
+   end
+
    def test_row_noconv
        assert_nothing_raised do
            assert_equal(
