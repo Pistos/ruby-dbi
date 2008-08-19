@@ -42,7 +42,7 @@ class DBI::DBD::Pg::Database < DBI::BaseDatabase
             raise DBI::InterfaceError, "must specify database"
         end
 
-        hash['options'] ||= ''
+        hash['options'] ||= nil
         hash['tty'] ||= ''
         hash['port'] = hash['port'].to_i unless hash['port'].nil? 
 
