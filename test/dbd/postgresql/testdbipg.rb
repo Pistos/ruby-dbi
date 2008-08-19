@@ -18,6 +18,23 @@ class TestDbdPostgres < DBDConfig.testbase(:postgresql)
 #      dbd.disconnect if dbd
 #   end
 
+    def test_binding
+        assert(@dbh["pg_native_binding"])
+
+        assert_raise(DBI::ProgrammingError) do
+            @sth = @dbh.prepare("select * from names where age IS NOT ?")
+            @sth.execute("NULL")
+            @sth.finish
+        end
+
+        assert_nothing_raised do
+            @dbh["pg_native_binding"] = false
+            @sth = @dbh.prepare("select * from names where age IS NOT ?")
+            @sth.execute("NULL")
+            @sth.finish
+        end
+    end
+
     def test_function_multiple_return_values
         @sth = @dbh.prepare("SELECT age, select_subproperty(age, NULL), select_subproperty(age, 1) FROM names WHERE age = 19")
         @sth.execute

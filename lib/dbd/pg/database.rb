@@ -34,6 +34,8 @@ class DBI::DBD::Pg::Database < DBI::BaseDatabase
     # * AutoCommit: 'unchained' mode in PostgreSQL. Commits after each
     #   statement execution. 
     # * pg_client_encoding: set the encoding for the client.
+    # * pg_native_binding: Boolean. Indicates whether to use libpq native
+    #   binding or DBI's inline binding. Defaults to true.
     #
     def initialize(dbname, user, auth, attr)
         hash = DBI::Utils.parse_params(dbname)
@@ -70,6 +72,8 @@ class DBI::DBD::Pg::Database < DBI::BaseDatabase
         end
 
         @attr.each { |k,v| self[k] = v} 
+        @attr["pg_native_binding"] = true unless @attr.has_key? "pg_native_binding"
+
         @type_map = __types
 
         self['AutoCommit'] = true    # Postgres starts in unchained mode (AutoCommit=on) by default 
@@ -253,6 +257,8 @@ class DBI::DBD::Pg::Database < DBI::BaseDatabase
             # value is assigned to @attr below
         when 'pg_client_encoding'
             @connection.set_client_encoding(value)
+        when 'pg_native_binding'
+            @attr[attr] = value
         else
             if attr =~ /^pg_/ or attr != /_/
                 raise DBI::NotSupportedError, "Option '#{attr}' not supported"

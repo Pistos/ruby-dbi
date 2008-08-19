@@ -17,7 +17,7 @@ class DBI::DBD::Pg::Statement < DBI::BaseStatement
         @stmt_name = PG_STMT_NAME_PREFIX + self.object_id.to_s
         @result = nil
         @bindvars = []
-        @db._prepare(@stmt_name, translate_param_markers(@sql))
+        @prepared = false
     rescue PGError => err
         raise DBI::ProgrammingError.new(err.message)
     end
@@ -43,13 +43,20 @@ class DBI::DBD::Pg::Statement < DBI::BaseStatement
                 var
             end
         end
+        
+        internal_prepare
 
         if not @db['AutoCommit'] then
             #          if not SQL.query?(boundsql) and not @db['AutoCommit'] then
             @db.start_transaction unless @db.in_transaction?
         end
 
-        pg_result = @db._exec_prepared(@stmt_name, *@bindvars)
+        if @db["pg_native_binding"]
+            pg_result = @db._exec_prepared(@stmt_name, *@bindvars)
+        else
+            pg_result = @db._exec_prepared(@stmt_name)
+        end
+
         @result = DBI::DBD::Pg::Tuples.new(@db, pg_result)
     rescue PGError, RuntimeError => err
         raise DBI::ProgrammingError.new(err.message)
@@ -64,6 +71,7 @@ class DBI::DBD::Pg::Statement < DBI::BaseStatement
     end
 
     def finish
+        @stmt.clear if @stmt
         @result.finish if @result
         @result = nil
         @db = nil
@@ -113,6 +121,19 @@ class DBI::DBD::Pg::Statement < DBI::BaseStatement
         def quote(str)
             str
         end
+    end
+
+    # prepare the statement at a lower level.
+    def internal_prepare
+        if @db["pg_native_binding"]
+            unless @prepared
+                @stmt = @db._prepare(@stmt_name, translate_param_markers(@sql))
+            end
+        else
+            @stmt.clear if @stmt
+            @stmt = @db._prepare(@stmt_name, DBI::SQL::PreparedStatement.new(DBI::DBD::Pg, @sql).bind(@bindvars))
+        end
+        @prepared = true
     end
 
     # Prepare the given SQL statement, returning its PostgreSQL string
