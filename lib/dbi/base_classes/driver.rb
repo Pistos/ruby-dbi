@@ -9,9 +9,10 @@ module DBI
     # to explain the same requirements.
     #
     class BaseDriver < Base
-        def initialize(dbd_version)
-            major, minor = dbd_version.split(".")
-            unless major.to_i == DBD::API_VERSION.split(".")[0].to_i
+        def initialize(dbi_version)
+            major, minor = dbi_version.split(".").collect { |x| x.to_i }
+            dbi_major, dbi_minor = DBI::VERSION.split(".").collect { |x| x.to_i }
+            unless major == dbi_major and minor == dbi_minor
                 raise InterfaceError, "Wrong DBD API version used"
             end
         end

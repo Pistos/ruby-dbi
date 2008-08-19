@@ -51,7 +51,6 @@ module DBI
         #
         module SQLite3
             VERSION = ::SQLite3::Version::STRING
-            USED_DBD_VERSION='0.2'
             DESCRIPTION = "SQLite 3.x DBD for DBI"
 
             #
@@ -82,6 +81,7 @@ module DBI
             class Driver < DBI::BaseDriver
                 def initialize
                     @dbs = []
+                    super "0.4.0"
                 end
 
                 def connect(dbname, user, auth, attr)

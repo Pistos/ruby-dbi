@@ -50,7 +50,6 @@ module DBI
         #
         module Pg
             VERSION          = "0.3.3"
-            USED_DBD_VERSION = "0.2"
             DESCRIPTION      = "PostgreSQL DBI DBD"
 
             #
@@ -145,7 +144,7 @@ module DBI
             #
             class Driver < DBI::BaseDriver
                 def initialize
-                    super(USED_DBD_VERSION)
+                    super("0.4.0")
                 end
 
                 ## List of datasources for this database.

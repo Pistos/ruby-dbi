@@ -6,7 +6,7 @@ module DBI::DBD::Mysql
         include Util
 
         def initialize
-            super(USED_DBD_VERSION)
+            super("0.4.0")
         end
 
         def default_user

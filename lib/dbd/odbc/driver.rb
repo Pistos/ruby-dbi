@@ -3,7 +3,7 @@
 #
 class DBI::DBD::ODBC::Driver < DBI::BaseDriver
     def initialize
-        super(DBI::DBD::ODBC::USED_DBD_VERSION)
+        super("0.4.0")
     end
 
     def data_sources

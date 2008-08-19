@@ -37,7 +37,6 @@ module DBI
         #
         class SQLite
             VERSION = "0.1"
-            USED_DBD_VERSION = "0.1"
             DESCRIPTION = "SQLite 2.x DBI DBD"
 
             #
@@ -74,7 +73,7 @@ module DBI
             #
             class Driver < DBI::BaseDriver
                 def initialize
-                    super USED_DBD_VERSION
+                    super "0.4.0"
                 end
 
                 def connect(dbname, user, auth, attr_hash)

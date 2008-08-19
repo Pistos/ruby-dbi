@@ -50,7 +50,6 @@ module DBI
         #
         module Mysql
             VERSION          = "0.3.3"
-            USED_DBD_VERSION = "0.2"
             DESCRIPTION      = "MySQL DBI DBD, Leverages 'mysql' low-level driver"
 
             MyError = ::MysqlError
