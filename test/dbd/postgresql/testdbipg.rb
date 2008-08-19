@@ -29,8 +29,28 @@ class TestDbdPostgres < DBDConfig.testbase(:postgresql)
 
         assert_nothing_raised do
             @dbh["pg_native_binding"] = false
-            @sth = @dbh.prepare("select * from names where age IS NOT ?")
+            @sth = @dbh.prepare("select * from names where age IS NOT ? order by age")
             @sth.execute("NULL")
+            assert_equal(
+                [
+                    ["Joe", 19],
+                    ["Bob", 21],
+                    ["Jim", 30],
+                ],
+                @sth.fetch_all
+            )
+
+            @sth.finish
+
+            @sth = @dbh.prepare("select * from names where age = ?")
+            @sth.execute(19)
+            assert_equal(
+                [
+                    ["Joe", 19]
+                ],
+                @sth.fetch_all
+            )
+
             @sth.finish
         end
     end
