@@ -12,6 +12,8 @@ sth = dbh.prepare("INSERT INTO MYTEST VALUES (:1, :2, :3, :4)")
   #print i, "\n"
 end
 
+sth.finish
+
 dbh.commit
 
 dbh.disconnect
