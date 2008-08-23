@@ -1,43 +1,6 @@
 = Description
     The DBI package is a vendor independent interface for accessing databases.
     It is similar, but not identical to, Perl's DBI module.
-   
-= Prerequisites
-    Ruby 1.8.6 or later is the test target, however you may have success with
-    earlier 1.8.x versions of Ruby.
-
-= RubyForge Project
-    General information: http://ruby-dbi.rubyforge.org
-    Project information: http://rubyforge.org/projects/ruby-dbi/
-    Downloads: http://rubyforge.org/frs/?group_id=234
-
-= Installation
-    There are many database drivers (DBDs) available.  You only need to install
-    the DBDs for the database software that you will be using.
-
-== Gem setup:
-
-    gem install dbi
-    # One or more of:
-    gem install dbd-mysql
-    gem install dbd-pg
-    gem install dbd-sqlite3
-    gem install dbd-sqlite
-
-== Without rubygems:
-
-    ruby setup.rb config
-    ruby setup.rb setup
-    ruby setup.rb install
-
-== The bleeding edge:
-
-    git clone git://hollensbe.org/git/ruby-dbi.git
-    git checkout -b development origin/development
-    
-    Also available at
-    
-    git clone git://github.com/erikh/ruby-dbi.git
 
 = Synopsis
 
@@ -86,6 +49,43 @@
         dbh.do('delete from simple01 where internal_id > 10')
       
     end
+
+= Prerequisites
+    Ruby 1.8.6 or later is the test target, however you may have success with
+    earlier 1.8.x versions of Ruby.
+
+= RubyForge Project
+    General information: http://ruby-dbi.rubyforge.org
+    Project information: http://rubyforge.org/projects/ruby-dbi/
+    Downloads: http://rubyforge.org/frs/?group_id=234
+
+= Installation
+    There are many database drivers (DBDs) available.  You only need to install
+    the DBDs for the database software that you will be using.
+
+== Gem setup:
+
+    gem install dbi
+    # One or more of:
+    gem install dbd-mysql
+    gem install dbd-pg
+    gem install dbd-sqlite3
+    gem install dbd-sqlite
+
+== Without rubygems:
+
+    ruby setup.rb config
+    ruby setup.rb setup
+    ruby setup.rb install
+
+== The bleeding edge:
+
+    git clone git://hollensbe.org/git/ruby-dbi.git
+    git checkout -b development origin/development
+    
+    Also available at
+    
+    git clone git://github.com/erikh/ruby-dbi.git
       
 = Available Database Drivers (DBDs)
 
