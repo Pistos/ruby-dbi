@@ -1,4 +1,4 @@
-#
+#--
 # DBD::Pg
 #
 # Copyright (c) 2001, 2002, 2003 Jim Weirich, Michael Neumann <mneumann@ntecs.de>
@@ -27,371 +27,119 @@
 # WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
 # OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 # ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-#
-# $Id$
-#
+#++
 
 begin
     require 'rubygems'
     gem 'pg'
+    gem 'dbi'
 rescue Exception => e
 end
 
+require 'dbi'
 require 'pg'
 
 module DBI
-  module DBD
-    module Pg
-      
-      VERSION          = "0.3.3"
-      USED_DBD_VERSION = "0.2"
-      
-      class Driver < DBI::BaseDriver
-        
-        def initialize
-          super(USED_DBD_VERSION)
-        end
-        
-        ## List of datasources for this database.
-        def data_sources
-          []
-        end
-        
-        ## Connect to a database.
-        def connect(dbname, user, auth, attr)
-          Database.new(dbname, user, auth, attr)
-        end
-
-      end
-      
-      ################################################################
-      class Database < DBI::BaseDatabase
-
-        # type map ---------------------------------------------------
-        
-        # by Eli Green
-        POSTGRESQL_to_XOPEN = {
-          "boolean"                   => [SQL_CHAR, 1, nil],
-          "character"                 => [SQL_CHAR, 1, nil],
-          "char"                      => [SQL_CHAR, 1, nil],
-          "real"                      => [SQL_REAL, 4, 6],
-          "double precision"          => [SQL_DOUBLE, 8, 15],
-          "smallint"                  => [SQL_SMALLINT, 2],
-          "integer"                   => [SQL_INTEGER, 4],
-          "bigint"                    => [SQL_BIGINT, 8],
-          "numeric"                   => [SQL_NUMERIC, nil, nil],
-          "time with time zone"       => [SQL_TIME, nil, nil],
-          "timestamp with time zone"  => [SQL_TIMESTAMP, nil, nil],
-          "bit varying"               => [SQL_BINARY, nil, nil], #huh??
-          "character varying"         => [SQL_VARCHAR, nil, nil],
-          "bit"                       => [SQL_TINYINT, nil, nil],
-          "text"                      => [SQL_VARCHAR, nil, nil],
-          nil                         => [SQL_OTHER, nil, nil]
-        }
-        
-        def initialize(dbname, user, auth, attr)
-          hash = Utils.parse_params(dbname)
-
-          if hash['dbname'].nil? and hash['database'].nil?
-            raise DBI::InterfaceError, "must specify database"
-          end
-
-          hash['options'] ||= ''
-          hash['tty'] ||= ''
-          hash['port'] = hash['port'].to_i unless hash['port'].nil? 
-
-          @connection = PGconn.new(hash['host'], hash['port'], hash['options'], hash['tty'], 
-            hash['dbname'] || hash['database'], user, auth)
-
-          @exec_method = :exec
-
-          @attr = attr
-          @attr['NonBlocking'] ||= false
-          @attr.each { |k,v| self[k] = v} 
-
-          load_type_map
-
-          @in_transaction = false
-          self['AutoCommit'] = true    # Postgres starts in unchained mode (AutoCommit=on) by default 
-
-        rescue PGError => err
-          raise DBI::OperationalError.new(err.message)
-        end
-        
-        # DBD Protocol -----------------------------------------------
-
-        def disconnect
-          if not @attr['AutoCommit'] and @in_transaction
-            _exec("ROLLBACK")   # rollback outstanding transactions
-          end
-          @connection.close
-        end
-        
-        def ping
-          answer = _exec("SELECT 1")
-          if answer
-            return answer.num_tuples == 1
-          else
-            return false
-          end
-        rescue PGError
-          return false
-        ensure
-          answer.clear if answer
-        end
-
-        def tables
-          stmt = execute("SELECT c.relname FROM pg_catalog.pg_class c WHERE c.relkind IN ('r','v') and pg_catalog.pg_table_is_visible(c.oid)")
-          res = stmt.fetch_all.collect {|row| row[0]} 
-          stmt.finish
-          res
-        end
-
-        ##
-        # by Eli Green (cleaned up by Michael Neumann)
+    module DBD
         #
-        def columns(table)
-          sql1 = %[
-            SELECT a.attname, i.indisprimary, i.indisunique 
-                   FROM pg_catalog.pg_class bc, pg_index i, pg_attribute a 
-            WHERE bc.relkind in ('r', 'v') AND bc.relname = ? AND i.indrelid = bc.oid AND 
-                  i.indexrelid = bc.oid AND bc.oid = a.attrelid
-            AND bc.relkind IN ('r','v')
-            AND pg_catalog.pg_table_is_visible(bc.oid)
-          ]
+        # DBD::Pg - Database Driver for the PostgreSQL database system.
+        #
+        # Requires DBI and the 'pg' gem or package to work.
+        #
+        # Only things that extend DBI's results are documented.
+        #
+        module Pg
+            VERSION          = "0.3.3"
+            DESCRIPTION      = "PostgreSQL DBI DBD"
 
-          sql2 = %[
-            SELECT a.attname, a.atttypid, a.attnotnull, a.attlen, format_type(a.atttypid, a.atttypmod) 
-                   FROM pg_catalog.pg_class c, pg_attribute a, pg_type t 
-            WHERE a.attnum > 0 AND a.attrelid = c.oid AND a.atttypid = t.oid AND c.relname = ?
-            AND c.relkind IN ('r','v')
-            AND pg_catalog.pg_table_is_visible(c.oid)
-          ]
+            #
+            # returns 'Pg'
+            # 
+            # See DBI::TypeUtil#convert for more information.
+            #
+            def self.driver_name
+                "Pg"
+            end
 
-          # by Michael Neumann (get default value)
-          # corrected by Joseph McDonald
-          sql3 = %[
-            SELECT pg_attrdef.adsrc, pg_attribute.attname 
-                   FROM pg_attribute, pg_attrdef, pg_catalog.pg_class
-            WHERE pg_catalog.pg_class.relname = ? AND 
-                  pg_attribute.attrelid = pg_catalog.pg_class.oid AND
-                  pg_attrdef.adrelid = pg_catalog.pg_class.oid AND
-                  pg_attrdef.adnum = pg_attribute.attnum
-                  AND pg_catalog.pg_class.relkind IN ('r','v')
-                  AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid)
-          ]
+            #
+            # This method takes a ruby Array and converts it to PostgreSQL array syntax.
+            #
+            def self.generate_array(obj)
+                # XXX yarr, there be recursion here, and it's probably not a good idea.
+                output = "{"
+                obj.each do |item|
+                    case item
+                    when ::Array
+                        output += generate_array(item)
+                    else
+                        generated = DBI::TypeUtil.convert(driver_name, item)
+                        generated = case item
+                                    when String
+                                        # in strings, escapes are doubled and the quotes are different.
+                                        # this gets *really* ugly and needs to be well-tested
+                                        "\"#{generated.gsub(/\\/) { "\\\\" }}\""
+                                    when Fixnum
+                                        generated.to_s
+                                    end
+                        output += generated
+                    end
+                    output += "," # FIXME technically, delimiters are variable
+                end
 
-          dbh = DBI::DatabaseHandle.new(self)
-          indices = {}
-          default_values = {}
+                output.sub(/,$/, '}')
+            end
 
-          dbh.select_all(sql3, table) do |default, name|
-            default_values[name] = default
-          end
+            #
+            # A quote helper, this uses the new syntax in PostgreSQL 8.2 and up.
+            #
+            def self.quote(value)
+                "E'#{ value.gsub(/\\/){ '\\\\' }.gsub(/'/){ '\\\'' } }'"
+            end
 
-          dbh.select_all(sql1, table) do |name, primary, unique|
-            indices[name] = [primary, unique]
-          end
+            #
+            # Parse a postgresql type. Returns a hash with these fields (as Symbol)
+            #
+            # * ftype: the full type, as passed in to this method.
+            # * type: the type stripped of all attribute information.
+            # * size: the LHS of the attribute information, typically the precision.
+            # * decimal: the RHS of the attribute information, typically the scale.
+            # * array: true if this type is actually an array of that type.
+            #
+            def self.parse_type(ftype)
+                type = ftype
+                pos = ftype.index('(')
+                decimal = nil
+                size = nil
+                array_of_type = nil 
 
-          ########## 
-
-          ret = []
-          dbh.execute(sql2, table) do |sth|
-            ret = sth.collect do |row|
-              name, pg_type, notnullable, len, ftype = row
-              #name = row[2]
-              indexed = false
-              primary = nil
-              unique = nil
-              if indices.has_key?(name)
-                indexed = true
-                primary, unique = indices[name]
-              end
-
-              type = ftype
-              pos = ftype.index('(')
-              decimal = nil
-              size = nil
-              if pos != nil
-                type = ftype[0..pos-1]
-                size = ftype[pos+1..-2]
-                pos = size.index(',')
                 if pos != nil
-                  size, decimal = size.split(',', 2)
-                  size = size.to_i
-                  decimal = decimal.to_i
-                else
-                  size = size.to_i
-                end
-              end
-              size = len if size.nil?
-
-              if POSTGRESQL_to_XOPEN.has_key?(type)
-                sql_type = POSTGRESQL_to_XOPEN[type][0]
-              else
-                sql_type = POSTGRESQL_to_XOPEN[nil][0]
-              end
-
-              row = {}
-              row['name']           = name
-              row['sql_type']       = sql_type
-              row['type_name']      = type
-              row['nullable']       = ! notnullable
-              row['indexed']        = indexed
-              row['primary']        = primary
-              row['unique']         = unique
-              row['precision']      = size
-              row['scale']          = decimal
-              row['default']        = default_values[name]
-              row
-            end # collect
-          end # execute
-
-          return ret
-        end
-
-        def prepare(statement)
-          Statement.new(self, statement)
-        end
-        
-        def [](attr)
-          case attr
-          when 'pg_client_encoding'
-            @connection.client_encoding
-          else
-            @attr[attr]
-          end
-        end
-
-        def []=(attr, value)
-          case attr
-          when 'AutoCommit'
-            if @attr['AutoCommit'] != value then
-              if value    # turn AutoCommit ON
-                if @in_transaction
-                  # TODO: commit outstanding transactions?
-                  _exec("COMMIT")
-                  @in_transaction = false
-                end
-              else        # turn AutoCommit OFF
-                @in_transaction = false
-              end
-            end
-            # value is assigned below
-          when 'NonBlocking'
-            @exec_method = if value then :async_exec else :exec end
-          when 'pg_client_encoding'
-            @connection.set_client_encoding(value)
-          else
-            if attr =~ /^pg_/ or attr != /_/
-              raise DBI::NotSupportedError, "Option '#{attr}' not supported"
-            else # option for some other driver - quitly ignore
-              return
-            end
-          end
-          @attr[attr] = value
-        end
-
-        def commit
-          if @in_transaction
-            _exec("COMMIT")
-            @in_transaction = false
-          else
-            # TODO: Warn?
-          end
-        end
-
-        def rollback
-          if @in_transaction
-            _exec("ROLLBACK")
-            @in_transaction = false
-          else
-            # TODO: Warn?
-          end
-        end
-
-        # Other Public Methods ---------------------------------------
-
-
-        # parse a PostgreSQL-Array output and convert into ruby array
-        def convert_array( str, elemtype )
-
-          array_nesting = 0         # nesting level of the array
-          in_string = false         # currently inside a quoted string ?
-          escaped = false           # if the character is escaped
-          sbuffer = ''              # buffer for the current element
-          result_array = Array.new  # the resulting Array
-  
-          str.each_byte { |char|    # parse character by character
-            char = char.chr         # we need the Character, not it's Integer
-
-            if escaped then         # if this character is escaped, just add it to the buffer
-              sbuffer += char
-              escaped = false
-              next
-            end
-    
-            case char               # let's see what kind of character we have
-            #------------- {: beginning of an array ----#
-            when '{'
-              if in_string then     # ignore inside a string
-                sbuffer += char
-                next
-              end
-
-              if array_nesting >= 1 then  # if it's an nested array, defer for recursion
-                sbuffer += char
-              end
-              array_nesting += 1          # inside another array
-    
-            #------------- ": string deliminator --------#
-            when '"'
-              in_string = !in_string      
-
-            #------------- \: escape character, next is regular character #
-            when '\\'     # single \, must be extra escaped in Ruby
-              escaped = true
-
-            #------------- ,: element separator ---------#
-            when ','
-              if in_string or array_nesting > 1 then  # don't care if inside string or
-                sbuffer += char                       # nested array
-              else
-                if !sbuffer.is_a? Array then
-                  sbuffer = convert( sbuffer, elemtype )
-                end
-                result_array << sbuffer               # otherwise, here ends an element
-                sbuffer = ''
-              end
-
-            #------------- }: End of Array --------------#
-            when '}' 
-              if in_string then                # ignore if inside quoted string
-                sbuffer += char
-                next
-              end
-
-              array_nesting -=1                # decrease nesting level
-      
-              if array_nesting == 1            # must be the end of a nested array 
-                sbuffer += char
-                sbuffer = convert_array( sbuffer, elemtype )  # recurse, using the whole nested array
-              elsif array_nesting > 1          # inside nested array, keep it for later
-                sbuffer += char
-              else                             # array_nesting = 0, must be the last }
-                if !sbuffer.is_a? Array then
-                  sbuffer = convert( sbuffer, elemtype )
+                    type = ftype[0..pos-1]
+                    size = ftype[pos+1..-2]
+                    pos = size.index(',')
+                    if pos != nil
+                        size, decimal = size.split(',', 2)
+                        size = size.to_i
+                        decimal = decimal.to_i
+                    else
+                        size = size.to_i
+                    end
                 end
 
-                result_array << sbuffer unless sbuffer.nil? # upto here was the last element
-              end
+                if type =~ /\[\]$/
+                    type.sub!(/\[\]$/, '')
+                    array_of_type = true
+                end
 
-            #------------- all other characters ---------#
-            else
-              sbuffer += char                 # simply append
-
+                return {
+                    :ftype   => ftype.dup,
+                    :type    => type,
+                    :size    => size,
+                    :decimal => decimal,
+                    :array   => array_of_type
+                }
             end
 
+<<<<<<< HEAD:lib/dbd/Pg.rb
           } 
   
           return result_array
@@ -812,27 +560,50 @@ module DBI
             # XXX 
             # String#split does not properly create a full array if the the
             # string ENDS in the split regex, unless this oddball -1 argument is supplied.
+=======
+>>>>>>> development:lib/dbd/Pg.rb
             #
-            # Another way of saying this:
-            # if foo = "foo\\\\\" and foo.split(/\\\\/), the result will be
-            # ["foo"]. You can add as many delimiters to the end of the string
-            # as you'd like - the result is no different.
+            # See DBI::BaseDriver.
             #
+            class Driver < DBI::BaseDriver
+                def initialize
+                    super("0.4.0")
+                end
 
-            ret = ret.split(/\\\\/, -1).collect { |x| x.length > 0 ? x.gsub(/\\[0-7]{3}/) { |y| y[1..3].oct.chr } : "" }.join("\\")
-            ret.gsub!(/''/, "'")
-            return ret
-        end
+                ## List of datasources for this database.
+                def data_sources
+                    []
+                end
 
-        def as_timestamp(str)
-          return super unless m = /\.\d+(?=(?:[-+]\d+)?$)/.match(str)
-          # ".12345" => 123456000 nanoseconds
-          num = m.to_s[1..9].ljust(9, "0")
-          (t = super $` + $').fraction = num.to_i
-          t
-        end
-      end
-
-    end # module Pg
-  end # module DBD
+                ## Connect to a database.
+                def connect(dbname, user, auth, attr)
+                    Database.new(dbname, user, auth, attr)
+                end
+            end
+        end # module Pg
+    end # module DBD
 end # module DBI
+
+require 'dbd/pg/type'
+require 'dbd/pg/database'
+require 'dbd/pg/statement'
+require 'dbd/pg/tuples'
+require 'dbd/pg/exec'
+
+pg = DBI::DBD::Pg
+
+DBI::TypeUtil.register_conversion(pg.driver_name) do |obj|
+    newobj = case obj
+             when ::DateTime
+                 obj.strftime("%m/%d/%Y %H:%M:%S.%N")
+             when ::Time, ::Date
+                 ::DateTime.parse(obj.to_s).strftime("%m/%d/%Y %H:%M:%S.%N")
+             when ::Array
+                 pg.generate_array(obj)
+             when DBI::DBD::Pg::Type::ByteA
+                 obj.escaped
+             else
+                 obj
+             end
+    [newobj, false]
+end

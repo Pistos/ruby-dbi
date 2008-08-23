@@ -1,4 +1,4 @@
-#
+#--
 # DBD::SQLite3
 # 
 # copyright (c) 2005 Jun Mukai <mukai@jmuk.org>
@@ -27,315 +27,96 @@
 # WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
 # OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 # ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-#
-# $Id$
-#
+#++
 
 begin
   require 'rubygems'
+  gem 'sqlite3-ruby'
+  gem 'dbi'
 rescue LoadError
 end
 
+require 'dbi'
 require 'sqlite3'
 require 'sqlite3/version'
 
 module DBI
-  module DBD
-    module SQLite3
+    module DBD
+        #
+        # DBD::SQLite3 - Database Driver for SQLite versions 3.x
+        #
+        # Requires DBI and the 'sqlite3-ruby' gem to work.
+        #
+        # Only things that extend DBI's results are documented.
+        #
+        module SQLite3
+            VERSION = ::SQLite3::Version::STRING
+            DESCRIPTION = "SQLite 3.x DBD for DBI"
 
-      VERSION = ::SQLite3::Version::STRING
-      USED_DBD_VERSION='0.2'
-     
-      # FIXME plucked from SQLite driver, this needs to be in DBI proper 
-      def self.parse_type(type_name)
-          type_name.match(/^([^\(]+)(\((\d+)(,(\d+))?\))?$/)
-      end
-
-      class Driver < DBI::BaseDriver
-        def initialize
-          @dbs = []
-        end
-
-        def connect(dbname, user, auth, attr)
-          raise DBI::InterfaceError, "dbname must be a string" unless dbname.kind_of? String
-          raise DBI::InterfaceError, "dbname must have some length" unless dbname.length > 0
-          raise DBI::InterfaceError, "attrs must be a hash" unless attr.kind_of? Hash
-          db = Database.new(dbname, attr)
-          @dbs.push(db)
-          db
-        end
-
-        def disconnect_all()
-          @dbs.each{|db| db.disconnect()}
-        end
-      end
-
-      class Database < DBI::BaseDatabase
-        def initialize(dbname, attr)
-          @db = ::SQLite3::Database.new(dbname)
-
-          @db.type_translation = true
-          @db.translator.add_translator("timestamp") do |type, value|
-              ::Time.parse(value)
-          end
-          @db.translator.add_translator(nil) do |type, value|
-            # autodetect numbers in typeless columns
-            case value
-            when /\A-?[0-9]+\z/
-              value.to_i
-            when /\A-?[0-9]+?\.[0-9]+\z/
-              value.to_f
-            else
-              value
-            end 
-          end
-
-          @attr = {'AutoCommit' => true}
-          if attr then
-            attr.each_pair do |key, value|
-              begin
-                self[key] = value
-              rescue NotSupportedError
-              end
+            #
+            # returns 'SQLite3'
+            #
+            # See DBI::TypeUtil#convert for more information.
+            #
+            def self.driver_name
+                "SQLite3"
             end
-          end
-          __generate_attr__
-        end
 
-        def disconnect()
-          @db.rollback if @db.transaction_active?
-          @db.close
-        end
-
-        def prepare(statement)
-          Statement.new(statement, @db)
-        end
-
-        def ping()
-          not @db.closed?
-        end
-
-        def commit()
-          if @db.transaction_active?
-            @db.commit
-            @db.transaction
-          else
-            raise DBI::ProgrammingError.new("No active transaction.")
-          end
-        end
-
-        def rollback()
-          if @db.transaction_active?
-            begin 
-                @db.rollback 
-                @db.transaction
-            rescue Exception => e
-                raise DBI::Warning, "Statements were not closed prior to rollback"
+            #
+            # Validates that the SQL has no literal NUL characters. (ASCII 0)
+            #
+            # SQLite apparently really hates it when you do that.
+            #
+            # It will raise DBI::DatabaseError should it find any.
+            #
+            def self.parse_type(type_name)
+                # FIXME plucked from SQLite driver, this needs to be in DBI proper 
+                return ['varchar'] unless type_name
+                type_name.match(/^([^\(]+)(\((\d+)(,(\d+))?\))?$/)
             end
-          else
-            raise DBI::ProgrammingError.new("No active transaction.")
-          end
-        end
 
-        def tables()
-          ret = []
-          result = @db.execute(<<'EOS')
-SELECT name FROM sqlite_master WHERE type IN ('table', 'view') 
-UNION ALL 
-SELECT name FROM sqlite_temp_master WHERE type in ('table', 'view') ORDER BY 1
-EOS
-          result.each{|row| ret.push(row[0])}
-          ret
-        end
+            #
+            # See DBI::BaseDriver.
+            #
+            class Driver < DBI::BaseDriver
+                def initialize
+                    @dbs = []
+                    super "0.4.0"
+                end
 
-        def columns(table)
-          @db.type_translation = false
-          ret =
-            @db.table_info(table).map do |hash|
-              m = DBI::DBD::SQLite3.parse_type(hash['type'])
-              h = { 'name' => hash['name'],
-                'type_name' => m[1],
-                'sql_type' => begin
-                            DBI.const_get('SQL_'+hash['type'].upcase)
-                          rescue NameError
-                            DBI::SQL_OTHER
-                          end,
-                'nullable' => (hash['notnull'] == '0'),
-                'default' => if @attr['type_translation'] && (not hash['dflt_value']) then
-                               @db.translator.translate(hash['type'], hash['dflt_value'])
-                             else
-                               hash['dflt_value'] 
-                             end
-              }
+                def connect(dbname, user, auth, attr)
+                    raise DBI::InterfaceError, "dbname must be a string" unless dbname.kind_of? String
+                    raise DBI::InterfaceError, "dbname must have some length" unless dbname.length > 0
+                    raise DBI::InterfaceError, "attrs must be a hash" unless attr.kind_of? Hash
+                    db = DBI::DBD::SQLite3::Database.new(dbname, attr)
+                    @dbs.push(db)
+                    db
+                end
 
-              h['precision'] = m[3].to_i if m[3]
-              h['scale']     = m[5].to_i if m[5]
-
-              h
-            end
-          @db.type_translation = @attr['type_translation']
-          ret
-        end
-
-        def quote(value)
-          ::SQLite3::Database.quote(value.to_s)
-        end
-
-        def __generate_attr__()
-          tt = @db.type_translation
-          @db.type_translation = false
-          [ 'auto_vacuum', 'cache_size', 'default_cache_size',
-            'default_synchronous', 'default_temp_store', 'full_column_names',
-            'synchronous', 'temp_store', 'type_translation' ].each do |key|
-            unless @attr.has_key?(key) then
-              @attr[key] = @db.__send__(key)
-            end
-          end
-          @db.type_translation = tt
-        end
-
-        def []=(attr, value)
-          case attr
-          when 'AutoCommit'
-            if value
-              @db.commit if @db.transaction_active?
-            else
-              @db.transaction unless @db.transaction_active?
-            end
-            @attr[attr] = value
-          when 'auto_vacuum', 'cache_size', 'count_changes',
-              'default_cache_size', 'encoding', 'full_column_names',
-              'page_size', 'short_column_names', 'synchronous',
-              'temp_store', 'temp_store_directory'
-            @db.__send__((attr+'='), value)
-            @attr[attr] = @db.__send__(attr)
-          when 'busy_timeout'
-            @db.busy_timeout(value)
-            @attr[attr] = value
-          when 'busy_handler'
-            @db.busy_timeout(&value)
-            @attr[attr] = value
-          when 'type_translation'
-            @db.type_translation = value
-            @attr[attr] = value
-          else
-            raise NotSupportedError
-          end
-
-          return value
-        end
-      end
-
-      class Statement < DBI::BaseStatement
-        def initialize(sql, db)
-          @sql = sql
-          @db = db
-          @stmt = db.prepare(sql)
-          @result = nil
-        rescue ::SQLite3::Exception, RuntimeError => err
-          raise DBI::ProgrammingError.new(err.message)
-        end
-
-        def bind_param(param, value, attribs=nil)
-          raise DBI::InterfaceError, "Bound parameter must be an integer" unless param.kind_of? Fixnum 
-
-          @stmt.bind_param(param, value)
-        end
-
-        def execute()
-          @result = @stmt.execute
-          @rows = DBI::SQL.query?(@sql) ? 0 : @db.changes
-        end
-
-        def finish()
-          @stmt.close rescue nil
-          @result = nil
-        end
-
-        def fetch()
-            ret = @result.next
-            return ret unless ret
-            cast_types([ret]).flatten
-        end
-
-        def column_info()
-          @stmt.columns.zip(@stmt.types).map{|name, type_name|
-            m = DBI::DBD::SQLite3.parse_type(type_name)
-            h = { 
-              'name' => name,
-              'type_name' => m[1],
-              'sql_type' => begin
-                              DBI.const_get('SQL_'+m[1].upcase)
-                            rescue NameError
-                              DBI::SQL_OTHER
-                            end,
-            }
-            h['precision'] = m[3].to_i if m[3]
-            h['scale']     = m[5].to_i if m[5]
-            h
-          }
-        end
-
-        def rows()
-            @rows
-        end
-
-        def bind_params(*bindvars)
-          @stmt.bind_params(bindvars)
-        end
-
-        def cancel()
-          @result = nil
-          @index = 0
-        end
-
-        def fetch_many(cnt)
-          ret = nil
-          if @result && (not @result.eof?) then
-            ret = []
-            cnt.times{ ret.push(@result.next()) }
-            ret.compact!
-            cast_types(ret)
-          end
-          nil
-        end
-
-        def fetch_all()
-          ret = nil
-          if @result then
-            ret = []
-            @result.each{|row| ret.push(row)}
-            return cast_types(ret)
-          end
-          nil 
-        end
-
-        private
-
-        def cast_types(ary)
-            tmp = []
-            col_info = column_info
-            ary.each do |row|
-                tmp2 = []
-                tmp.push tmp2
-                if row
-                    row = row.each_with_index do |x, i| 
-                        tmp2.push   case col_info[i]["sql_type"]
-                                    when DBI::SQL_TIMESTAMP
-                                        DBI::Timestamp.new(x)
-                                    when DBI::SQL_TIME
-                                        DBI::Time.new(x)
-                                    when DBI::SQL_DATE
-                                        DBI::Date.new(x)
-                                    else
-                                        x
-                                    end
-                    end
+                def disconnect_all()
+                    @dbs.each{|db| db.disconnect()}
                 end
             end
-            return tmp
         end
-      end
     end
-  end
+end
+
+require 'dbd/sqlite3/database'
+require 'dbd/sqlite3/statement'
+
+DBI::TypeUtil.register_conversion(DBI::DBD::SQLite3.driver_name) do |obj|
+    newobj = case obj
+             when ::TrueClass
+                '1'
+             when ::FalseClass
+                '0'
+             else
+                 # SQLite3 is managing its own conversion right now, until I'm happy let's keep it that way
+                 obj.dup rescue obj
+             end
+    if newobj.object_id == obj.object_id
+        [newobj, true]
+    else
+        [newobj, false]
+    end
 end

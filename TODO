@@ -1,0 +1,44 @@
+0.4.0:
+    x Work
+     x Postgres quoting toggles
+     x Postgres binding toggles
+     x Test for #20489
+    * Release checklist:
+     x Update ChangeLog
+     x rake
+     x remove all related gems, install all DBI/DBD gems (check prereqs)
+     x write a few test scripts to make sure drivers are loading  
+     x Update homepage (irc channel, git, other changes)
+     * tag as 0.4.0
+     * upload rdoc
+     * upload packages
+     * release announcement (rf, ruby-talk, dbi lists, other places?)
+     * rebase master from development
+     * BEER 
+0.6.0:
+    * Cleanup:
+     * Arrays:
+          * Find some way to get the extents of an array type
+           * checked pg_type, pg_attribute and pg_class, can't find anything.
+           * I don't think this is possible, but let's slate it for 0.6.0 anyways.
+     * Tracing
+      * WTH do we want to do with this
+       * Wow, this module has *serious issues*. Crashes DBI without warning. Redo this completely.
+        * 0.6.0
+    * Re-institute drivers
+     * Proxy
+      * Slated for 0.6.0
+    * Finish type management system
+     * Unify ColumnInfo
+      * Should we enforce ColumnInfo requirements at the DBI level?
+       * At least test the result of statement colinfo uniformly
+       * 0.6.0
+    * Cleanup core
+     * Require code is a mess
+      * Just remove the case-sensitivity from the DBDs in general
+       * 0.6.0
+     * Find a good clean way to enumerate drivers in separate gems
+      * Some registration-on-require would be cleaner and safer
+       * 0.6.0
+    * Scripts
+     * bin/dbd_proxy seems to have never worked; slate it for 0.6.0

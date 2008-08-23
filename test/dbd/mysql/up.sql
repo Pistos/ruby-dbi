@@ -1,6 +1,6 @@
 create table names (
-    name varchar(255) not null,
-    age integer not null
+    name varchar(255),
+    age integer
 ) Engine=InnoDB;
 ---
 insert into names (name, age) values ('Joe', 19);
@@ -8,6 +8,8 @@ insert into names (name, age) values ('Joe', 19);
 insert into names (name, age) values ('Jim', 30);
 ---
 insert into names (name, age) values ('Bob', 21);
+---
+create table precision_test (text_field varchar(20) primary key not null, integer_field decimal(2,1));
 ---
 CREATE TABLE blob_test (name VARCHAR(30), data BLOB) Engine=InnoDB;
 ---
