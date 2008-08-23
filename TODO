@@ -4,7 +4,7 @@
      x Postgres binding toggles
      x Test for #20489
     * Release checklist:
-     * Update ChangeLog
+     x Update ChangeLog
      x rake
      x remove all related gems, install all DBI/DBD gems (check prereqs)
      x write a few test scripts to make sure drivers are loading  
