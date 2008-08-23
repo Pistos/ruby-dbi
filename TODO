@@ -5,9 +5,9 @@
      x Test for #20489
     * Release checklist:
      * Update ChangeLog
-     * rake
-     * remove all related gems, install all DBI/DBD gems (check prereqs)
-     * write a few test scripts to make sure drivers are loading  
+     x rake
+     x remove all related gems, install all DBI/DBD gems (check prereqs)
+     x write a few test scripts to make sure drivers are loading  
      x Update homepage (irc channel, git, other changes)
      * tag as 0.4.0
      * upload rdoc
