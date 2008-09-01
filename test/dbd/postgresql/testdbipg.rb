@@ -18,6 +18,35 @@ class TestDbdPostgres < DBDConfig.testbase(:postgresql)
 #      dbd.disconnect if dbd
 #   end
 
+    # this monkeypatch is used for the following test... NEVER integrate this into DBI proper.
+    class DBI::StatementHandle < DBI::Handle
+        def stmt_name
+            @handle.instance_variable_get(:@stmt_name)
+        end
+    end
+
+    def test_statement_finish_deallocates_sth
+        assert_nothing_raised do
+            @sth = @dbh.prepare("select * from names")
+            @sth.execute
+            sth_internal_name = @sth.stmt_name
+            assert(sth_internal_name)
+            assert(!sth_internal_name.empty?)
+            @sth.finish
+
+            # at this point, the statement name should no longer exist
+            #
+            # XXX this is a potentially horrible way of doing it since it'll
+            # create another prepared statement, but *at this time*, I don't
+            # see any drawbacks and the alternative is considerably uglier.
+            
+            @sth = @dbh.prepare("select count(*) from pg_prepared_statements where name = ?")
+            @sth.execute(sth_internal_name)
+            assert_equal([0], @sth.fetch)
+            @sth.finish
+        end
+    end
+
     def test_binding
         assert(@dbh["pg_native_binding"])
 

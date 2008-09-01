@@ -71,8 +71,7 @@ class DBI::DBD::Pg::Statement < DBI::BaseStatement
     end
 
     def finish
-        @stmt.clear if @stmt
-        @result.finish if @result
+        internal_finish
         @result = nil
         @db = nil
     end
@@ -123,6 +122,15 @@ class DBI::DBD::Pg::Statement < DBI::BaseStatement
         end
     end
 
+    # finish the statement at a lower level
+    def internal_finish
+        @result.finish if @result
+        statement_exists = @db._exec("select * from pg_prepared_statements where name='#{@stmt_name}'")
+        if statement_exists.num_tuples > 0
+            @db._exec("DEALLOCATE \"#{@stmt_name}\"")
+        end
+    end
+
     # prepare the statement at a lower level.
     def internal_prepare
         if @db["pg_native_binding"]
@@ -130,7 +138,7 @@ class DBI::DBD::Pg::Statement < DBI::BaseStatement
                 @stmt = @db._prepare(@stmt_name, translate_param_markers(@sql))
             end
         else
-            @stmt.clear if @stmt
+            internal_finish
             @stmt = @db._prepare(@stmt_name, DBI::SQL::PreparedStatement.new(DBI::DBD::Pg, @sql).bind(@bindvars))
         end
         @prepared = true
