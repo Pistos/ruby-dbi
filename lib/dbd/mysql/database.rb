@@ -181,7 +181,7 @@ module DBI::DBD::Mysql
             uniques = []
             dbh.execute("SHOW INDEX FROM #{table}") do |sth|
                 sth.each do |row|
-                    uniques << row[4] if row[1] == "0"
+                    uniques << row[4] if row[1] == 0
                 end
             end  
 

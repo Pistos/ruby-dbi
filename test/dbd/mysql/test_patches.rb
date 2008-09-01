@@ -4,8 +4,12 @@ class TestMysqlPatches < DBDConfig.testbase(:mysql)
             sth = @dbh.prepare("select sum(age) from names")
             sth.execute
             row = sth.fetch 
-            # FIXME: this is BROKEN - should not be a string, should be fixnum
             assert_equal(70.0, row[0])
+            sth.finish
+
+            sth = @dbh.prepare("select count(*) from names")
+            sth.execute
+            assert_equal([3], sth.fetch)
             sth.finish
         end
     end
@@ -45,20 +49,21 @@ class TestMysqlPatches < DBDConfig.testbase(:mysql)
             assert_equal [2], row
             assert_equal [
                 {
-                      :name =>"foo",
-                      :mysql_type_name =>"INT",
-                      :mysql_max_length =>1,
-                      :primary =>true,
-                      :scale =>0,
-                      :mysql_flags =>49155,
-                      :sql_type =>4,
-                      :nullable =>false,
-                      :mysql_type =>3,
-                      :indexed =>true,
-                      :mysql_length =>11,
-                      :precision =>11,
-                      :type_name =>"INTEGER",
-                      :unique =>true
+                    :dbi_type => DBI::Type::Integer,
+                    :name =>"foo",
+                    :mysql_type_name =>"INT",
+                    :mysql_max_length =>1,
+                    :primary =>true,
+                    :scale =>0,
+                    :mysql_flags =>49155,
+                    :sql_type =>4,
+                    :nullable =>false,
+                    :mysql_type =>3,
+                    :indexed =>true,
+                    :mysql_length =>11,
+                    :precision =>11,
+                    :type_name =>"INTEGER",
+                    :unique =>true
                 }
             ], columns
         end

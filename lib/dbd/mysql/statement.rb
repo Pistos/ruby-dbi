@@ -128,7 +128,7 @@ module DBI::DBD::Mysql
             # is set only by mysql_list_fields()
 
             @res_handle.fetch_fields.each {|col| 
-                mysql_type_name = Database::TYPE_MAP[col.type][0] rescue nil
+                mysql_type_name, dbi_type = Database::TYPE_MAP[col.type] rescue [nil, nil]
                 xopen_info = Database::MYSQL_to_XOPEN[mysql_type_name] ||
                     Database::MYSQL_to_XOPEN[nil]
                 sql_type = xopen_info[0]
@@ -158,6 +158,8 @@ module DBI::DBD::Mysql
 
                 if retval[-1]['sql_type'] == DBI::SQL_TINYINT and retval[-1]['precision'] == 1
                     retval[-1]['dbi_type'] = DBI::Type::Boolean
+                elsif dbi_type
+                    retval[-1]['dbi_type'] = dbi_type
                 end
             }
             retval
