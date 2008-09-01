@@ -1,6 +1,7 @@
 require 'delegate'
-require 'rubygems'
+
 begin
+    require 'rubygems'
     gem 'deprecated'
 rescue LoadError => e
 end
