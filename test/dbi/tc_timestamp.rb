@@ -11,8 +11,10 @@ $LOAD_PATH.unshift("../../lib/dbi")
 $LOAD_PATH.unshift("lib")
 
 require 'date'
-require 'dbi/utils'
+require 'dbi'
 require 'test/unit'
+
+Deprecate.set_action(proc { })
 
 class TC_DBI_Date < Test::Unit::TestCase
    def setup

@@ -8,12 +8,19 @@ DBDConfig.set_testbase(:sqlite, Class.new(Test::Unit::TestCase) do
         end
 
         def test_base
-            assert true
+            if @dbh # FIXME for some reason, @dbh isn't initialized in some cases. investigate.
+                assert_equal(@dbh.driver_name, "SQLite")
+                assert_kind_of(DBI::DBD::SQLite::Database, @dbh.instance_variable_get(:@handle))
+            end
+        end
+
+        def set_base_dbh
+            config = DBDConfig.get_config['sqlite']
+            @dbh = DBI.connect('dbi:SQLite:'+config['dbname'], nil, nil, { }) 
         end
 
         def setup
-            config = DBDConfig.get_config['sqlite']
-            @dbh = DBI.connect('dbi:SQLite:'+config['dbname'], nil, nil, { }) 
+            set_base_dbh
             DBDConfig.inject_sql(@dbh, dbtype, "dbd/sqlite/up.sql")
         end
 

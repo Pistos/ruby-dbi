@@ -24,19 +24,44 @@ class TestSQLiteStatement < DBDConfig.testbase(:sqlite)
             sth.bind_param(:foo, "monkeys")
         end
 
-        for test_sth in [sth, @dbh.prepare("select * from foo")] do
-            test_sth.bind_param(1, "monkeys", nil)
+        # XXX this is fairly ugly, but...
+        # what i've attempted to do here is normalize what is tested, even
+        # though the data differs subtly.  you'll notice that there are two
+        # arrays that get passed to the each block for evaluation.  the first
+        # argument is the statment handle (raw from SQLite DBD or the facade
+        # from DBI), the second is how we access the @params internally held
+        # variable, and the third is how these params are scrubbed before we
+        # assert against them.
+        #
+        # the @params variable is in different spots in both statement handles
+        # and the values of the params are quoted differently. However, the
+        # full pipe works and I'd like to ensure that both do their job as a
+        # team.
+        #
+        [ 
+          [ 
+              sth, 
+              proc { |x| x.instance_variable_get("@params") }, 
+              proc { |x| x } 
+          ],
+          [ 
+              @dbh.prepare("select * from foo"), 
+              proc { |x| x.instance_variable_get("@handle").instance_variable_get("@params") },
+              proc { |x| x.gsub(/(^')|('$)/, '') }
+          ]
+        ].each do |sthpack|
+            sthpack[0].bind_param(1, "monkeys", nil)
 
-            params = test_sth.instance_variable_get("@params") || test_sth.instance_variable_get("@handle").instance_variable_get("@params")
-
-            assert_equal "monkeys", params[0]
+            params = sthpack[1].call(sthpack[0])
+            
+            assert_equal "monkeys", sthpack[2].call(params[0])
 
             # set a bunch of stuff.
-            %w(I like monkeys).each_with_index { |x, i| test_sth.bind_param(i+1, x) }
+            %w(I like monkeys).each_with_index { |x, i| sthpack[0].bind_param(i+1, x) }
 
-            params = test_sth.instance_variable_get("@params") || test_sth.instance_variable_get("@handle").instance_variable_get("@params")
+            params = sthpack[1].call(sthpack[0])
             
-            assert_equal %w(I like monkeys), params
+            assert_equal %w(I like monkeys), params.collect { |x| sthpack[2].call(x) }
 
             # FIXME what to do with attributes? are they important in SQLite?
         end
@@ -51,19 +76,19 @@ class TestSQLiteStatement < DBDConfig.testbase(:sqlite)
         end
 
         assert_kind_of Array, sth.column_info 
-        assert_kind_of ColumnInfo, sth.column_info[0]
-        assert_kind_of ColumnInfo, sth.column_info[1]
+        assert_kind_of DBI::ColumnInfo, sth.column_info[0]
+        assert_kind_of DBI::ColumnInfo, sth.column_info[1]
         assert_equal [ 
             { 
-                "name" => "name",
-                "sql_type" => 12,
-                "precision" => 255,
-                "type_name" => "varchar"
+                :name  => "name",
+                :sql_type  => 12,
+                :precision  => 255,
+                :type_name  => "varchar"
             }, 
             { 
-                "name" => "age",
-                "sql_type" => 4,
-                "type_name" => "integer"
+                :name  => "age",
+                :sql_type  => 4,
+                :type_name  => "integer"
             } 
         ], sth.column_info
 

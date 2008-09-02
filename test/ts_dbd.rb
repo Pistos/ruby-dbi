@@ -3,6 +3,12 @@ require 'yaml'
 require 'test/unit/testsuite'
 require 'test/unit/ui/console/testrunner'
 
+if File.basename(Dir.pwd) == "test"
+    $:.unshift('../lib')
+else
+    $:.unshift('lib')
+end
+
 module Test::Unit::Assertions
     def build_message(head, template=nil, *arguments)
         template += "\n" + "DATABASE: " + dbtype
@@ -74,12 +80,31 @@ if __FILE__ == $0
     $LOAD_PATH.unshift(File.join(Dir.pwd, "lib"))
     Dir.chdir("test") rescue nil
 
-    require 'dbi'
+    begin
+        require 'dbi'
+    rescue LoadError => e
+        begin
+            require 'rubygems'
+            gem 'dbi'
+            require 'dbi'
+        rescue LoadError => e
+            abort "DBI must already be installed or must come with this package for tests to work."
+        end
+    end
+
+    Deprecate.set_action(proc { })
 
     config = DBDConfig.get_config
 
-    if config
+    config["dbtypes"] = ENV["DBTYPES"].split(/\s+/) if ENV["DBTYPES"]
+
+    if config and config["dbtypes"]
         config["dbtypes"].each do |dbtype|
+            unless config[dbtype]
+                warn "#{dbtype} is selected for testing but not configured; see test/DBD_TESTS"
+                next
+            end
+
             # base.rb is special, see DBD_TESTS
             require "dbd/#{dbtype}/base.rb"
             Dir["dbd/#{dbtype}/test*.rb"].each { |file| require file }
@@ -87,5 +112,7 @@ if __FILE__ == $0
             DBDConfig.current_dbtype = dbtype.to_sym
             Dir["dbd/general/test*.rb"].each { |file| load file; DBDConfig.suite << @class }
         end
+    elsif !config["dbtypes"]
+        warn "Please see test/DBD_TESTS for information on configuring DBD tests."
     end
 end

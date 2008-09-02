@@ -7,7 +7,7 @@ class TestStatement < DBDConfig.testbase(:sqlite3)
         assert_kind_of ::SQLite3::Database, sth.instance_variable_get("@db")
         assert_equal(@dbh.instance_variable_get("@handle").instance_variable_get("@db"), sth.instance_variable_get("@db"))
         assert_kind_of ::SQLite3::Statement, sth.instance_variable_get("@stmt")
-        assert_nil(sth.instance_variable_get("@result"))
+        assert_nil(@sth.instance_variable_get("@result"))
 
         sth.finish
 
@@ -28,31 +28,30 @@ class TestStatement < DBDConfig.testbase(:sqlite3)
     end
     
     def test_column_info
-        sth = nil
+        @sth = nil
         
         assert_nothing_raised do 
-            sth = @dbh.prepare("select * from names")
-            sth.execute
+            @sth = @dbh.prepare("select * from names")
+            @sth.execute
         end
 
-        assert_kind_of Array, sth.column_info 
-        assert_kind_of ColumnInfo, sth.column_info[0]
-        assert_kind_of ColumnInfo, sth.column_info[1]
+        assert_kind_of Array, @sth.column_info 
+        assert_kind_of DBI::ColumnInfo, @sth.column_info[0]
+        assert_kind_of DBI::ColumnInfo, @sth.column_info[1]
         assert_equal [ 
             { 
-                "name" => "name",
-                "sql_type" => 12,
-                "precision" => 255,
-                "type_name" => "varchar"
+                :name  => "name",
+                :sql_type  => 12,
+                :precision  => 255,
+                :type_name  => "varchar"
             }, 
             { 
-                "name" => "age",
-                "sql_type" => 4,
-                "type_name" => "integer"
+                :name  => "age",
+                :sql_type  => 4,
+                :type_name  => "integer"
             } 
-        ], sth.column_info
+        ], @sth.column_info
 
-        sth.finish
+        @sth.finish
     end
-
 end

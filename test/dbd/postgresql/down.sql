@@ -14,8 +14,12 @@ drop table bit_test;
 ---
 drop table field_types_test;
 ---
+drop table array_test;
+---
+drop table bytea_test;
+---
+drop table precision_test;
+---
 drop schema schema1 cascade;
 ---
 drop schema schema2 cascade;
----
-drop language plpgsql CASCADE;

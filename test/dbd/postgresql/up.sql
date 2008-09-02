@@ -1,6 +1,6 @@
 create table names (
-    name varchar(255) not null,
-    age integer not null
+    name varchar(255),
+    age integer
 );
 ---
 insert into names (name, age) values ('Joe', 19);
@@ -8,6 +8,8 @@ insert into names (name, age) values ('Joe', 19);
 insert into names (name, age) values ('Jim', 30);
 ---
 insert into names (name, age) values ('Bob', 21);
+---
+create table precision_test (text_field varchar(20) primary key not null, integer_field decimal(2,1));
 ---
 CREATE TABLE blob_test (name VARCHAR(30), data OID);
 ---
@@ -28,6 +30,10 @@ create table bit_test (mybit bit);
 ---
 create table field_types_test (foo integer not null primary key default 1);
 ---
+create table array_test (foo integer[], bar integer[3], baz integer[3][3], quux varchar[2]);
+---
+create table bytea_test (foo bytea);
+---
 create schema schema1;
 ---
 create schema schema2;
@@ -36,15 +42,13 @@ create table schema1.tbl (foo integer);
 ---
 create table schema2.tbl (bar integer);
 ---
-create language plpgsql;
----
-create or replace function select_subproperty(value names.age%TYPE,
-subproperty names.age%TYPE) RETURNS names.age%TYPE AS $$
-    BEGIN
-        IF subproperty IS NULL THEN
-            RETURN NULL;
-        ELSE
-            RETURN value;
-        END IF;
-    END;
-$$ LANGUAGE 'plpgsql';
+create or replace function 
+    select_subproperty(value names.age%TYPE, sub names.age%TYPE, out retval names.age%TYPE) 
+    as $$ 
+        select 
+            case 
+            when $2 is not null 
+                then $1 
+            else null 
+        end 
+    $$ language sql;

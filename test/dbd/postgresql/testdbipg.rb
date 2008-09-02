@@ -18,6 +18,72 @@ class TestDbdPostgres < DBDConfig.testbase(:postgresql)
 #      dbd.disconnect if dbd
 #   end
 
+    # this monkeypatch is used for the following test... NEVER integrate this into DBI proper.
+    class DBI::StatementHandle < DBI::Handle
+        def stmt_name
+            @handle.instance_variable_get(:@stmt_name)
+        end
+    end
+
+    def test_statement_finish_deallocates_sth
+        assert_nothing_raised do
+            @sth = @dbh.prepare("select * from names")
+            @sth.execute
+            sth_internal_name = @sth.stmt_name
+            assert(sth_internal_name)
+            assert(!sth_internal_name.empty?)
+            @sth.finish
+
+            # at this point, the statement name should no longer exist
+            #
+            # XXX this is a potentially horrible way of doing it since it'll
+            # create another prepared statement, but *at this time*, I don't
+            # see any drawbacks and the alternative is considerably uglier.
+            
+            @sth = @dbh.prepare("select count(*) from pg_prepared_statements where name = ?")
+            @sth.execute(sth_internal_name)
+            assert_equal([0], @sth.fetch)
+            @sth.finish
+        end
+    end
+
+    def test_binding
+        assert(@dbh["pg_native_binding"])
+
+        assert_raise(DBI::ProgrammingError) do
+            @sth = @dbh.prepare("select * from names where age IS NOT ?")
+            @sth.execute("NULL")
+            @sth.finish
+        end
+
+        assert_nothing_raised do
+            @dbh["pg_native_binding"] = false
+            @sth = @dbh.prepare("select * from names where age IS NOT ? order by age")
+            @sth.execute("NULL")
+            assert_equal(
+                [
+                    ["Joe", 19],
+                    ["Bob", 21],
+                    ["Jim", 30],
+                ],
+                @sth.fetch_all
+            )
+
+            @sth.finish
+
+            @sth = @dbh.prepare("select * from names where age = ?")
+            @sth.execute(19)
+            assert_equal(
+                [
+                    ["Joe", 19]
+                ],
+                @sth.fetch_all
+            )
+
+            @sth.finish
+        end
+    end
+
     def test_function_multiple_return_values
         @sth = @dbh.prepare("SELECT age, select_subproperty(age, NULL), select_subproperty(age, 1) FROM names WHERE age = 19")
         @sth.execute
@@ -28,43 +94,48 @@ class TestDbdPostgres < DBDConfig.testbase(:postgresql)
     def test_tables
         assert_equal(
         [
+            "array_test",
             "bit_test",
             "blob_test",
             "boolean_test",
+            "bytea_test",
             "field_types_test",
             "names",
+            "precision_test",
             "time_test",
             "timestamp_test",
             "view_names"
-        ], @dbh.tables.reject { |x| x =~ /^pg/ }.sort)
+        ], @dbh.tables.reject { |x| x =~ /^pg_/ }.sort)
     end
 
     def test_columns
         assert_equal(
             [
                 {
-                        "name"=>"age",
-                        "default"=>nil,
-                        "primary"=>nil,
-                        "scale"=>nil,
-                        "sql_type"=>4,
-                        "nullable"=>false,
-                        "indexed"=>false,
-                        "precision"=>4,
-                        "type_name"=>"integer",
-                        "unique"=>nil
+                        :name =>"age",
+                        :default =>nil,
+                        :primary =>nil,
+                        :scale =>nil,
+                        :sql_type =>4,
+                        :nullable =>true,
+                        :indexed =>false,
+                        :precision =>4,
+                        :type_name =>"integer",
+                        :unique =>nil,
+                        :array_of_type =>nil
                 },
                 {
-                        "name"=>"name",
-                        "default"=>nil,
-                        "primary"=>nil,
-                        "scale"=>nil,
-                        "sql_type"=>12,
-                        "nullable"=>false,
-                        "indexed"=>false,
-                        "precision"=>255,
-                        "type_name"=>"character varying",
-                        "unique"=>nil
+                        :name =>"name",
+                        :default =>nil,
+                        :primary =>nil,
+                        :scale =>nil,
+                        :sql_type =>12,
+                        :nullable =>true,
+                        :indexed =>false,
+                        :precision =>255,
+                        :type_name =>"character varying",
+                        :unique =>nil,
+                        :array_of_type =>nil
                 }
         ], @dbh.columns("names").sort_by { |x| x["name"] })
 
@@ -78,16 +149,17 @@ class TestDbdPostgres < DBDConfig.testbase(:postgresql)
         assert_equal(
             [
                 {
-                    "name"=>"foo",
-                    "default"=>nil,
-                    "primary"=>nil,
-                    "scale"=>nil,
-                    "sql_type"=>4,
-                    "nullable"=>true,
-                    "indexed"=>false,
-                    "precision"=>4,
-                    "type_name"=>"integer",
-                    "unique"=>nil
+                    :name =>"foo",
+                    :default =>nil,
+                    :primary =>nil,
+                    :scale =>nil,
+                    :sql_type =>4,
+                    :nullable =>true,
+                    :indexed =>false,
+                    :precision =>4,
+                    :type_name =>"integer",
+                    :unique =>nil,
+                    :array_of_type =>nil
         
                 }
             ], 
@@ -114,7 +186,7 @@ class TestDbdPostgres < DBDConfig.testbase(:postgresql)
     dbd.disconnect if dbd
   end
 
-  def test_type_map
+  def skip_test_type_map
     dbd = get_dbd
     def dbd.type_map
       @type_map
@@ -130,11 +202,11 @@ class TestDbdPostgres < DBDConfig.testbase(:postgresql)
     res = dbd.do("INSERT INTO names (name, age) VALUES('Dan', 16)")
     assert_equal 1, res
     
-    sth = get_dbi.prepare("SELECT name FROM names WHERE age=16")
-    sth.execute
-    assert sth.fetchable?
+    @sth = get_dbi.prepare("SELECT name FROM names WHERE age=16")
+    @sth.execute
+    assert @sth.fetchable?
     # XXX FIXME This is a bug in the DBD. #rows should equal 1 for select statements.
-    assert_equal 0, sth.rows
+    assert_equal 0, @sth.rows
   ensure
     dbd.do("DELETE FROM names WHERE age < 20")
     dbd.disconnect if dbd
@@ -150,14 +222,16 @@ class TestDbdPostgres < DBDConfig.testbase(:postgresql)
   end
 
   def test_query_single
-    dbd = get_dbd
+    dbd = get_dbi
     res = dbd.prepare("SELECT name, age FROM names WHERE age=21;")
     assert res
     res.execute
     fields = res.column_info
     assert_equal 2, fields.length
     assert_equal 'name', fields[0]['name']
+    assert_equal 'varchar', fields[0]['type_name']
     assert_equal 'age', fields[1]['name']
+    assert_equal 'int4', fields[1]['type_name']
 
     row = res.fetch
 
