@@ -49,7 +49,7 @@ module DBI
         # Only things that extend DBI's results are documented.
         #
         module Mysql
-            VERSION          = "0.3.3"
+            VERSION          = "0.4.0"
             DESCRIPTION      = "MySQL DBI DBD, Leverages 'mysql' low-level driver"
 
             MyError = ::MysqlError
