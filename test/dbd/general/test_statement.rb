@@ -1,4 +1,13 @@
 @class = Class.new(DBDConfig.testbase(DBDConfig.current_dbtype)) do
+
+    def test_execute
+        assert_nothing_raised do
+            @dbh.execute("select * from names order by age") do |sth|
+                assert_equal([["Joe", 19], ["Bob", 21], ["Jim", 30]], sth.fetch_all)
+            end
+        end
+    end
+
     def test_quoting # FIXME breaks sqlite-ruby to a segfault - research
         @sth = nil
 
@@ -114,7 +123,7 @@
         @sth.finish
     end
 
-    def test_execute
+    def test_prepare_execute
         assert_nothing_raised do 
             @sth = @dbh.prepare("select * from names")
             @sth.execute
@@ -134,7 +143,7 @@
         end
     end
 
-    def test_execute_with_transactions
+    def test_prepare_execute_with_transactions
         @dbh["AutoCommit"] = false 
         config = DBDConfig.get_config['sqlite3']
 
