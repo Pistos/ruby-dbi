@@ -54,7 +54,7 @@ module DBI
         #
         module ODBC
 
-            VERSION          = "0.2.2"
+            VERSION          = "0.2.3"
             DESCRIPTION      = "ODBC DBI DBD"
 
             def self.driver_name
