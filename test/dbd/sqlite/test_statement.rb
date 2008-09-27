@@ -94,4 +94,19 @@ class TestSQLiteStatement < DBDConfig.testbase(:sqlite)
 
         sth.finish
     end
+
+    def test_specific_types
+        assert_nothing_raised do
+            @sth = @dbh.prepare("insert into db_specific_types_test (dbl) values (?)")
+            @sth.execute(11111111.111111)
+            @sth.finish
+        end
+
+        assert_nothing_raised do
+            @sth = @dbh.prepare("select * from db_specific_types_test")
+            @sth.execute
+            assert_equal([11111111.111111], @sth.fetch)
+            @sth.finish
+        end
+    end
 end
