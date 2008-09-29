@@ -32,7 +32,7 @@ class DBI::DBD::ODBC::Driver < DBI::BaseDriver
         end
 
         return DBI::DBD::ODBC::Database.new(handle, attr)
-    rescue ODBCErr => err
+    rescue DBI::DBD::ODBC::ODBCErr => err
         raise DBI::DatabaseError.new(err.message)
     end
 end

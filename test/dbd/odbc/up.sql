@@ -29,3 +29,5 @@ create table timestamp_test (mytimestamp timestamp);
 create table bit_test (mybit bit);
 ---
 create table field_types_test (foo integer not null primary key default 1);
+---
+create table db_specific_types_test (foo integer);

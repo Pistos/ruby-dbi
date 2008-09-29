@@ -14,6 +14,46 @@ class TestMysqlPatches < DBDConfig.testbase(:mysql)
         end
     end
 
+    def test_timestamps
+        timestamp = "04-06-1978 06:00:00"
+        datestamp = "04-06-1978"
+        date  = Date.strptime(datestamp, "%m-%d-%Y")
+        stamp = DateTime.strptime(timestamp, "%m-%d-%Y %H:%M:%S")
+        assert_nothing_raised do
+            @sth = @dbh.prepare("insert into db_specific_types_test (ts) values (?)")
+            @sth.execute(stamp)
+            @sth.finish
+        end
+
+        assert_nothing_raised do
+            @sth = @dbh.prepare("select ts from db_specific_types_test where ts is not null")
+            @sth.execute
+
+            newstamp = @sth.fetch[0]
+
+            assert_equal(newstamp, stamp)
+            assert_equal(newstamp.strftime("%m-%d-%Y %H:%M:%S"), timestamp)
+            @sth.finish
+        end
+
+        assert_nothing_raised do
+            @sth = @dbh.prepare("insert into db_specific_types_test (dt) values (?)")
+            @sth.execute(date)
+            @sth.finish
+        end
+
+        assert_nothing_raised do
+            @sth = @dbh.prepare("select dt from db_specific_types_test where dt is not null")
+            @sth.execute
+            
+            newdate = @sth.fetch[0]
+
+            assert_equal(newdate, date)
+            assert_equal(newdate.strftime("%m-%d-%Y"), datestamp)
+            @sth.finish
+        end
+    end
+
     # FIXME when the spec is more solid, this should be in the general tests
     def test_columns
         assert_nothing_raised do

@@ -14,4 +14,6 @@ drop table bit_test;
 ---
 drop table field_types_test;
 ---
+drop table db_specific_types_test;
+---
 drop table precision_test;

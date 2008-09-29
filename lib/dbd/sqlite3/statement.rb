@@ -53,6 +53,12 @@ class DBI::DBD::SQLite3::Statement < DBI::BaseStatement
             }
             h['precision'] = m[3].to_i if m[3]
             h['scale']     = m[5].to_i if m[5]
+
+            case h['type_name']
+            when 'double'
+                h['dbi_type'] = DBI::Type::Float
+            end
+
             h
         }
     end
