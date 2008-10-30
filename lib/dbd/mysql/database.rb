@@ -87,13 +87,13 @@ module DBI::DBD::Mysql
                 coercion_method = DBI::Type::Varchar
             when 'TYPE_DATE'
                 mysql_type_name = 'DATE'
-                coercion_method = DBI::Type::Timestamp
+                coercion_method = DBI::DBD::Mysql::Type::Date
             when 'TYPE_TIME'
                 mysql_type_name = 'TIME'
                 coercion_method = DBI::Type::Timestamp
             when 'TYPE_DATETIME', 'TYPE_TIMESTAMP'
                 mysql_type_name = 'DATETIME'
-                coercion_method = DBI::Type::Timestamp
+                coercion_method = DBI::DBD::Mysql::Type::Timestamp
             when 'TYPE_CHAR'
                 mysql_type_name = 'TINYINT'    # questionable?
             when 'TYPE_TINY_BLOB'
@@ -206,6 +206,12 @@ module DBI::DBD::Mysql
                     col['precision']      = size
                     col['scale']          = decimal
                     col['default']        = row[4]
+
+                    case col['type_name']
+                    when 'timestamp'
+                        col['dbi_type'] = DBI::DBD::Mysql::Type::Timestamp
+                    end
+
                     col
                 end # collect
             end # execute

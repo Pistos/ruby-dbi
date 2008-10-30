@@ -50,7 +50,7 @@ module DBI
         # Only things that extend DBI's results are documented.
         #
         module SQLite3
-            VERSION = ::SQLite3::Version::STRING
+            VERSION = "1.2.3"
             DESCRIPTION = "SQLite 3.x DBD for DBI"
 
             #

@@ -108,6 +108,11 @@ class DBI::DBD::SQLite::Statement < DBI::BaseStatement
                         break
                     end
                 end
+
+                case columns[i]["type_name"]
+                when 'double'
+                    columns[i]["dbi_type"] = DBI::Type::Float
+                end
             end
         end
 

@@ -91,23 +91,6 @@ class TestDbdPostgres < DBDConfig.testbase(:postgresql)
         @sth.finish
     end
 
-    def test_tables
-        assert_equal(
-        [
-            "array_test",
-            "bit_test",
-            "blob_test",
-            "boolean_test",
-            "bytea_test",
-            "field_types_test",
-            "names",
-            "precision_test",
-            "time_test",
-            "timestamp_test",
-            "view_names"
-        ], @dbh.tables.reject { |x| x =~ /^pg_/ }.sort)
-    end
-
     def test_columns
         assert_equal(
             [

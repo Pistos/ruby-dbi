@@ -77,7 +77,7 @@ class DBI::DBD::ODBC::Database < DBI::BaseDatabase
 
     def execute(statement, *bindvars)
         stmt = @handle.run(statement, *bindvars) 
-        DBI::DBD::ODBC::Statement.new(stmt)
+        DBI::DBD::ODBC::Statement.new(stmt, statement)
     rescue DBI::DBD::ODBC::ODBCErr => err
         raise DBI::DatabaseError.new(err.message)
     end
