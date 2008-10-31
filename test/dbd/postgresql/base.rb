@@ -1,7 +1,6 @@
-require 'test/unit'
 require 'fileutils'
 
-DBDConfig.set_testbase(:postgresql, Class.new(Test::Unit::TestCase) do
+DBDConfig.set_testbase(:postgresql, Class.new(MiniTest::Unit::TestCase) do
         
         def dbtype
             "postgresql"

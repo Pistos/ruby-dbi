@@ -62,9 +62,9 @@
         @sth = @dbh.prepare("select name, age from names order by age")
 
         # can't bind_coltype before execute
-        assert_raise(DBI::InterfaceError) { @sth.bind_coltype(1, DBI::Type::Float) }
+        assert_raises(DBI::InterfaceError) { @sth.bind_coltype(1, DBI::Type::Float) }
         # can't index < 1
-        assert_raise(DBI::InterfaceError) { @sth.bind_coltype(0, DBI::Type::Float) }
+        assert_raises(DBI::InterfaceError) { @sth.bind_coltype(0, DBI::Type::Float) }
     end
 
     def test_noconv

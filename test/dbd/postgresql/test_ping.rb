@@ -5,6 +5,6 @@ class TestPostgresPing < DBDConfig.testbase(:postgresql)
         assert dbh
         assert dbh.ping
         dbh.disconnect
-        assert_raise(DBI::InterfaceError) { dbh.ping }
+        assert_raises(DBI::InterfaceError) { dbh.ping }
     end
 end

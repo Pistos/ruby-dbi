@@ -138,11 +138,11 @@ class TestPostgresArray < DBDConfig.testbase(:postgresql)
             sth.execute('{1,2,3}')
         end
 
-        assert_raise(DBI::ProgrammingError) do
+        assert_raises(DBI::ProgrammingError) do
             sth.execute('{{1,2,3,4}, {1,2,3}}')
         end
 
-        assert_raise(DBI::ProgrammingError) do
+        assert_raises(DBI::ProgrammingError) do
             sth.execute('{{1,2,3}, {1,2,3,4}}')
         end
 

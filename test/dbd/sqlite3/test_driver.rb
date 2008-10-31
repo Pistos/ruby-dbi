@@ -18,17 +18,17 @@ class TestDriver < DBDConfig.testbase(:sqlite3)
         assert_kind_of DBI::DatabaseHandle, dbh
 
         # first argument should be a string
-        assert_raise(DBI::InterfaceError) do
+        assert_raises(DBI::InterfaceError) do
             DBI::DBD::SQLite3::Driver.new.connect(nil, nil, nil, { })
         end
 
         # that string should have some frackin' length
-        assert_raise(DBI::InterfaceError) do
+        assert_raises(DBI::InterfaceError) do
             DBI::DBD::SQLite3::Driver.new.connect("", nil, nil, { })
         end
 
         # last argument should be a hash
-        assert_raise(DBI::InterfaceError) do
+        assert_raises(DBI::InterfaceError) do
             DBI::DBD::SQLite3::Driver.new.connect(config['dbname'], nil, nil, nil)
         end
 
