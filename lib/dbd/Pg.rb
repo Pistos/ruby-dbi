@@ -49,7 +49,7 @@ module DBI
         # Only things that extend DBI's results are documented.
         #
         module Pg
-            VERSION          = "0.3.4"
+            VERSION          = "0.3.5"
             DESCRIPTION      = "PostgreSQL DBI DBD"
 
             #
