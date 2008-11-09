@@ -11,7 +11,7 @@
 
             assert(cols)
             assert_kind_of(Array, cols)
-            assert_equal(2, cols.length)
+            assert_equal(4, cols.length)
 
             # the first column should always be "text_field" and have the following
             # properties:
@@ -30,19 +30,41 @@
             end
 
             assert_equal(
-                DBI::Type::Varchar, 
-                DBI::TypeUtil.type_name_to_module(cols[0]["type_name"])
+                DBI::Type::Varchar.object_id, 
+                DBI::TypeUtil.type_name_to_module(cols[0]["type_name"]).object_id
             )
 
             # the second column should always be "integer_field" and have the following
             # properties:
             assert_equal("integer_field", cols[1]["name"])
             assert(cols[1]["nullable"])
-            assert_equal(1, cols[1]["scale"])
-            assert_equal(2, cols[1]["precision"])
+            assert_equal(1, cols[2]["scale"])
+            assert_equal(2, cols[2]["precision"])
             assert_equal(
-                DBI::Type::Decimal, 
-                DBI::TypeUtil.type_name_to_module(cols[1]["type_name"])
+                DBI::Type::Integer.object_id, 
+                DBI::TypeUtil.type_name_to_module(cols[1]["type_name"]).object_id
+            )
+
+            # the second column should always be "integer_field" and have the following
+            # properties:
+            assert_equal("decimal_field", cols[2]["name"])
+            assert(cols[2]["nullable"])
+            assert_equal(1, cols[2]["scale"])
+            assert_equal(2, cols[2]["precision"])
+            assert_equal(
+                DBI::Type::Decimal.object_id, 
+                DBI::TypeUtil.type_name_to_module(cols[2]["type_name"]).object_id
+            )
+
+            # the second column should always be "numeric_field" and have the following
+            # properties:
+            assert_equal("numeric_field", cols[3]["name"])
+            assert(cols[3]["nullable"])
+            assert_equal(6, cols[3]["scale"])
+            assert_equal(30, cols[3]["precision"])
+            assert_equal(
+                DBI::Type::Decimal.object_id, 
+                DBI::TypeUtil.type_name_to_module(cols[3]["type_name"]).object_id
             )
 
             # finally, we ensure that every column in the array is a ColumnInfo

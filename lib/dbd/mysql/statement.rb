@@ -140,7 +140,7 @@ module DBI::DBD::Mysql
                     'sql_type'    => sql_type,
                     'type_name'   => type_name,
                     # XXX it seems mysql counts the literal decimal point when weighing in the "length".
-                    'precision'   => col.decimals > 0 ? col.length - col.decimals - 1 : col.length,
+                    'precision'   => type_name == "NUMERIC" ? col.length - 2 : col.length,
                     'scale'       => col.decimals,
                     'nullable'    => !col.is_not_null?,
                     'indexed'     => ((col.flags & indexed) != 0) ||
