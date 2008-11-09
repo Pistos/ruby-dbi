@@ -1,11 +1,9 @@
+require 'rubygems'
+gem 'test-unit'
 # figure out what tests to run
 require 'yaml'
-require 'rubygems'
-begin
-    gem 'minitest'
-rescue LoadError => e
-end
-require 'minitest/unit'
+require 'test/unit/testsuite'
+require 'test/unit/ui/console/testrunner'
 
 if File.basename(Dir.pwd) == "test"
     $:.unshift('../lib')
@@ -13,28 +11,21 @@ else
     $:.unshift('lib')
 end
 
-# miniunit is awesomely full of fail
-class Class
-    def name=(name)
-        @name = name.to_s if name
-    end
-
-    alias :name_orig :name
-
-    def name
-        return @name if @name
-        return name_orig
+module Test::Unit::Assertions
+    def build_message(head, template=nil, *arguments)
+        template += "\n" + "DATABASE: " + dbtype
+        template &&= template.chomp
+        return AssertionMessage.new(head, template, arguments)
     end
 end
 
-module MiniTest::Assertions
-    def assert_nothing_raised
-        begin
-            yield 
-            assert(true, "Nothing raised")
-        rescue Exception => e
-            flunk "#{mu_pp(e)} raised when nothing was expected"
-        end
+class Class
+    def name=(klass_name)
+        @name = klass_name
+    end
+
+    def name
+        return @name || super
     end
 end
 
@@ -88,8 +79,8 @@ module DBDConfig
     end
 
     def self.set_testbase(klass_name, klass)
-        klass.name = klass_name
         @testbase[klass_name] = klass
+        klass.name = klass_name.to_s
     end
 
     def self.suite
@@ -129,37 +120,12 @@ if __FILE__ == $0
 
             # base.rb is special, see DBD_TESTS
             require "dbd/#{dbtype}/base.rb"
-            Dir["dbd/#{dbtype}/test*.rb"].each { |file| load file }
+            Dir["dbd/#{dbtype}/test*.rb"].each { |file| require file }
             # run the general tests
             DBDConfig.current_dbtype = dbtype.to_sym
-            Dir["dbd/general/test*.rb"].each { |file| load file; @class.name = file }
-            mt = MiniTest::Unit.new
-            start = Time.now
-            mt.run_test_suites
-
-            puts
-            if mt.report.length > 0
-
-                puts "-" * 50
-                puts "DATABASE: #{dbtype}"
-                puts "-" * 50
-
-                puts mt.report
-
-                puts "-" * 50
-                puts "DATABASE: #{dbtype}"
-                puts "-" * 50
-            end
-
-            puts "Finished in #{(Time.now - start).to_f} seconds."
-            puts
-
-            format = "%d tests, %d assertions, %d failures, %d errors, %d skips"
-            puts format % [mt.test_count, mt.assertion_count, mt.failures, mt.errors, mt.skips]
-
-            MiniTest::Unit::TestCase.reset
+            Dir["dbd/general/test*.rb"].each { |file| load file; @class.name = file; DBDConfig.suite << @class }
         end
-    else
+    elsif !config["dbtypes"]
         warn "Please see test/DBD_TESTS for information on configuring DBD tests."
     end
 end

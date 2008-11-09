@@ -1,4 +1,4 @@
-DBDConfig.set_testbase(:mysql, Class.new(MiniTest::Unit::TestCase) do
+DBDConfig.set_testbase(:mysql, Class.new(Test::Unit::TestCase) do
         def dbtype 
             "mysql"
         end

@@ -1,6 +1,6 @@
 require 'fileutils'
 
-DBDConfig.set_testbase(:sqlite3, Class.new(MiniTest::Unit::TestCase) do
+DBDConfig.set_testbase(:sqlite3, Class.new(Test::Unit::TestCase) do
         def dbtype 
             "sqlite3"
         end
