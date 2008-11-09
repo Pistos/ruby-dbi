@@ -338,6 +338,7 @@ class DBI::DBD::Pg::Database < DBI::BaseDatabase
         when 'time', 'timetz'            then DBI::Type::Timestamp
         when 'timestamp', 'timestamptz'  then DBI::Type::Timestamp
         when 'date'                      then DBI::Type::Timestamp
+        when 'decimal', 'numeric'        then DBI::Type::Decimal
         when 'bytea'                     then DBI::DBD::Pg::Type::ByteA
         end
     end
