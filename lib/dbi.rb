@@ -269,9 +269,10 @@ module DBI
                     # driver handle.
 
                     dr = nil
+                    dr_error = nil
                     begin
                         dr = DBI::DBD.const_get(driver_name.intern)
-                    rescue NameError
+                    rescue NameError => dr_error
                         # caseless look for constants to find actual constant
                         dc = driver_name.downcase
                         found = DBI::DBD.constants.find { |e| e.downcase == dc }
@@ -283,6 +284,13 @@ module DBI
                     # can fail for other reasons.
                     if dr.nil?
                         err = "Unable to load driver '#{driver_name}'"
+
+                        if dr_error
+                            err += " (underlying error: #{dr_error.message})"
+                        else
+                            err += " (BUG: could not determine underlying error)"
+                        end
+
                         raise DBI::InterfaceError, err
                     end
 
