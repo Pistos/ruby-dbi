@@ -20,7 +20,7 @@ class TestSQLiteStatement < DBDConfig.testbase(:sqlite)
     def test_bind_param
         sth = DBI::DBD::SQLite::Statement.new("select * from foo", @dbh.instance_variable_get("@handle"))
 
-        assert_raise(DBI::InterfaceError) do
+        assert_raises(DBI::InterfaceError) do
             sth.bind_param(:foo, "monkeys")
         end
 

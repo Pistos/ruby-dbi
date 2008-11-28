@@ -50,7 +50,7 @@ class TestDbdPostgres < DBDConfig.testbase(:postgresql)
     def test_binding
         assert(@dbh["pg_native_binding"])
 
-        assert_raise(DBI::ProgrammingError) do
+        assert_raises(DBI::ProgrammingError) do
             @sth = @dbh.prepare("select * from names where age IS NOT ?")
             @sth.execute("NULL")
             @sth.finish
@@ -153,15 +153,15 @@ class TestDbdPostgres < DBDConfig.testbase(:postgresql)
 
   def test_connect_errors
     dbd = nil
-    ex = assert_raise(DBI::OperationalError) {
+    ex = assert_raises(DBI::OperationalError) {
       dbd = DBI::DBD::Pg::Database.new('rubytest:1234', 'jim', nil, {})
     }
-    ex = assert_raise(DBI::OperationalError) {
+    ex = assert_raises(DBI::OperationalError) {
       dbd = DBI::DBD::Pg::Database.new('bad_db_name', 'jim', nil, {})
     }
 
     # this corresponds to the test_parse_url_expected_errors test in tc_dbi.rb
-    assert_raise(DBI::InterfaceError) do
+    assert_raises(DBI::InterfaceError) do
         DBI.connect("dbi:Pg").disconnect
     end
 
@@ -197,7 +197,7 @@ class TestDbdPostgres < DBDConfig.testbase(:postgresql)
 
   def test_bad_command
     dbd = get_dbd
-    assert_raise(DBI::ProgrammingError) {
+    assert_raises(DBI::ProgrammingError) {
       dbd.do("INSERT INTO bad_table (name, age) VALUES('Dave', 12)")
     }
   ensure

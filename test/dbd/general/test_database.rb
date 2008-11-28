@@ -1,4 +1,15 @@
 @class = Class.new(DBDConfig.testbase(DBDConfig.current_dbtype)) do
+
+    def test_empty_query
+        ["", " ", "\t"].each do |str|
+            [:do, :prepare, :execute, :select_one, :select_all].each do |call|
+                assert_raises(DBI::InterfaceError) do
+                    @dbh.send(call, str)
+                end
+            end
+        end
+    end
+
     def test_ping
         assert @dbh.ping
         # XXX if it isn't obvious, this should be tested better. Not sure what
@@ -40,6 +51,7 @@
             assert(cols[1]["nullable"])
             assert_equal(1, cols[2]["scale"])
             assert_equal(2, cols[2]["precision"])
+            
             assert_equal(
                 DBI::Type::Integer.object_id, 
                 DBI::TypeUtil.type_name_to_module(cols[1]["type_name"]).object_id

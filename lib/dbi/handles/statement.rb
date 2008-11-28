@@ -12,11 +12,13 @@ module DBI
         include Enumerable
 
         attr_accessor :dbh
+        attr_accessor :raise_error
 
-        def initialize(handle, fetchable=false, prepared=true, convert_types=true)
+        def initialize(handle, fetchable=false, prepared=true, convert_types=true, executed=false)
             super(handle)
             @fetchable = fetchable
             @prepared  = prepared     # only false if immediate execute was used
+            @executed  = executed     # only true if the statement was already executed.
             @cols = nil
             @coltypes = nil
             @convert_types = convert_types
@@ -68,8 +70,8 @@ module DBI
         #  sth.finish
         #
         def bind_coltype(pos, type)
-            raise InterfaceError, "statement must be executed before using this command" unless @executed
-
+            sanity_check({:prepared => true, :executed => true})
+            
             coltypes = column_types
 
             if (pos - 1) < 1
@@ -85,8 +87,7 @@ module DBI
         # type if it's supposed to, adhering to the DBD's current ruleset.
         #
         def bind_param(param, value, attribs=nil)
-            raise InterfaceError, "Statement was already closed!" if @handle.nil?
-            raise InterfaceError, "Statement wasn't prepared before." unless @prepared
+            sanity_check({ :prepared => true })
 
             if @convert_types
                 value = DBI::Utils::ConvParam.conv_param(dbh.driver_name, value)[0]
@@ -105,8 +106,7 @@ module DBI
         # If arguments are supplied, these are fed to #bind_param.
         def execute(*bindvars)
             cancel     # cancel before 
-            raise InterfaceError, "Statement was already closed!" if @handle.nil?
-            raise InterfaceError, "Statement wasn't prepared before." unless @prepared
+            sanity_check({:prepared => true })
 
             if @convert_types
                 bindvars = DBI::Utils::ConvParam.conv_param(dbh.driver_name, *bindvars)
@@ -132,7 +132,7 @@ module DBI
         # inoperable and unavailable for further use.
         #
         def finish
-            raise InterfaceError, "Statement was already closed!" if @handle.nil?
+            sanity_check
             @handle.finish
             @handle = nil
         end
@@ -144,7 +144,7 @@ module DBI
         # may be re-executed.
         #
         def cancel
-            raise InterfaceError, "Statement was already closed!" if @handle.nil?
+            sanity_check
             @handle.cancel if @fetchable
             @fetchable = false
         end
@@ -153,7 +153,7 @@ module DBI
         # Obtains the column names for this query as an array.
         #
         def column_names
-            raise InterfaceError, "Statement was already closed!" if @handle.nil?
+            sanity_check
             return @cols unless @cols.nil?
             @cols = @handle.column_info.collect {|col| col['name'] }
         end
@@ -166,7 +166,7 @@ module DBI
         # to the DBI::Type calling syntax.
         #
         def column_types
-            raise InterfaceError, "Statement was already closed!" if @handle.nil?
+            sanity_check
             return @coltypes unless @coltypes.nil?
             @coltypes = @handle.column_info.collect do |col| 
                 if col['dbi_type']
@@ -181,7 +181,7 @@ module DBI
         # See BaseStatement#column_info.
         #
         def column_info
-            raise InterfaceError, "Statement was already closed!" if @handle.nil?
+            sanity_check
             @handle.column_info.collect {|col| ColumnInfo.new(col) }
         end
 
@@ -193,7 +193,7 @@ module DBI
         # statements, f.e.)
         #
         def rows
-            raise InterfaceError, "Statement was already closed!" if @handle.nil?
+            sanity_check
             @handle.rows
         end
 
@@ -205,7 +205,7 @@ module DBI
         # similar fashion to Enumerable#collect. See #each.
         #
         def fetch(&p)
-            raise InterfaceError, "Statement was already closed!" if @handle.nil?
+            sanity_check({ :fetchable => true, :prepared => true, :executed => true })
 
             if block_given? 
                 while (res = @handle.fetch) != nil
@@ -234,8 +234,7 @@ module DBI
         # Synonym for #fetch with a block.
         #
         def each(&p)
-            raise InterfaceError, "Statement was already closed!" if @handle.nil?
-            raise InterfaceError, "Statement must first be executed" unless @fetchable
+            sanity_check({:fetchable => true, :prepared => true, :executed => true})
             raise InterfaceError, "No block given" unless block_given?
 
             fetch(&p)
@@ -247,8 +246,7 @@ module DBI
         # is basically a way to get the raw data from the DBD.
         #
         def fetch_array
-            raise InterfaceError, "Statement was already closed!" if @handle.nil?
-            raise InterfaceError, "Statement must first be executed" unless @fetchable
+            sanity_check({:fetchable => true, :prepared => true, :executed => true})
 
             if block_given? 
                 while (res = @handle.fetch) != nil
@@ -273,8 +271,7 @@ module DBI
         # No type conversion is performed here. Expect this to change in 0.6.0.
         #
         def fetch_hash
-            raise InterfaceError, "Statement was already closed!" if @handle.nil?
-            raise InterfaceError, "Statement must first be executed" unless @fetchable
+            sanity_check({:fetchable => true, :prepared => true, :executed => true})
 
             cols = column_names
 
@@ -305,12 +302,11 @@ module DBI
         # Fetch `cnt` rows. Result is array of DBI::Row
         #
         def fetch_many(cnt)
-            raise InterfaceError, "Statement was already closed!" if @handle.nil?
-            raise InterfaceError, "Statement must first be executed" unless @fetchable
+            sanity_check({:fetchable => true, :prepared => true, :executed => true})
 
             cols = column_names
             rows = @handle.fetch_many(cnt)
-            if rows.nil?
+            if rows.nil? or rows.empty?
                 @handle.cancel
                 @fetchable = false
                 return []
@@ -323,8 +319,7 @@ module DBI
         # Fetch the entire result set. Result is array of DBI::Row.
         #
         def fetch_all
-            raise InterfaceError, "Statement was already closed!" if @handle.nil?
-            raise InterfaceError, "Statement must first be executed" unless @fetchable
+            sanity_check({:fetchable => true, :prepared => true, :executed => true})
 
             cols = column_names
             fetched_rows = []
@@ -346,8 +341,7 @@ module DBI
         # See BaseStatement#fetch_scroll.
         #
         def fetch_scroll(direction, offset=1)
-            raise InterfaceError, "Statement was already closed!" if @handle.nil?
-            raise InterfaceError, "Statement must first be executed" unless @fetchable
+            sanity_check({:fetchable => true, :prepared => true, :executed => true})
 
             row = @handle.fetch_scroll(direction, offset)
             if row.nil?
@@ -362,14 +356,53 @@ module DBI
 
         # Get an attribute from the StatementHandle object.
         def [] (attr)
-            raise InterfaceError, "Statement was already closed!" if @handle.nil?
+            sanity_check
             @handle[attr]
         end
 
         # Set an attribute on the StatementHandle object.
         def []= (attr, val)
-            raise InterfaceError, "Statement was already closed!" if @handle.nil?
+            sanity_check
             @handle[attr] = val
         end
+        
+        protected
+
+        def sanity_check(params={})
+            raise InterfaceError, "Statement was already closed!" if @handle.nil?
+
+            params.each_key do |key|
+                case key
+                when :fetchable
+                    check_fetchable
+                when :executed
+                    check_executed
+                when :prepared
+                    check_prepared
+                when :statement
+                    check_statement(params[:statement])
+                end
+            end
+        end
+
+        def check_prepared
+            raise InterfaceError, "Statement wasn't prepared before." unless @prepared
+        end
+
+        def check_fetchable
+            if !@fetchable and @raise_error
+                raise InterfaceError, "Statement does not have any data for fetching." 
+            end
+        end
+
+        def check_executed
+            raise InterfaceError, "Statement hasn't been executed yet." unless @executed
+        end
+
+        # basic sanity checks for statements
+        def check_statement(stmt)
+            raise InterfaceError, "Statement is empty, or contains nothing but whitespace" if stmt !~ /\S/
+        end
+
     end # class StatementHandle
 end

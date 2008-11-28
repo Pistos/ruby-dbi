@@ -1,3 +1,5 @@
+require 'rubygems'
+gem 'test-unit'
 # figure out what tests to run
 require 'yaml'
 require 'test/unit/testsuite'
@@ -14,6 +16,16 @@ module Test::Unit::Assertions
         template += "\n" + "DATABASE: " + dbtype
         template &&= template.chomp
         return AssertionMessage.new(head, template, arguments)
+    end
+end
+
+class Class
+    def name=(klass_name)
+        @name = klass_name
+    end
+
+    def name
+        return @name || super
     end
 end
 
@@ -68,6 +80,7 @@ module DBDConfig
 
     def self.set_testbase(klass_name, klass)
         @testbase[klass_name] = klass
+        klass.name = klass_name.to_s
     end
 
     def self.suite
@@ -110,7 +123,7 @@ if __FILE__ == $0
             Dir["dbd/#{dbtype}/test*.rb"].each { |file| require file }
             # run the general tests
             DBDConfig.current_dbtype = dbtype.to_sym
-            Dir["dbd/general/test*.rb"].each { |file| load file; DBDConfig.suite << @class }
+            Dir["dbd/general/test*.rb"].each { |file| load file; @class.name = file; DBDConfig.suite << @class }
         end
     elsif !config["dbtypes"]
         warn "Please see test/DBD_TESTS for information on configuring DBD tests."

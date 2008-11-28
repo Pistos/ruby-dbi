@@ -98,7 +98,7 @@ module DBI
         # Create a new row with 'new_values', reusing the field name hash.
         # Initial cloning is done deeply, via Marshal.
         def clone_with(new_values)
-            obj = Marshal.load(Marshal.dump(self))
+            obj = clone
             obj.set_values(new_values)
 
             return obj
@@ -208,16 +208,27 @@ module DBI
             end
         end
 
-        #
-        # See Object#clone.
-        #
-        # #clone and #dup here, however, are both deep copies via Marshal.
-        #
-        def clone
-            Marshal.load(Marshal.dump(self))
-        end
 
-        alias dup clone
+        if RUBY_VERSION =~ /^1\.9/
+            def __getobj__
+                @arr
+            end
+
+            def __setobj__(obj)
+                @delegate_dc_obj = @arr = obj
+            end
+        else
+            #
+            # See Object#clone.
+            #
+            # #clone and #dup here, however, are both deep copies via Marshal.
+            #
+            def clone
+                Marshal.load(Marshal.dump(self))
+            end
+            
+            alias dup clone
+        end
 
         private
 

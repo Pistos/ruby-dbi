@@ -25,7 +25,7 @@ class TestPostgresBlob < DBDConfig.testbase(:postgresql)
             index += 1
             assert_equal DATA, @dbh.func(:blob_read, data, DATA.length)
             @dbh.func(:blob_export, data, '/tmp/pg_dbi_read_test')
-            assert_equal DATA, File.readlines('/tmp/pg_dbi_read_test').to_s
+            assert_equal DATA, File.read('/tmp/pg_dbi_read_test')
         end
 
         assert_equal 3, index

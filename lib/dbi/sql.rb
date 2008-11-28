@@ -5,7 +5,6 @@
 #
 
 require "dbi/utils"
-require "parsedate"
 require "time"
 
 module DBI

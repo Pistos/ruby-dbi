@@ -8,6 +8,9 @@ module DBI
     # Optional" are defined in DBI::BaseDatabase.
     #
     class BaseStatement < Base
+
+        attr_accessor :raise_error
+
         def initialize(attr=nil)
             @attr = attr || {}
         end
@@ -154,6 +157,7 @@ module DBI
         # Get statement attributes.
         #
         def [](attr)
+            @attr ||= { }
             @attr[attr]
         end
 
