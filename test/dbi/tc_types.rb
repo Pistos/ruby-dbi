@@ -144,7 +144,7 @@ class TC_DBI_TypeUtil < Test::Unit::TestCase
     end
 
     def datecast(obj)
-        "'#{::DateTime.parse(obj.to_s).strftime("%m/%d/%Y %H:%M:%S")}'"
+        "'#{::DateTime.parse(obj.to_s).strftime("%Y-%m-%dT%H:%M:%S")}'"
     end
 
     def test_default_unknown_cast
