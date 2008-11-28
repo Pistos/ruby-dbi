@@ -59,6 +59,7 @@ class TestStatement < DBDConfig.testbase(:sqlite3)
         assert_nothing_raised do
             @sth = @dbh.prepare("insert into db_specific_types_test (dbl) values (?)")
             @sth.execute(11111111.111111)
+            @sth.execute(22)
             @sth.finish
         end
 
@@ -66,7 +67,10 @@ class TestStatement < DBDConfig.testbase(:sqlite3)
             @sth = @dbh.prepare("select * from db_specific_types_test")
             @sth.execute
             assert_equal([11111111.111111], @sth.fetch)
+            assert_equal([22], @sth.fetch)
             @sth.finish
+
+            assert_equal([[11111111.111111], [22]], @dbh.select_all("select * from db_specific_types_test"))
         end
     end
 end
