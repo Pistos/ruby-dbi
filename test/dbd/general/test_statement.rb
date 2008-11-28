@@ -1,4 +1,50 @@
 @class = Class.new(DBDConfig.testbase(DBDConfig.current_dbtype)) do
+   
+    def prep_status_statement
+        @sth.finish if (@sth and !@sth.finished?)
+        @sth = @dbh.prepare("select * from names order by age")
+        @sth.raise_error = true
+    end
+
+    def test_status
+        names_rc = 3
+
+        [:fetch, :fetch_hash, :each, :fetch_all].each do |call|
+            assert_raise(DBI::InterfaceError, DBI::NotSupportedError) do
+                prep_status_statement
+                @sth.send(call)
+            end
+        end
+        
+        # for these next three, it doesn't really matter what the args are, it should fail
+        assert_raises(DBI::InterfaceError, DBI::NotSupportedError) do
+            prep_status_statement
+            @sth.fetch_many(1) 
+        end
+
+        assert_raises(DBI::InterfaceError, DBI::NotSupportedError) do
+            prep_status_statement
+            @sth.fetch_scroll(0, 0)
+        end
+
+        assert_raises(DBI::InterfaceError, DBI::NotSupportedError) do
+            prep_status_statement
+            @sth.each { |x| }
+        end
+
+        assert_raises(DBI::InterfaceError) do
+            prep_status_statement
+            @sth.execute
+            2.times { @sth.fetch_all }
+        end
+
+        assert_raises(DBI::InterfaceError) do
+            prep_status_statement
+            @sth.execute
+            # XXX fetch_many won't know it can't fetch anything until the third time around.
+            3.times { @sth.fetch_many(names_rc) }
+        end
+    end
 
     def test_execute
         assert_nothing_raised do

@@ -1,4 +1,15 @@
 @class = Class.new(DBDConfig.testbase(DBDConfig.current_dbtype)) do
+
+    def test_empty_query
+        ["", " ", "\t"].each do |str|
+            [:do, :prepare, :execute, :select_one, :select_all].each do |call|
+                assert_raises(DBI::InterfaceError) do
+                    @dbh.send(call, str)
+                end
+            end
+        end
+    end
+
     def test_ping
         assert @dbh.ping
         # XXX if it isn't obvious, this should be tested better. Not sure what
