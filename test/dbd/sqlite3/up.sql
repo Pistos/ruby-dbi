@@ -23,3 +23,11 @@ create table bit_test (mybit bit);
 create table field_types_test (foo integer not null primary key default 1);
 ---
 create table db_specific_types_test (dbl double);
+---
+create table names_defined_with_spaces ( name varchar( 255 ), age integer );
+---
+insert into names_defined_with_spaces (name, age) values ("Bob", 21);
+---
+insert into names_defined_with_spaces (name, age) values ("Joe", 19);
+---
+insert into names_defined_with_spaces (name, age) values ("Jim", 30);

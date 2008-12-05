@@ -41,7 +41,7 @@
             end
 
             assert_equal(
-                DBI::Type::Varchar.object_id, 
+                DBI::Type::Varchar.object_id,
                 DBI::TypeUtil.type_name_to_module(cols[0]["type_name"]).object_id
             )
 
@@ -51,9 +51,9 @@
             assert(cols[1]["nullable"])
             assert_equal(1, cols[2]["scale"])
             assert_equal(2, cols[2]["precision"])
-            
+
             assert_equal(
-                DBI::Type::Integer.object_id, 
+                DBI::Type::Integer.object_id,
                 DBI::TypeUtil.type_name_to_module(cols[1]["type_name"]).object_id
             )
 
@@ -64,7 +64,7 @@
             assert_equal(1, cols[2]["scale"])
             assert_equal(2, cols[2]["precision"])
             assert_equal(
-                DBI::Type::Decimal.object_id, 
+                DBI::Type::Decimal.object_id,
                 DBI::TypeUtil.type_name_to_module(cols[2]["type_name"]).object_id
             )
 
@@ -75,7 +75,7 @@
             assert_equal(6, cols[3]["scale"])
             assert_equal(30, cols[3]["precision"])
             assert_equal(
-                DBI::Type::Decimal.object_id, 
+                DBI::Type::Decimal.object_id,
                 DBI::TypeUtil.type_name_to_module(cols[3]["type_name"]).object_id
             )
 
@@ -157,11 +157,13 @@
                 "views"
             ]
         end
-        
-        case dbtype 
+
+        case dbtype
         when "postgresql"
             tables.reject! { |x| x =~ /^pg_/ }
             assert_equal %w(array_test bit_test blob_test boolean_test bytea_test db_specific_types_test field_types_test names precision_test time_test timestamp_test view_names), tables
+        when 'sqlite3'
+            assert_equal %w(bit_test blob_test boolean_test db_specific_types_test field_types_test names names_defined_with_spaces precision_test time_test timestamp_test view_names), tables
         else
             assert_equal %w(bit_test blob_test boolean_test db_specific_types_test field_types_test names precision_test time_test timestamp_test view_names), tables
         end
@@ -176,13 +178,13 @@
         assert !@dbh["AutoCommit"]
 
         # test committing an outstanding transaction
-        
+
         @sth = @dbh.prepare("insert into names (name, age) values (?, ?)")
         @sth.execute("Billy", 22)
         @sth.finish
 
         assert @dbh["AutoCommit"] = true # should commit at this point
-        
+
         @sth = @dbh.prepare("select * from names where name = ?")
         @sth.execute("Billy")
         assert_equal [ "Billy", 22 ], @sth.fetch
