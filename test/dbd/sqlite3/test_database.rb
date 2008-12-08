@@ -41,4 +41,31 @@ class TestDatabase < DBDConfig.testbase(:sqlite3)
             }
         ], @dbh.columns("names_defined_with_spaces")
     end
+    
+    def test_parse_type
+      # Some tests to ensure various whitespace and case styles don't confuse parse_type.
+      
+      match = DBI::DBD::SQLite3.parse_type( 'VARCHAR' )
+      assert_equal 'VARCHAR', match[ 1 ]
+      
+      match = DBI::DBD::SQLite3.parse_type( 'VARCHAR(4096)' )
+      assert_equal 'VARCHAR', match[ 1 ]
+      assert_equal '4096', match[ 3 ]
+      
+      match = DBI::DBD::SQLite3.parse_type( 'varchar(4096)' )
+      assert_equal 'varchar', match[ 1 ]
+      assert_equal '4096', match[ 3 ]
+      
+      match = DBI::DBD::SQLite3.parse_type( 'VARCHAR( 4096 )' )
+      assert_equal 'VARCHAR', match[ 1 ]
+      assert_equal '4096', match[ 3 ]
+      
+      match = DBI::DBD::SQLite3.parse_type( 'VARCHAR ( 4096 )' )
+      assert_equal 'VARCHAR', match[ 1 ]
+      assert_equal '4096', match[ 3 ]
+      
+      match = DBI::DBD::SQLite3.parse_type( 'VARCHAR (4096)' )
+      assert_equal 'VARCHAR', match[ 1 ]
+      assert_equal '4096', match[ 3 ]
+    end
 end
