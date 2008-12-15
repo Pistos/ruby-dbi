@@ -8,7 +8,7 @@
 #
 class DBI::DBD::Pg::Tuples
 
-    def initialize(db,pg_result)
+    def initialize(db, pg_result)
         @db = db
         @pg_result = pg_result
         @index = -1
@@ -37,7 +37,8 @@ class DBI::DBD::Pg::Tuples
                 typeinfo = DBI::DBD::Pg.parse_type(res[0].values[0])
             end
 
-            h = { "name" => str }.merge(@db.type_map[@pg_result.ftype(i)])
+            map = @db.type_map[@pg_result.ftype(i)] || { }
+            h = { "name" => str }.merge(map)
 
             if typeinfo
                 h["precision"]     = typeinfo[:size]

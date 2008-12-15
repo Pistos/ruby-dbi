@@ -161,7 +161,7 @@
         case dbtype
         when "postgresql"
             tables.reject! { |x| x =~ /^pg_/ }
-            assert_equal %w(array_test bit_test blob_test boolean_test bytea_test db_specific_types_test field_types_test names precision_test time_test timestamp_test view_names), tables
+            assert_equal %w(array_test bit_test blob_test boolean_test bytea_test db_specific_types_test enum_type_test field_types_test names precision_test time_test timestamp_test view_names), tables
         when 'sqlite3'
             assert_equal %w(bit_test blob_test boolean_test db_specific_types_test field_types_test names names_defined_with_spaces precision_test time_test timestamp_test view_names), tables
         else
