@@ -20,17 +20,17 @@ class TC_DBI_ColumnInfo < Test::Unit::TestCase
          "type_name" => "test_type_name",
          "precision" => 2,
          "scale"     => 2,
-         "default_value"   => 100.00,
+         "default"   => 100.00,
          "nullable"  => false,
          "indexed"   => true,
          "primary"   => true,
          "unique"    => false
       )
-      @keys = %w/name sql_type type_name precision scale default_value nullable
+      @keys = %w/name sql_type type_name precision scale default nullable
          indexed primary unique
       /
    end
-   
+
    def test_constructor
       assert_nothing_raised{ DBI::ColumnInfo.new }
 
@@ -78,37 +78,14 @@ class TC_DBI_ColumnInfo < Test::Unit::TestCase
       assert_respond_to(@colinfo, :default_value=)
    end
 
-   def test_default_value
-      assert_equal(100.00, @colinfo[ 'default_value' ])
-      assert_equal(100.00, @colinfo.default_value)
-   end
-
-   def test_nullable_basic
-      assert_respond_to(@colinfo, :nullable)
-      assert_respond_to(@colinfo, :nullable?)
-      assert_respond_to(@colinfo, :nullable=)
-   end
-
    def test_nullable
       assert_equal(false, @colinfo["nullable"])
       assert_equal(false, @colinfo.nullable)
    end
 
-   def test_indexed_basic
-      assert_respond_to(@colinfo, :indexed)
-      assert_respond_to(@colinfo, :indexed?)
-      assert_respond_to(@colinfo, :indexed=)
-   end
-
    def test_indexed
       assert_equal(true, @colinfo["indexed"])
       assert_equal(true, @colinfo.indexed)
-   end
-
-   def test_primary_basic
-      assert_respond_to(@colinfo, :primary)
-      assert_respond_to(@colinfo, :primary?)
-      assert_respond_to(@colinfo, :primary=)
    end
 
    def test_primary
@@ -124,7 +101,7 @@ class TC_DBI_ColumnInfo < Test::Unit::TestCase
       assert_respond_to(@colinfo, :keys)
       assert_equal(@keys.sort, @colinfo.keys.collect { |x| x.to_s }.sort)
    end
-   
+
    def test_respond_to_hash_methods
       assert_respond_to(@colinfo, :each)
       assert_respond_to(@colinfo, :empty?)
