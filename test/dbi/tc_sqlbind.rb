@@ -22,13 +22,13 @@ class TestSqlBind < Test::Unit::TestCase
   end
 
   def test_too_many
-    assert_raise (RuntimeError) {
+    assert_raises (RuntimeError) {
       bind(self, "age=?", [10, 11])
     }
   end
 
   def test_too_few
-    assert_raise (RuntimeError) {
+    assert_raises (RuntimeError) {
       bind(self, "age in (?, ?, ?)", [10, 11])
     }
   end

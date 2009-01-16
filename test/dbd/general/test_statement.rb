@@ -1,4 +1,50 @@
 @class = Class.new(DBDConfig.testbase(DBDConfig.current_dbtype)) do
+   
+    def prep_status_statement
+        @sth.finish if (@sth and !@sth.finished?)
+        @sth = @dbh.prepare("select * from names order by age")
+        @sth.raise_error = true
+    end
+
+    def test_status
+        names_rc = 3
+
+        [:fetch, :fetch_hash, :each, :fetch_all].each do |call|
+            assert_raise(DBI::InterfaceError, DBI::NotSupportedError) do
+                prep_status_statement
+                @sth.send(call)
+            end
+        end
+        
+        # for these next three, it doesn't really matter what the args are, it should fail
+        assert_raises(DBI::InterfaceError, DBI::NotSupportedError) do
+            prep_status_statement
+            @sth.fetch_many(1) 
+        end
+
+        assert_raises(DBI::InterfaceError, DBI::NotSupportedError) do
+            prep_status_statement
+            @sth.fetch_scroll(0, 0)
+        end
+
+        assert_raises(DBI::InterfaceError, DBI::NotSupportedError) do
+            prep_status_statement
+            @sth.each { |x| }
+        end
+
+        assert_raises(DBI::InterfaceError) do
+            prep_status_statement
+            @sth.execute
+            2.times { @sth.fetch_all }
+        end
+
+        assert_raises(DBI::InterfaceError) do
+            prep_status_statement
+            @sth.execute
+            # XXX fetch_many won't know it can't fetch anything until the third time around.
+            3.times { @sth.fetch_many(names_rc) }
+        end
+    end
 
     def test_execute
         assert_nothing_raised do
@@ -44,7 +90,7 @@
 
             assert(cols)
             assert_kind_of(Array, cols)
-            assert_equal(2, cols.length)
+            assert_equal(4, cols.length)
             
             # the first column should always be "text_field" and have the following
             # properties:
@@ -61,18 +107,49 @@
             end
                 
             assert_equal(
-                DBI::Type::Varchar, 
-                DBI::TypeUtil.type_name_to_module(cols[0]["type_name"])
+                DBI::Type::Varchar.object_id, 
+                DBI::TypeUtil.type_name_to_module(cols[0]["type_name"]).object_id
             )
 
             # the second column should always be "integer_field" and have the following
             # properties:
             assert_equal("integer_field", cols[1]["name"])
-            assert_equal(1, cols[1]["scale"])
-            assert_equal(2, cols[1]["precision"])
+            # if these aren't set on the field, they should not exist
+            # FIXME mysql does not follow this rule, neither does ODBC
+            if dbtype == "mysql" 
+                assert_equal(0, cols[1]["scale"])
+                assert_equal(11, cols[1]["precision"])
+            elsif dbtype == "odbc"
+                assert_equal(0, cols[1]["scale"])
+                assert_equal(10, cols[1]["precision"])
+            else
+                assert(!cols[1]["scale"])
+                assert(!cols[1]["precision"])
+            end
+
             assert_equal(
-                DBI::Type::Decimal, 
-                DBI::TypeUtil.type_name_to_module(cols[1]["type_name"])
+                DBI::Type::Integer.object_id, 
+                DBI::TypeUtil.type_name_to_module(cols[1]["type_name"]).object_id
+            )
+
+            # the second column should always be "integer_field" and have the following
+            # properties:
+            assert_equal("decimal_field", cols[2]["name"])
+            assert_equal(1, cols[2]["scale"])
+            assert_equal(2, cols[2]["precision"])
+            assert_equal(
+                DBI::Type::Decimal.object_id, 
+                DBI::TypeUtil.type_name_to_module(cols[2]["type_name"]).object_id
+            )
+
+            # the second column should always be "numeric_field" and have the following
+            # properties:
+            assert_equal("numeric_field", cols[3]["name"])
+            assert_equal(6, cols[3]["scale"])
+            assert_equal(30, cols[3]["precision"])
+            assert_equal(
+                DBI::Type::Decimal.object_id, 
+                DBI::TypeUtil.type_name_to_module(cols[3]["type_name"]).object_id
             )
 
             cols.each { |col| assert_kind_of(DBI::ColumnInfo, col) }

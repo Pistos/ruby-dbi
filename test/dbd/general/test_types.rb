@@ -25,6 +25,34 @@
         end
     end
 
+    def test_numeric_types
+        assert(@dbh.convert_types)
+
+        @sth = @dbh.prepare("insert into precision_test (text_field, integer_field, decimal_field, numeric_field) values (?, ?, ?, ?)")
+        assert(@sth.convert_types)
+        1.step(5) do |x|
+            @sth.execute("poop#{x}", x, x + 0.123, x + 0.234)
+        end
+
+        @sth.finish
+
+        @sth = @dbh.prepare("select integer_field, decimal_field, numeric_field from precision_test")
+        @sth.execute
+        col_info = @sth.column_info
+        1.step(5) do |x|
+            row = @sth.fetch
+
+            assert_kind_of(Integer, row[0])
+            assert_kind_of(BigDecimal, row[1])
+            assert_kind_of(BigDecimal, row[2])
+
+            # FIXME BigDecimal requires a string and some databases will pad
+            # decimal/numeric with constrained precision. We should account for
+            # this, but I'm not quite sure how yet.
+        end
+        @sth.finish
+    end
+
     # FIXME
     # Ideally, this test should be split across the DBI tests and DBD, but for
     # now testing against the DBDs really doesn't cost us anything other than
@@ -62,9 +90,9 @@
         @sth = @dbh.prepare("select name, age from names order by age")
 
         # can't bind_coltype before execute
-        assert_raise(DBI::InterfaceError) { @sth.bind_coltype(1, DBI::Type::Float) }
+        assert_raises(DBI::InterfaceError) { @sth.bind_coltype(1, DBI::Type::Float) }
         # can't index < 1
-        assert_raise(DBI::InterfaceError) { @sth.bind_coltype(0, DBI::Type::Float) }
+        assert_raises(DBI::InterfaceError) { @sth.bind_coltype(0, DBI::Type::Float) }
     end
 
     def test_noconv

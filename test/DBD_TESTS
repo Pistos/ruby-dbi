@@ -2,6 +2,8 @@
 Using DBD tests
 ================================================================================
 
+Before you do anything, read the TESTING file.
+
 Create a YAML file named .ruby-dbi.test-config.yaml in your home directory.
 
 This file is a hash of keys that determine what you want to test and how you

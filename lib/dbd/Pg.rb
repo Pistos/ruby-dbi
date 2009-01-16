@@ -49,7 +49,7 @@ module DBI
         # Only things that extend DBI's results are documented.
         #
         module Pg
-            VERSION          = "0.3.4"
+            VERSION          = "0.3.6"
             DESCRIPTION      = "PostgreSQL DBI DBD"
 
             #
@@ -172,9 +172,11 @@ pg = DBI::DBD::Pg
 DBI::TypeUtil.register_conversion(pg.driver_name) do |obj|
     newobj = case obj
              when ::DateTime
-                 obj.strftime("%m/%d/%Y %H:%M:%S.%N")
-             when ::Time, ::Date
-                 ::DateTime.parse(obj.to_s).strftime("%m/%d/%Y %H:%M:%S.%N")
+                 obj.strftime("%Y-%m-%dT%H:%M:%S.%N")
+             when ::Time
+                 ::DateTime.parse(obj.to_s).strftime("%H:%M:%S.%N")
+             when ::Date
+                 obj.strftime("%Y-%m-%d")
              when ::Array
                  pg.generate_array(obj)
              when DBI::DBD::Pg::Type::ByteA

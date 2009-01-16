@@ -9,7 +9,7 @@ insert into names (name, age) values ('Jim', 30);
 ---
 insert into names (name, age) values ('Bob', 21);
 ---
-create table precision_test (text_field varchar(20) primary key not null, integer_field decimal(2,1));
+create table precision_test (text_field varchar(20) primary key not null, integer_field integer, decimal_field decimal(2,1), numeric_field numeric(30,6));
 ---
 CREATE TABLE blob_test (name VARCHAR(30), data OID);
 ---
