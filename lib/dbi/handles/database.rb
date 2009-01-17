@@ -8,6 +8,9 @@ module DBI
     # Note: almost all methods in this class will raise InterfaceError if the
     # database is not connected.
     class DatabaseHandle < Handle
+
+        attr_accessor :raise_error
+
         # This is the driver name as supplied by the DBD's driver_name method.
         # Its primary utility is in DBI::TypeUtil#convert.
         def driver_name
@@ -34,7 +37,7 @@ module DBI
         # already done prior.
         #
         def disconnect
-            raise InterfaceError, "Database connection was already closed!" if @handle.nil?
+            sanity_check
             @handle.disconnect
             @handle = nil
         end
@@ -45,10 +48,11 @@ module DBI
         # BaseStatement#finish it when the block is done executing.
         #
         def prepare(stmt)
-            raise InterfaceError, "Database connection was already closed!" if @handle.nil?
+            sanity_check(stmt)
             sth = StatementHandle.new(@handle.prepare(stmt), false, true, @convert_types)
             # FIXME trace sth.trace(@trace_mode, @trace_output)
             sth.dbh = self
+            sth.raise_error = raise_error
 
             if block_given?
                 begin
@@ -65,15 +69,16 @@ module DBI
         # Prepare and execute a statement. It has block semantics equivalent to #prepare.
         #
         def execute(stmt, *bindvars)
-            raise InterfaceError, "Database connection was already closed!" if @handle.nil?
+            sanity_check(stmt)
 
             if @convert_types
                 bindvars = DBI::Utils::ConvParam.conv_param(driver_name, *bindvars)
             end
 
-            sth = StatementHandle.new(@handle.execute(stmt, *bindvars), true, false, @convert_types)
+            sth = StatementHandle.new(@handle.execute(stmt, *bindvars), true, true, @convert_types, true)
             # FIXME trace sth.trace(@trace_mode, @trace_output)
             sth.dbh = self
+            sth.raise_error = raise_error
 
             if block_given?
                 begin
@@ -92,7 +97,8 @@ module DBI
         # #execute and #prepare. Should return a row modified count.
         #
         def do(stmt, *bindvars)
-            raise InterfaceError, "Database connection was already closed!" if @handle.nil?
+            sanity_check(stmt)
+
             @handle.do(stmt, *DBI::Utils::ConvParam.conv_param(driver_name, *bindvars))
         end
 
@@ -100,7 +106,7 @@ module DBI
         # Executes a statement and returns the first row from the result.
         #
         def select_one(stmt, *bindvars)
-            raise InterfaceError, "Database connection was already closed!" if @handle.nil?
+            sanity_check(stmt)
             row = nil
             execute(stmt, *bindvars) do |sth|
                 row = sth.fetch 
@@ -113,7 +119,7 @@ module DBI
         # is given, it is executed for each row.
         # 
         def select_all(stmt, *bindvars, &p)
-            raise InterfaceError, "Database connection was already closed!" if @handle.nil?
+            sanity_check(stmt)
             rows = nil
             execute(stmt, *bindvars) do |sth|
                 if block_given?
@@ -129,7 +135,7 @@ module DBI
         # Return the tables available to this DatabaseHandle as an array of strings.
         #
         def tables
-            raise InterfaceError, "Database connection was already closed!" if @handle.nil?
+            sanity_check
             @handle.tables
         end
 
@@ -139,7 +145,7 @@ module DBI
         # this method must provide.
         #
         def columns( table )
-            raise InterfaceError, "Database connection was already closed!" if @handle.nil?
+            sanity_check
             @handle.columns( table ).collect {|col| ColumnInfo.new(col) }
         end
 
@@ -149,7 +155,7 @@ module DBI
         # is an active operation that will contact the database.
         #
         def ping
-            raise InterfaceError, "Database connection was already closed!" if @handle.nil?
+            sanity_check
             @handle.ping
         end
 
@@ -157,7 +163,7 @@ module DBI
         # Attempt to escape the value, rendering it suitable for inclusion in a SQL statement.
         #
         def quote(value)
-            raise InterfaceError, "Database connection was already closed!" if @handle.nil?
+            sanity_check
             @handle.quote(value)
         end
 
@@ -165,7 +171,7 @@ module DBI
         # Force a commit to the database immediately.
         #
         def commit
-            raise InterfaceError, "Database connection was already closed!" if @handle.nil?
+            sanity_check
             @handle.commit
         end
 
@@ -173,7 +179,7 @@ module DBI
         # Force a rollback to the database immediately.
         #
         def rollback
-            raise InterfaceError, "Database connection was already closed!" if @handle.nil?
+            sanity_check
             @handle.rollback
         end
 
@@ -183,7 +189,7 @@ module DBI
         # Otherwise, commit occurs.
         #
         def transaction
-            raise InterfaceError, "Database connection was already closed!" if @handle.nil?
+            sanity_check
             raise InterfaceError, "No block given" unless block_given?
 
             commit
@@ -198,14 +204,26 @@ module DBI
 
         # Get an attribute from the DatabaseHandle.
         def [] (attr)
-            raise InterfaceError, "Database connection was already closed!" if @handle.nil?
+            sanity_check
             @handle[attr]
         end
 
         # Set an attribute on the DatabaseHandle.
         def []= (attr, val)
-            raise InterfaceError, "Database connection was already closed!" if @handle.nil?
+            sanity_check
             @handle[attr] = val
+        end
+
+        protected
+
+        def sanity_check(stmt=nil)      
+            raise InterfaceError, "Database connection was already closed!" if @handle.nil?
+            check_statement(stmt) if stmt
+        end
+
+        # basic sanity checks for statements
+        def check_statement(stmt)
+            raise InterfaceError, "Statement is empty, or contains nothing but whitespace" if stmt !~ /\S/
         end
     end
 end

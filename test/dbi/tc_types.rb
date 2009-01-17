@@ -114,9 +114,15 @@ class TC_DBI_Type < Test::Unit::TestCase
         d = Date.today
         assert_equal(DateTime.parse(d.to_s), klass.parse(d))
 
+        md = "10-11"
+
+        if RUBY_VERSION =~ /^1\.9/
+            md = "11-10"
+        end
+
         # be sure we're actually getting the right data back
         assert_equal(
-            "2008-10-11", 
+            "2008-#{md}",
             klass.parse(Date.parse("10/11/2008")).strftime("%Y-%m-%d")
         )
 
@@ -126,8 +132,8 @@ class TC_DBI_Type < Test::Unit::TestCase
         )
 
         assert_equal(
-            "10/11/2008 10:01:02",
-            klass.parse(DateTime.parse("10/11/2008 10:01:02")).strftime("%m/%d/%Y %H:%M:%S")
+            "#{md}-2008 10:01:02",
+            klass.parse(DateTime.parse("10/11/2008 10:01:02")).strftime("%m-%d-%Y %H:%M:%S")
         )
     end
 end
@@ -138,7 +144,7 @@ class TC_DBI_TypeUtil < Test::Unit::TestCase
     end
 
     def datecast(obj)
-        "'#{::DateTime.parse(obj.to_s).strftime("%m/%d/%Y %H:%M:%S")}'"
+        "'#{::DateTime.parse(obj.to_s).strftime("%Y-%m-%dT%H:%M:%S")}'"
     end
 
     def test_default_unknown_cast

@@ -9,7 +9,7 @@ insert into names (name, age) values ('Jim', 30);
 ---
 insert into names (name, age) values ('Bob', 21);
 ---
-create table precision_test (text_field varchar(20) primary key not null, integer_field decimal(2,1));
+create table precision_test (text_field varchar(20) primary key not null, integer_field integer, decimal_field decimal(2,1), numeric_field numeric(30,6));
 ---
 CREATE TABLE blob_test (name VARCHAR(30), data OID);
 ---
@@ -29,6 +29,10 @@ create table timestamp_test (mytimestamp timestamp);
 create table bit_test (mybit bit);
 ---
 create table field_types_test (foo integer not null primary key default 1);
+---
+create type enum_test as ENUM ('one', 'two', 'three');
+---
+create table enum_type_test (foo enum_test);
 ---
 create table db_specific_types_test (foo integer);
 ---

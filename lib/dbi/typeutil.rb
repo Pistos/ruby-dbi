@@ -93,7 +93,7 @@ DBI::TypeUtil.register_conversion("default") do |obj|
     when ::FalseClass
         "'0'"
     when ::Time, ::Date, ::DateTime
-        "'#{::DateTime.parse(obj.to_s).strftime("%m/%d/%Y %H:%M:%S")}'"
+        "'#{::DateTime.parse(obj.to_s).strftime("%Y-%m-%dT%H:%M:%S")}'"
     when ::String
         obj = obj.gsub(/\\/) { "\\\\" }
         obj = obj.gsub(/'/) { "''" }

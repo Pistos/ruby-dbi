@@ -1,0 +1,16 @@
+================================================================================
+Running Tests
+================================================================================
+
+You must have the source distribution (from git) to run the tests properly. This
+is something I plan to remedy in 0.6.0.
+
+You need the 'test-unit' gem to get started...
+
+    gem install test-unit
+
+There are three rake targets, run from the root of the source.
+
+    test_dbi: these are interface tests and do not require database connectivity.
+    test_dbd: these are database-specific tests. Read DBD_TESTS.
+    test: runs the both test_dbi and test_dbd

@@ -1,4 +1,15 @@
 @class = Class.new(DBDConfig.testbase(DBDConfig.current_dbtype)) do
+
+    def test_empty_query
+        ["", " ", "\t"].each do |str|
+            [:do, :prepare, :execute, :select_one, :select_all].each do |call|
+                assert_raises(DBI::InterfaceError) do
+                    @dbh.send(call, str)
+                end
+            end
+        end
+    end
+
     def test_ping
         assert @dbh.ping
         # XXX if it isn't obvious, this should be tested better. Not sure what
@@ -11,7 +22,7 @@
 
             assert(cols)
             assert_kind_of(Array, cols)
-            assert_equal(2, cols.length)
+            assert_equal(4, cols.length)
 
             # the first column should always be "text_field" and have the following
             # properties:
@@ -30,19 +41,42 @@
             end
 
             assert_equal(
-                DBI::Type::Varchar, 
-                DBI::TypeUtil.type_name_to_module(cols[0]["type_name"])
+                DBI::Type::Varchar.object_id,
+                DBI::TypeUtil.type_name_to_module(cols[0]["type_name"]).object_id
             )
 
             # the second column should always be "integer_field" and have the following
             # properties:
             assert_equal("integer_field", cols[1]["name"])
             assert(cols[1]["nullable"])
-            assert_equal(1, cols[1]["scale"])
-            assert_equal(2, cols[1]["precision"])
+            assert_equal(1, cols[2]["scale"])
+            assert_equal(2, cols[2]["precision"])
+
             assert_equal(
-                DBI::Type::Decimal, 
-                DBI::TypeUtil.type_name_to_module(cols[1]["type_name"])
+                DBI::Type::Integer.object_id,
+                DBI::TypeUtil.type_name_to_module(cols[1]["type_name"]).object_id
+            )
+
+            # the second column should always be "integer_field" and have the following
+            # properties:
+            assert_equal("decimal_field", cols[2]["name"])
+            assert(cols[2]["nullable"])
+            assert_equal(1, cols[2]["scale"])
+            assert_equal(2, cols[2]["precision"])
+            assert_equal(
+                DBI::Type::Decimal.object_id,
+                DBI::TypeUtil.type_name_to_module(cols[2]["type_name"]).object_id
+            )
+
+            # the second column should always be "numeric_field" and have the following
+            # properties:
+            assert_equal("numeric_field", cols[3]["name"])
+            assert(cols[3]["nullable"])
+            assert_equal(6, cols[3]["scale"])
+            assert_equal(30, cols[3]["precision"])
+            assert_equal(
+                DBI::Type::Decimal.object_id,
+                DBI::TypeUtil.type_name_to_module(cols[3]["type_name"]).object_id
             )
 
             # finally, we ensure that every column in the array is a ColumnInfo
@@ -123,11 +157,13 @@
                 "views"
             ]
         end
-        
-        case dbtype 
+
+        case dbtype
         when "postgresql"
             tables.reject! { |x| x =~ /^pg_/ }
-            assert_equal %w(array_test bit_test blob_test boolean_test bytea_test db_specific_types_test field_types_test names precision_test time_test timestamp_test view_names), tables
+            assert_equal %w(array_test bit_test blob_test boolean_test bytea_test db_specific_types_test enum_type_test field_types_test names precision_test time_test timestamp_test view_names), tables
+        when 'sqlite3'
+            assert_equal %w(bit_test blob_test boolean_test db_specific_types_test field_types_test names names_defined_with_spaces precision_test time_test timestamp_test view_names), tables
         else
             assert_equal %w(bit_test blob_test boolean_test db_specific_types_test field_types_test names precision_test time_test timestamp_test view_names), tables
         end
@@ -142,13 +178,13 @@
         assert !@dbh["AutoCommit"]
 
         # test committing an outstanding transaction
-        
+
         @sth = @dbh.prepare("insert into names (name, age) values (?, ?)")
         @sth.execute("Billy", 22)
         @sth.finish
 
         assert @dbh["AutoCommit"] = true # should commit at this point
-        
+
         @sth = @dbh.prepare("select * from names where name = ?")
         @sth.execute("Billy")
         assert_equal [ "Billy", 22 ], @sth.fetch
