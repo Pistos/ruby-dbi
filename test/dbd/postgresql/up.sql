@@ -30,6 +30,10 @@ create table bit_test (mybit bit);
 ---
 create table field_types_test (foo integer not null primary key default 1);
 ---
+create type enum_test as ENUM ('one', 'two', 'three');
+---
+create table enum_type_test (foo enum_test);
+---
 create table db_specific_types_test (foo integer);
 ---
 create table array_test (foo integer[], bar integer[3], baz integer[3][3], quux varchar[2]);

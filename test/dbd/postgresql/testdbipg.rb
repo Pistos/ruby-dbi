@@ -25,6 +25,20 @@ class TestDbdPostgres < DBDConfig.testbase(:postgresql)
         end
     end
 
+    def test_enum_type
+        assert_nothing_raised do
+            assert(@dbh.convert_types)
+            @sth = @dbh.prepare("insert into enum_type_test values (?)")
+            @sth.execute("one")
+            @sth.finish
+
+            @sth = @dbh.prepare("select foo from enum_type_test")
+            @sth.execute
+            assert_equal(@sth.fetch, ['one'])
+            @sth.finish
+        end
+    end
+
     def test_statement_finish_deallocates_sth
         assert_nothing_raised do
             @sth = @dbh.prepare("select * from names")
