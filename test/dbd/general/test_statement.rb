@@ -1,5 +1,5 @@
 @class = Class.new(DBDConfig.testbase(DBDConfig.current_dbtype)) do
-   
+
     def prep_status_statement
         @sth.finish if (@sth and !@sth.finished?)
         @sth = @dbh.prepare("select * from names order by age")
@@ -15,11 +15,11 @@
                 @sth.send(call)
             end
         end
-        
+
         # for these next three, it doesn't really matter what the args are, it should fail
         assert_raises(DBI::InterfaceError, DBI::NotSupportedError) do
             prep_status_statement
-            @sth.fetch_many(1) 
+            @sth.fetch_many(1)
         end
 
         assert_raises(DBI::InterfaceError, DBI::NotSupportedError) do
@@ -54,6 +54,16 @@
         end
     end
 
+    def test_placeholders
+        assert_nothing_raised do
+            @dbh.execute( "SELECT * FROM names WHERE age = ?", nil ) do |sth|
+                assert_equal [], sth.fetch_all
+            end
+            rows = @dbh.select_all( "SELECT * FROM names WHERE age = ?", nil )
+            assert_equal [], rows
+        end
+    end
+
     def test_quoting # FIXME breaks sqlite-ruby to a segfault - research
         @sth = nil
 
@@ -81,7 +91,7 @@
 
     def test_columninfo
         @sth = nil
-        
+
         assert_nothing_raised do
             @sth = @dbh.prepare("select * from precision_test")
             @sth.execute
@@ -91,7 +101,7 @@
             assert(cols)
             assert_kind_of(Array, cols)
             assert_equal(4, cols.length)
-            
+
             # the first column should always be "text_field" and have the following
             # properties:
             assert_equal("text_field", cols[0]["name"])
@@ -105,9 +115,9 @@
             else
                 flunk "scale can be either 0 or nil for character types"
             end
-                
+
             assert_equal(
-                DBI::Type::Varchar.object_id, 
+                DBI::Type::Varchar.object_id,
                 DBI::TypeUtil.type_name_to_module(cols[0]["type_name"]).object_id
             )
 
@@ -116,7 +126,7 @@
             assert_equal("integer_field", cols[1]["name"])
             # if these aren't set on the field, they should not exist
             # FIXME mysql does not follow this rule, neither does ODBC
-            if dbtype == "mysql" 
+            if dbtype == "mysql"
                 assert_equal(0, cols[1]["scale"])
                 assert_equal(11, cols[1]["precision"])
             elsif dbtype == "odbc"
@@ -128,7 +138,7 @@
             end
 
             assert_equal(
-                DBI::Type::Integer.object_id, 
+                DBI::Type::Integer.object_id,
                 DBI::TypeUtil.type_name_to_module(cols[1]["type_name"]).object_id
             )
 
@@ -138,7 +148,7 @@
             assert_equal(1, cols[2]["scale"])
             assert_equal(2, cols[2]["precision"])
             assert_equal(
-                DBI::Type::Decimal.object_id, 
+                DBI::Type::Decimal.object_id,
                 DBI::TypeUtil.type_name_to_module(cols[2]["type_name"]).object_id
             )
 
@@ -148,7 +158,7 @@
             assert_equal(6, cols[3]["scale"])
             assert_equal(30, cols[3]["precision"])
             assert_equal(
-                DBI::Type::Decimal.object_id, 
+                DBI::Type::Decimal.object_id,
                 DBI::TypeUtil.type_name_to_module(cols[3]["type_name"]).object_id
             )
 
@@ -201,7 +211,7 @@
     end
 
     def test_prepare_execute
-        assert_nothing_raised do 
+        assert_nothing_raised do
             @sth = @dbh.prepare("select * from names")
             @sth.execute
             @sth.finish
@@ -221,7 +231,7 @@
     end
 
     def test_prepare_execute_with_transactions
-        @dbh["AutoCommit"] = false 
+        @dbh["AutoCommit"] = false
         config = DBDConfig.get_config['sqlite3']
 
         # rollback 1 (the right way)
@@ -243,7 +253,7 @@
         @sth.execute("Billy")
         assert_nil @sth.fetch
         @sth.finish
-       
+
         # rollback 2 (without closing statements first)
 
         @sth = nil
@@ -260,11 +270,11 @@
 
         # FIXME some throw here, some don't. we should probably normalize this
         @dbh.rollback rescue true
-        
+
         @sth2.finish
         @sth.finish
         assert_nothing_raised { @dbh.rollback }
-        
+
         @sth = @dbh.prepare("select * from names where name = ?")
         @sth.execute("Billy")
         assert_nil @sth.fetch
@@ -294,13 +304,13 @@
 
     def test_fetch
         @sth = nil
-        assert_nothing_raised do 
+        assert_nothing_raised do
             @sth = @dbh.prepare("select * from names order by age")
             @sth.execute
         end
 
         # this tests that we're getting the rows in the right order,
-        # and that the types are being converted. 
+        # and that the types are being converted.
         assert_equal ["Joe", 19], @sth.fetch
         assert_equal ["Bob", 21], @sth.fetch
         assert_equal ["Jim", 30], @sth.fetch
@@ -315,7 +325,7 @@
         @dbh.transaction do |dbh|
             dbh.do('INSERT INTO names (name, age) VALUES (?, ?)', "Cooter", 69)
             return 42
-        end 
+        end
         @sth = @dbh.prepare("select * from names where name = ?")
         @sth.execute("Cooter")
         row = @sth.fetch
