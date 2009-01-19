@@ -74,7 +74,7 @@ class DBI::DBD::Pg::Database < DBI::BaseDatabase
         @attr.each { |k,v| self[k] = v} 
         @attr["pg_native_binding"] = true unless @attr.has_key? "pg_native_binding"
 
-        @type_map = __types
+        load_type_map
 
         self['AutoCommit'] = true    # Postgres starts in unchained mode (AutoCommit=on) by default 
 
@@ -340,6 +340,7 @@ class DBI::DBD::Pg::Database < DBI::BaseDatabase
         when 'date'                      then DBI::Type::Timestamp
         when 'decimal', 'numeric'        then DBI::Type::Decimal
         when 'bytea'                     then DBI::DBD::Pg::Type::ByteA
+        when 'enum'                      then DBI::Type::Varchar
         end
     end
 
@@ -350,7 +351,7 @@ class DBI::DBD::Pg::Database < DBI::BaseDatabase
     def load_type_map
         @type_map = Hash.new
 
-        res = _exec("SELECT oid, typname, typelem FROM pg_type WHERE typtype = 'b'")
+        res = _exec("SELECT oid, typname, typelem FROM pg_type WHERE typtype IN ('b', 'e')")
 
         res.each do |row|
             rowtype = parse_type_name(row["typname"])
