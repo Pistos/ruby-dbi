@@ -62,7 +62,7 @@ module DBI
                 end
             else
                 return sth
-            end 
+            end
         end
 
         #
@@ -88,7 +88,7 @@ module DBI
                 end
             else
                 return sth
-            end 
+            end
         end
 
         #
@@ -109,7 +109,7 @@ module DBI
             sanity_check(stmt)
             row = nil
             execute(stmt, *bindvars) do |sth|
-                row = sth.fetch 
+                row = sth.fetch
             end
             row
         end
@@ -117,7 +117,7 @@ module DBI
         #
         # Executes a statement and returns all rows from the result. If a block
         # is given, it is executed for each row.
-        # 
+        #
         def select_all(stmt, *bindvars, &p)
             sanity_check(stmt)
             rows = nil
@@ -125,7 +125,7 @@ module DBI
                 if block_given?
                     sth.each(&p)
                 else
-                    rows = sth.fetch_all 
+                    rows = sth.fetch_all
                 end
             end
             return rows
@@ -216,7 +216,7 @@ module DBI
 
         protected
 
-        def sanity_check(stmt=nil)      
+        def sanity_check(stmt=nil)
             raise InterfaceError, "Database connection was already closed!" if @handle.nil?
             check_statement(stmt) if stmt
         end

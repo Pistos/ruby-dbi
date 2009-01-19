@@ -1,15 +1,15 @@
 module DBI
     # Provides the core-level functionality for DatabaseHandles.
-    # 
+    #
     # If the method description says "DBD Required", it's the DBD's
-    # responsibility to create this method. 
-    # 
+    # responsibility to create this method.
+    #
     # Required methods unimplemented by the DBD will raise
     # DBD::NotImplementedError.
     #
     # "DBD Optional" methods are methods that do not have a default
     # implementation but are optional due to the fact that many databases may
-    # not support these features (and emulating them would be prohibitive). 
+    # not support these features (and emulating them would be prohibitive).
     #
     # These methods raise DBI::NotSupportedError.
     #
@@ -21,7 +21,7 @@ module DBI
         def initialize(handle, attr)
             @handle = handle
             @attr   = {}
-            attr.each {|k,v| self[k] = v} 
+            attr.each {|k,v| self[k] = v}
         end
 
         # Disconnect from the database. DBD Required.
@@ -46,7 +46,7 @@ module DBI
         # DBD Required.
         #
         # The result should be an array of DBI::ColumnInfo objects which have,
-        # at minimum, the following fields: 
+        # at minimum, the following fields:
         #
         # * name:: the name of the column.
         # * type:: This is not a field name in itself. You have two options:
@@ -59,7 +59,7 @@ module DBI
         def columns(table)
             raise NotImplementedError
         end
-        
+
         #============================================
         # OPTIONAL
         #============================================
@@ -75,13 +75,13 @@ module DBI
         end
 
         # Return the tables available to the database connection.
-        # 
+        #
         # Note:: the basic implementation returns an empty array.
         def tables
             []
         end
 
-        # 
+        #
         # Execute a statement with the binds provided. Returns the statement
         # handle unfinished.
         #
@@ -89,7 +89,7 @@ module DBI
         #
         #   sth = dbh.prepare("my statement")
         #   sth.execute(my, bind, vars)
-        #   
+        #
         def execute(statement, *bindvars)
             stmt = prepare(statement)
             stmt.bind_params(*bindvars)
