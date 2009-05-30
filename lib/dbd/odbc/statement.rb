@@ -124,8 +124,14 @@ class DBI::DBD::ODBC::Statement < DBI::BaseStatement
     def convert_row(row)
         return nil if row.nil?
         row.collect do |col|
-            col = col.to_s unless col.nil?
-            col
+            case col
+            when nil
+                nil
+            when ODBC::TimeStamp
+                DateTime.new col.year, col.month, col.day, col.hour, col.minute, col.second
+            else
+                col.to_s
+            end
         end
     end 
 end
