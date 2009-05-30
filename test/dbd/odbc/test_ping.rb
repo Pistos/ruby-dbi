@@ -1,7 +1,7 @@
 class TestODBCPing < DBDConfig.testbase(:odbc)
     def test_ping
         config = DBDConfig.get_config['odbc']
-        dbh = DBI.connect("dbi:Pg:#{config['dbname']}", config['username'], config['password'])
+        dbh = DBI.connect("dbi:ODBC:#{config['dbname']}", config['username'], config['password'])
         assert dbh
         assert dbh.ping
         dbh.disconnect
