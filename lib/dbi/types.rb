@@ -105,9 +105,22 @@ module DBI
             def self.create(year, month, day, hour, min, sec)
                 # DateTime will remove leap and leap-leap seconds
                 sec = 59 if sec > 59
-                date = ::DateTime.new(year, month, day, hour, min, sec)
-                date.instance_variable_set :"@__#{:civil.to_i}__", [[year, month, day]]
-                date.instance_variable_set :"@__#{:time.to_i}__",  [[hour, min, sec, 0.0]]
+                # store this before we modify it
+                civil = year, month, day
+                time  = hour, min, sec, 0.0
+                if month <= 2
+                    month += 12
+                    year  -= 1
+                end
+                y   = year + 4800
+                m   = month - 3
+                jd  = day + (153 * m + 2) / 5 + 365 * y + y / 4 - y / 100 + y / 400 - 32045
+                #fr  = hour / 24.0 + min / 1440.0 + sec / 86400.0
+                # ridiculously, this line does the same thing but twice as fast... :/
+                fr  = ::Time.gm(1970, 1, 1, hour, min, sec).to_f / 86400
+                date = ::DateTime.new!(jd + fr - 0.5, 0, ::DateTime::ITALY)
+                date.instance_variable_set :"@__#{:civil.to_i}__", [civil]
+                date.instance_variable_set :"@__#{:time.to_i}__",  [time]
                 date
             end
 
