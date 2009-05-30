@@ -103,16 +103,16 @@ module DBI
         #
         class Timestamp < Null
             def self.parse(obj)
-                obj = super
-                return obj unless obj
-                case obj.class
+                case obj
                 when ::DateTime
                     return obj
                 when ::Date
-                    return ::DateTime.parse(obj.to_s)
+                    return ::DateTime.new(obj.year, obj.month, obj.day, 0, 0, 0)
                 when ::Time
-                    return ::DateTime.parse(obj.to_s)
+                    return ::DateTime.new(obj.year, obj.month, obj.day, obj.hour, obj.min, obj.sec)
                 else
+                    obj = super
+                    return obj unless obj
                     return ::DateTime.parse(obj.to_s)   if obj.respond_to? :to_s
                     return ::DateTime.parse(obj.to_str) if obj.respond_to? :to_str
                     return obj
