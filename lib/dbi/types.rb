@@ -102,14 +102,23 @@ module DBI
         # Represents a SQL TIMESTAMP and returns DateTime. Falls back to Null.
         #
         class Timestamp < Null
+            def self.create(year, month, day, hour, min, sec)
+                # DateTime will remove leap and leap-leap seconds
+                sec = 59 if sec > 59
+                date = ::DateTime.new(year, month, day, hour, min, sec)
+                date.instance_variable_set :"@__#{:civil.to_i}__", [[year, month, day]]
+                date.instance_variable_set :"@__#{:time.to_i}__",  [[hour, min, sec, 0.0]]
+                date
+            end
+
             def self.parse(obj)
                 case obj
                 when ::DateTime
                     return obj
                 when ::Date
-                    return ::DateTime.new(obj.year, obj.month, obj.day, 0, 0, 0)
+                    return create(obj.year, obj.month, obj.day, 0, 0, 0)
                 when ::Time
-                    return ::DateTime.new(obj.year, obj.month, obj.day, obj.hour, obj.min, obj.sec)
+                    return create(obj.year, obj.month, obj.day, obj.hour, obj.min, obj.sec)
                 else
                     obj = super
                     return obj unless obj

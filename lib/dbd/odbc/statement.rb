@@ -128,7 +128,7 @@ class DBI::DBD::ODBC::Statement < DBI::BaseStatement
             when nil
                 nil
             when ODBC::TimeStamp
-                DateTime.new col.year, col.month, col.day, col.hour, col.minute, col.second
+                DBI::Type::Timestamp.create col.year, col.month, col.day, col.hour, col.minute, col.second
             else
                 col.to_s
             end
