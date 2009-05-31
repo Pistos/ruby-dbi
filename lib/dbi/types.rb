@@ -102,7 +102,7 @@ module DBI
         # Represents a SQL TIMESTAMP and returns DateTime. Falls back to Null.
         #
         class Timestamp < Null
-            def self.create(year, month, day, hour, min, sec)
+            def self.create(year, month, day, hour, min, sec, of=0)
                 # DateTime will remove leap and leap-leap seconds
                 sec = 59 if sec > 59
                 # store this before we modify it
@@ -118,7 +118,7 @@ module DBI
                 #fr  = hour / 24.0 + min / 1440.0 + sec / 86400.0
                 # ridiculously, this line does the same thing but twice as fast... :/
                 fr  = ::Time.gm(1970, 1, 1, hour, min, sec).to_f / 86400
-                date = ::DateTime.new!(jd + fr - 0.5, 0, ::DateTime::ITALY)
+                date = ::DateTime.new!(jd + fr - 0.5, of, ::DateTime::ITALY)
                 date.instance_variable_set :"@__#{:civil.to_i}__", [civil]
                 date.instance_variable_set :"@__#{:time.to_i}__",  [time]
                 date
@@ -131,7 +131,7 @@ module DBI
                 when ::Date
                     return create(obj.year, obj.month, obj.day, 0, 0, 0)
                 when ::Time
-                    return create(obj.year, obj.month, obj.day, obj.hour, obj.min, obj.sec)
+                    return create(obj.year, obj.month, obj.day, obj.hour, obj.min, obj.sec, obj.utc_offset / 86400.0)
                 else
                     obj = super
                     return obj unless obj

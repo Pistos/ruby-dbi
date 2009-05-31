@@ -109,10 +109,10 @@ class TC_DBI_Type < Test::Unit::TestCase
         assert_equal(dt.to_s, klass.parse(dt).to_s)
         
         t = Time.now
-        assert_equal(DateTime.parse(t.to_s), klass.parse(t))
+        assert_equal(DateTime.parse(t.to_s).to_s, klass.parse(t).to_s)
 
         d = Date.today
-        assert_equal(DateTime.parse(d.to_s), klass.parse(d))
+        assert_equal(DateTime.parse(d.to_s).to_s, klass.parse(d).to_s)
 
         md = "10-11"
 
