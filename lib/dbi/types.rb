@@ -128,10 +128,10 @@ module DBI
                 # special casing the common formats here gives roughly an
                 # 8-fold speed boost over using Date._parse
                 case str
-                when /^(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2}):(\d{2})(?: ([+-]?\d{2}):?(\d{2}))?$/
-                    parts = $~[1..-3].map { |s| s.to_i }
-                    parts << 0
-                    parts << ($7 ? ($7.to_f * 60 + $8.to_i) / 1440 : 0)
+                when /^(\d{4})-(\d{2})-(\d{2})(?: (\d{2}):(\d{2}):(\d{2})(\.\d+)?)?(?: ([+-]?\d{2}):?(\d{2}))?$/
+                    parts = $~[1..-4].map { |s| s.to_i }
+                    parts << $7.to_f * 1000000.0
+                    parts << ($8 ? ($8.to_f * 60 + $9.to_i) / 1440 : 0)
                 else
                     parts = ::Date._parse(str).values_at(:year, :mon, :mday, :hour, :min, :sec, :sec_fraction, :offset)
                     # some defaults
