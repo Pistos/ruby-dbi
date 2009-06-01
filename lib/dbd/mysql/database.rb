@@ -93,7 +93,7 @@ module DBI::DBD::Mysql
                 coercion_method = DBI::Type::Timestamp
             when 'TYPE_DATETIME', 'TYPE_TIMESTAMP'
                 mysql_type_name = 'DATETIME'
-                coercion_method = DBI::DBD::Mysql::Type::Timestamp
+                coercion_method = DBI::Type::Timestamp
             when 'TYPE_CHAR'
                 mysql_type_name = 'TINYINT'    # questionable?
             when 'TYPE_TINY_BLOB'
@@ -209,7 +209,7 @@ module DBI::DBD::Mysql
 
                     case col['type_name']
                     when 'timestamp'
-                        col['dbi_type'] = DBI::DBD::Mysql::Type::Timestamp
+                        col['dbi_type'] = DBI::Type::Timestamp
                     end
 
                     col

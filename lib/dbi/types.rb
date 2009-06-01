@@ -102,12 +102,12 @@ module DBI
         # Represents a SQL TIMESTAMP and returns DateTime. Falls back to Null.
         #
         class Timestamp < Null
-            def self.create(year, month, day, hour, min, sec, of=0)
+            def self.create(year, month, day, hour, min, sec, usec=0, of=0)
                 # DateTime will remove leap and leap-leap seconds
                 sec = 59 if sec > 59
                 # store this before we modify it
                 civil = year, month, day
-                time  = hour, min, sec, 0.0
+                time  = hour, min, sec, usec / 86400000000.0
                 if month <= 2
                     month += 12
                     year  -= 1
@@ -117,11 +117,34 @@ module DBI
                 jd  = day + (153 * m + 2) / 5 + 365 * y + y / 4 - y / 100 + y / 400 - 32045
                 #fr  = hour / 24.0 + min / 1440.0 + sec / 86400.0
                 # ridiculously, this line does the same thing but twice as fast... :/
-                fr  = ::Time.gm(1970, 1, 1, hour, min, sec).to_f / 86400
+                fr  = ::Time.gm(1970, 1, 1, hour, min, sec, usec).to_f / 86400
                 date = ::DateTime.new!(jd + fr - 0.5, of, ::DateTime::ITALY)
                 date.instance_variable_set :"@__#{:civil.to_i}__", [civil]
                 date.instance_variable_set :"@__#{:time.to_i}__",  [time]
                 date
+            end
+
+            def self.parse_string str
+                # special casing the common formats here gives roughly an
+                # 8-fold speed boost over using Date._parse
+                case str
+                when /^(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2}):(\d{2})(?: ([+-]?\d{2}):?(\d{2}))?$/
+                    parts = $~[1..-3].map { |s| s.to_i }
+                    parts << 0
+                    parts << ($7 ? ($7.to_f * 60 + $8.to_i) / 1440 : 0)
+                else
+                    parts = ::Date._parse(str).values_at(:year, :mon, :mday, :hour, :min, :sec, :sec_fraction, :offset)
+                    # some defaults
+                    today = nil
+                    8.times do |i|
+                        next if parts[i]
+                        today ||= ::Time.now.to_a.values_at(5, 4, 3) + [0, 0, 0, 0, 0]
+                        parts[i] = today[i]
+                    end
+                    parts[6] *= 1000000.0
+                    parts[7] /= 86400.0
+                end
+                parts
             end
 
             def self.parse(obj)
@@ -131,12 +154,12 @@ module DBI
                 when ::Date
                     return create(obj.year, obj.month, obj.day, 0, 0, 0)
                 when ::Time
-                    return create(obj.year, obj.month, obj.day, obj.hour, obj.min, obj.sec, obj.utc_offset / 86400.0)
+                    return create(obj.year, obj.month, obj.day, obj.hour, obj.min, obj.sec, obj.usec, obj.utc_offset / 86400.0)
                 else
                     obj = super
                     return obj unless obj
-                    return ::DateTime.parse(obj.to_s)   if obj.respond_to? :to_s
-                    return ::DateTime.parse(obj.to_str) if obj.respond_to? :to_str
+                    return create(*parse_string(obj.to_s))   if obj.respond_to? :to_s
+                    return create(*parse_string(obj.to_str)) if obj.respond_to? :to_str
                     return obj
                 end
             end
