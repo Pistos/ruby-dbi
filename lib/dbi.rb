@@ -255,7 +255,7 @@ module DBI
                         begin
                             require @@caseless_driver_name_map[dc] if @@caseless_driver_name_map[dc]
                         rescue LoadError => e2
-                            raise e.class, "Could not find driver #{driver_name} or #{driver_name.downcase} (error: #{e1.message})"
+                            raise e1.class, "Could not find driver #{driver_name} or #{driver_name.downcase} (error: #{e1.message})"
                         end
                     end
 
