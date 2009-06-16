@@ -119,9 +119,20 @@ module DBI
                 # ridiculously, this line does the same thing but twice as fast... :/
                 fr  = ::Time.gm(1970, 1, 1, hour, min, sec, usec).to_f / 86400
                 date = ::DateTime.new!(jd + fr - 0.5, of, ::DateTime::ITALY)
-                date.instance_variable_set :"@__#{:civil.to_i}__", [civil]
-                date.instance_variable_set :"@__#{:time.to_i}__",  [time]
+                prefill_cache date, civil, time
                 date
+            end
+
+            if RUBY_VERSION =~ /^1\.8\./
+                def self.prefill_cache date, civil, time
+                    date.instance_variable_set :"@__#{:civil.to_i}__", [civil]
+                    date.instance_variable_set :"@__#{:time.to_i}__",  [time]
+                end
+            else
+                def self.prefill_cache date, civil, time
+                    date.instance_variable_get(:@__ca__)[:civil.object_id] = civil
+                    date.instance_variable_get(:@__ca__)[:time.object_id] = time
+                end
             end
 
             def self.parse_string str
