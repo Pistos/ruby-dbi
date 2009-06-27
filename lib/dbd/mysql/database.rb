@@ -149,6 +149,14 @@ module DBI::DBD::Mysql
             error(err)
         end
 
+        def database_name
+            sth = Statement.new(self, @handle, "select DATABASE()", @mutex)
+            sth.execute
+            res = sth.fetch
+            sth.finish
+            return res[0]
+        end
+
         def ping
             begin
                 @handle.ping

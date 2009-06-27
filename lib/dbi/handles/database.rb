@@ -132,6 +132,14 @@ module DBI
         end
 
         #
+        # Return the name of the database we are connected to.
+        #
+        def database_name
+            sanity_check
+            @handle.database_name
+        end
+
+        #
         # Return the tables available to this DatabaseHandle as an array of strings.
         #
         def tables
