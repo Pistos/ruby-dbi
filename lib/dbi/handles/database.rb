@@ -9,6 +9,7 @@ module DBI
     # database is not connected.
     class DatabaseHandle < Handle
 
+        attr_accessor :last_statement
         attr_accessor :raise_error
 
         # This is the driver name as supplied by the DBD's driver_name method.
@@ -49,6 +50,7 @@ module DBI
         #
         def prepare(stmt)
             sanity_check(stmt)
+            @last_statement = stmt
             sth = StatementHandle.new(@handle.prepare(stmt), false, true, @convert_types)
             # FIXME trace sth.trace(@trace_mode, @trace_output)
             sth.dbh = self
@@ -71,6 +73,7 @@ module DBI
         def execute(stmt, *bindvars)
             sanity_check(stmt)
 
+            @last_statement = stmt
             if @convert_types
                 bindvars = DBI::Utils::ConvParam.conv_param(driver_name, *bindvars)
             end
@@ -99,6 +102,7 @@ module DBI
         def do(stmt, *bindvars)
             sanity_check(stmt)
 
+            @last_statement = stmt
             @handle.do(stmt, *DBI::Utils::ConvParam.conv_param(driver_name, *bindvars))
         end
 
