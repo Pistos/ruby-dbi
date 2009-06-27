@@ -36,7 +36,7 @@ module DBI
         # Only things that extend DBI's results are documented.
         #
         class SQLite
-            VERSION = "0.1.1"
+            VERSION = "0.1.2"
             DESCRIPTION = "SQLite 2.x DBI DBD"
 
             #
