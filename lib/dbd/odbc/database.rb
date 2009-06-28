@@ -9,6 +9,10 @@ class DBI::DBD::ODBC::Database < DBI::BaseDatabase
         raise DBI::DatabaseError.new(err.message)
     end
 
+    def database_name
+        @handle.get_info('SQL_DATABASE_NAME')
+    end
+
     def ping
         @handle.connected?
     end

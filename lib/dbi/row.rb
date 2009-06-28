@@ -226,8 +226,18 @@ module DBI
             def clone
                 Marshal.load(Marshal.dump(self))
             end
-            
-            alias dup clone
+
+            def dup
+                row = self.class.allocate
+                row.instance_variable_set :@column_types,  @column_types
+                row.instance_variable_set :@convert_types, @convert_types
+                row.instance_variable_set :@column_map,    @column_map
+                row.instance_variable_set :@column_names,  @column_names
+                # this is the only one we actually dup...
+                row.instance_variable_set :@arr,           arr = @arr.dup
+                row.instance_variable_set :@_dc_obj,       arr
+                row
+            end
         end
 
         private

@@ -102,19 +102,75 @@ module DBI
         # Represents a SQL TIMESTAMP and returns DateTime. Falls back to Null.
         #
         class Timestamp < Null
+            def self.create(year, month, day, hour, min, sec, usec=0, of=0)
+                # DateTime will remove leap and leap-leap seconds
+                sec = 59 if sec > 59
+                # store this before we modify it
+                civil = year, month, day
+                time  = hour, min, sec, usec / 86400000000.0
+                if month <= 2
+                    month += 12
+                    year  -= 1
+                end
+                y   = year + 4800
+                m   = month - 3
+                jd  = day + (153 * m + 2) / 5 + 365 * y + y / 4 - y / 100 + y / 400 - 32045
+                #fr  = hour / 24.0 + min / 1440.0 + sec / 86400.0
+                # ridiculously, this line does the same thing but twice as fast... :/
+                fr  = ::Time.gm(1970, 1, 1, hour, min, sec, usec).to_f / 86400
+                date = ::DateTime.new!(jd + fr - 0.5, of, ::DateTime::ITALY)
+                prefill_cache date, civil, time
+                date
+            end
+
+            if RUBY_VERSION =~ /^1\.8\./
+                def self.prefill_cache date, civil, time
+                    date.instance_variable_set :"@__#{:civil.to_i}__", [civil]
+                    date.instance_variable_set :"@__#{:time.to_i}__",  [time]
+                end
+            else
+                def self.prefill_cache date, civil, time
+                    date.instance_variable_get(:@__ca__)[:civil.object_id] = civil
+                    date.instance_variable_get(:@__ca__)[:time.object_id] = time
+                end
+            end
+
+            def self.parse_string str
+                # special casing the common formats here gives roughly an
+                # 8-fold speed boost over using Date._parse
+                case str
+                when /^(\d{4})-(\d{2})-(\d{2})(?: (\d{2}):(\d{2}):(\d{2})(\.\d+)?)?(?: ([+-]?\d{2}):?(\d{2}))?$/
+                    parts = $~[1..-4].map { |s| s.to_i }
+                    parts << $7.to_f * 1000000.0
+                    parts << ($8 ? ($8.to_f * 60 + $9.to_i) / 1440 : 0)
+                else
+                    parts = ::Date._parse(str).values_at(:year, :mon, :mday, :hour, :min, :sec, :sec_fraction, :offset)
+                    # some defaults
+                    today = nil
+                    8.times do |i|
+                        next if parts[i]
+                        today ||= ::Time.now.to_a.values_at(5, 4, 3) + [0, 0, 0, 0, 0]
+                        parts[i] = today[i]
+                    end
+                    parts[6] *= 1000000.0
+                    parts[7] /= 86400.0
+                end
+                parts
+            end
+
             def self.parse(obj)
-                obj = super
-                return obj unless obj
-                case obj.class
+                case obj
                 when ::DateTime
                     return obj
                 when ::Date
-                    return ::DateTime.parse(obj.to_s)
+                    return create(obj.year, obj.month, obj.day, 0, 0, 0)
                 when ::Time
-                    return ::DateTime.parse(obj.to_s)
+                    return create(obj.year, obj.month, obj.day, obj.hour, obj.min, obj.sec, obj.usec, obj.utc_offset / 86400.0)
                 else
-                    return ::DateTime.parse(obj.to_s)   if obj.respond_to? :to_s
-                    return ::DateTime.parse(obj.to_str) if obj.respond_to? :to_str
+                    obj = super
+                    return obj unless obj
+                    return create(*parse_string(obj.to_s))   if obj.respond_to? :to_s
+                    return create(*parse_string(obj.to_str)) if obj.respond_to? :to_str
                     return obj
                 end
             end

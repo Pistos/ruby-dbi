@@ -49,7 +49,7 @@ module DBI
         # Only things that extend DBI's results are documented.
         #
         module Mysql
-            VERSION          = "0.4.2"
+            VERSION          = "0.4.3"
             DESCRIPTION      = "MySQL DBI DBD, Leverages 'mysql' low-level driver"
 
             MyError = ::MysqlError
@@ -109,28 +109,6 @@ module DBI::DBD::Mysql::Util
 end # module Util
 
 module DBI::DBD::Mysql::Type
-    #
-    # Custom handling for TIMESTAMP and DATETIME types in MySQL. See DBI::Type
-    # for more information.
-    #
-    class Timestamp < DBI::Type::Null
-        def self.parse(obj)
-            obj = super
-            return obj unless obj
-
-            case obj.class
-            when ::DateTime
-                return obj
-            when ::String
-                return ::DateTime.strptime(obj, "%Y-%m-%d %H:%M:%S")
-            else
-                return ::DateTime.parse(obj.to_s)   if obj.respond_to? :to_s
-                return ::DateTime.parse(obj.to_str) if obj.respond_to? :to_str
-                return obj
-            end
-        end
-    end
-
     #
     # Custom handling for DATE types in MySQL. See DBI::Type for more
     # information.

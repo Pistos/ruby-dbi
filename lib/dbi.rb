@@ -90,7 +90,7 @@ Deprecate.set_action(
 
 #++
 module DBI
-    VERSION = "0.4.1"
+    VERSION = "0.4.2"
 
     module DBD # :nodoc:
         API_VERSION = "0.3"
@@ -107,6 +107,12 @@ module DBI
     @@trace_output   = DEFAULT_TRACE_OUTPUT
     @@caseless_driver_name_map = nil
     @@convert_types  = true
+    @@last_connection = nil
+
+    # Return the last connection attempted.
+    def self.last_connection
+        @@last_connection
+    end
 
     # Return the current status of type conversion at this level. This status
     # will be propogated to any new DatabaseHandles created.
@@ -139,7 +145,7 @@ module DBI
             dr, db_args = _get_full_driver(driver_url)
             dh = dr[0] # driver-handle
             dh.convert_types = @@convert_types
-            dh.connect(db_args, user, auth, params, &p)
+            @@last_connection = dh.connect(db_args, user, auth, params, &p)
         end
 
         # Load a DBD and returns the DriverHandle object
@@ -255,7 +261,7 @@ module DBI
                         begin
                             require @@caseless_driver_name_map[dc] if @@caseless_driver_name_map[dc]
                         rescue LoadError => e2
-                            raise e.class, "Could not find driver #{driver_name} or #{driver_name.downcase} (error: #{e1.message})"
+                            raise e1.class, "Could not find driver #{driver_name} or #{driver_name.downcase} (error: #{e1.message})"
                         end
                     end
 
