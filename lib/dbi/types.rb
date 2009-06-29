@@ -107,7 +107,7 @@ module DBI
                 sec = 59 if sec > 59
                 # store this before we modify it
                 civil = year, month, day
-                time  = hour, min, sec, usec / 86400000000.0
+                time  = hour, min, sec, usec
                 if month <= 2
                     month += 12
                     year  -= 1
@@ -125,11 +125,13 @@ module DBI
 
             if RUBY_VERSION =~ /^1\.8\./
                 def self.prefill_cache date, civil, time
+                		time[3] /= 86400000000.0
                     date.instance_variable_set :"@__#{:civil.to_i}__", [civil]
                     date.instance_variable_set :"@__#{:time.to_i}__",  [time]
                 end
             else
                 def self.prefill_cache date, civil, time
+                		time[3] /= 1000000.0
                     date.instance_variable_get(:@__ca__)[:civil.object_id] = civil
                     date.instance_variable_get(:@__ca__)[:time.object_id] = time
                 end
