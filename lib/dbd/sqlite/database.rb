@@ -46,6 +46,15 @@ class DBI::DBD::SQLite::Database < DBI::BaseDatabase
         @db = nil
     end
 
+    def database_name
+        st = DBI::DBD::SQLite::Statement.new('PRAGMA database_list', self)
+        st.execute
+        row = st.fetch
+        st.finish
+
+        return row[2]
+    end
+
     def prepare(stmt)
         return DBI::DBD::SQLite::Statement.new(stmt, self)
     end

@@ -13,14 +13,17 @@ end
 task :package         => (map_task("package") + map_task("gem"))
 task :clobber_package => map_task("clobber_package")
 
+desc 'Run interface tests (no database connectivity required)'
 task :test_dbi do
     ruby("test/ts_dbi.rb")
 end
 
+desc 'Run database-specific tests'
 task :test_dbd do
     ruby("test/ts_dbd.rb")
 end
 
+desc 'Run full test suite'
 task :test => [:test_dbi, :test_dbd]
 
 build_dbi_tasks

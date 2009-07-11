@@ -46,6 +46,15 @@ class DBI::DBD::SQLite3::Database < DBI::BaseDatabase
         DBI::DBD::SQLite3::Statement.new(statement, @db)
     end
 
+    def database_name
+        st = DBI::DBD::SQLite3::Statement.new('PRAGMA database_list', @db)
+        st.execute
+        row = st.fetch
+        st.finish
+
+        return row[2]
+    end
+
     def ping()
         not @db.closed?
     end

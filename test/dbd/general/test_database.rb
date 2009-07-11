@@ -1,5 +1,18 @@
 @class = Class.new(DBDConfig.testbase(DBDConfig.current_dbtype)) do
 
+    def test_last_statement
+        @sth = @dbh.prepare("select * from names")
+        @sth.finish
+        assert_equal "select * from names", @dbh.last_statement
+
+        @sth = @dbh.execute("select * from names")
+        @sth.finish
+        assert_equal "select * from names", @dbh.last_statement
+         
+        @dbh.do("select * from names")
+        assert_equal "select * from names", @dbh.last_statement
+    end
+
     def test_empty_query
         ["", " ", "\t"].each do |str|
             [:do, :prepare, :execute, :select_one, :select_all].each do |call|

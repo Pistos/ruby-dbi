@@ -102,6 +102,10 @@ class DBI::DBD::Pg::Database < DBI::BaseDatabase
         answer.clear if answer
     end
 
+    def database_name
+        @connection.db
+    end
+
     def tables
         stmt = execute("SELECT c.relname FROM pg_catalog.pg_class c WHERE c.relkind IN ('r','v') and pg_catalog.pg_table_is_visible(c.oid)")
         res = stmt.fetch_all.collect {|row| row[0]} 
