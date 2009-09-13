@@ -174,7 +174,7 @@ DBI::TypeUtil.register_conversion(pg.driver_name) do |obj|
              when ::DateTime
                  obj.strftime("%Y-%m-%dT%H:%M:%S.%N")
              when ::Time
-                 ::DateTime.parse(obj.to_s).strftime("%Y-%m-%dT%H:%M:%S.%N")
+                 ::DateTime.parse(obj.to_s).strftime("%H:%M:%S.%N")
              when ::Date
                  obj.strftime("%Y-%m-%d")
              when ::Array
