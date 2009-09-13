@@ -41,7 +41,7 @@ namespace :dbi do
     spec.name        = 'dbi'
     spec.version     = DBI::VERSION
     spec.test_file   = 'test/ts_dbi.rb'
-    spec.executables = ['dbi']
+    spec.executables = ['dbi', 'test_broken_dbi']
     spec.files       = gem_files(code_files)
     spec.summary     = 'A vendor independent interface for accessing databases, similar to Perl\'s DBI'
     spec.description = 'A vendor independent interface for accessing databases, similar to Perl\'s DBI'
