@@ -9,6 +9,10 @@ class DBI::DBD::ODBC::Database < DBI::BaseDatabase
         raise DBI::DatabaseError.new(err.message)
     end
 
+    def database_name
+        @handle.get_info('SQL_DATABASE_NAME')
+    end
+
     def ping
         @handle.connected?
     end
@@ -87,6 +91,7 @@ class DBI::DBD::ODBC::Database < DBI::BaseDatabase
     #
     # * AutoCommit: force a commit after each statement execution.
     # * odbc_ignorecase: Be case-insensitive in operations. 
+    # * odbc_timeout: Return after a certain time regardless of whether the operation returned anything.
     #
     def []=(attr, value)
         case attr
@@ -94,6 +99,8 @@ class DBI::DBD::ODBC::Database < DBI::BaseDatabase
             @handle.autocommit(value)
         when 'odbc_ignorecase'
             @handle.ignorecase(value)
+        when 'odbc_timeout'
+            @handle.timeout(value)
         else
             if attr =~ /^odbc_/ or attr != /_/
                 raise DBI::NotSupportedError, "Option '#{attr}' not supported"
