@@ -1,4 +1,4 @@
-$LOAD_PATH.unshift(File.dirname(__FILE__))
+$LOAD_PATH.unshift(File.dirname(__FILE__)) unless $LOAD_PATH.include?(File.dirname(__FILE__))
 #
 # DBI - Database Interface for Ruby. Please see the files README, DBI_SPEC,
 # DBD_SPEC for more information.
@@ -90,7 +90,7 @@ Deprecate.set_action(
 
 #++
 module DBI
-    VERSION = "0.4.2"
+    VERSION = "0.4.3"
 
     module DBD # :nodoc:
         API_VERSION = "0.3"

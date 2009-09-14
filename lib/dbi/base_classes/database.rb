@@ -104,7 +104,7 @@ module DBI
         #
         # Roughly equivalent to:
         #
-        #   sth = dbh.prepare("my statement)
+        #   sth = dbh.prepare("my statement")
         #   sth.execute(my, bind, vars)
         #   result = sth.rows
         #   sth.finish
