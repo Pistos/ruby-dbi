@@ -1,5 +1,10 @@
 require 'dbd/Pg'
 
+module DBI
+  class ForcedError < ::DBI::Error
+  end
+end
+
 ######################################################################
 # Test the PostgreSql DBD driver.  This test exercises options
 # difficult to test through the standard DBI interface.
@@ -59,7 +64,7 @@ class TestDbdPostgres < DBDConfig.testbase(:postgresql)
             # XXX this is a potentially horrible way of doing it since it'll
             # create another prepared statement, but *at this time*, I don't
             # see any drawbacks and the alternative is considerably uglier.
-            
+
             @sth = @dbh.prepare("select count(*) from pg_prepared_statements where name = ?")
             @sth.execute(sth_internal_name)
             assert_equal([0], @sth.fetch)
@@ -163,13 +168,29 @@ class TestDbdPostgres < DBDConfig.testbase(:postgresql)
                     :type_name =>"integer",
                     :unique =>nil,
                     :array_of_type =>nil
-        
+
                 }
-            ], 
+            ],
             @dbh.columns('tbl')
         )
-                                
+
     end
+
+  def test_statement_name_uniqueness
+    5000.times do
+      begin
+        @dbh.prepare('SELECT 1').execute()
+        raise DBI::ForcedError
+        sth.finish # never reached
+      rescue DBI::ProgrammingError => e
+        # ERROR:  prepared statement "ruby-dbi:Pg:-604926268" already exists
+        # This should never happen
+        raise e
+      rescue DBI::ForcedError
+        # no-op
+      end
+    end
+  end
 
   def test_connect_errors
     dbd = nil
@@ -204,7 +225,7 @@ class TestDbdPostgres < DBDConfig.testbase(:postgresql)
     dbd = get_dbd
     res = dbd.do("INSERT INTO names (name, age) VALUES('Dan', 16)")
     assert_equal 1, res
-    
+
     @sth = get_dbi.prepare("SELECT name FROM names WHERE age=16")
     @sth.execute
     assert @sth.fetchable?
@@ -269,7 +290,7 @@ class TestDbdPostgres < DBDConfig.testbase(:postgresql)
       # per bug #1082, views do not show up in tables listing.
       assert get_dbi.tables.include?("view_names")
   end
-  
+
   def get_dbi
       config = DBDConfig.get_config
       DBI.connect("dbi:Pg:#{config['postgresql']['dbname']}", config['postgresql']['username'], config['postgresql']['password'])
