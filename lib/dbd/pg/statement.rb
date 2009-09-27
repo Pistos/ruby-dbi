@@ -14,7 +14,7 @@ class DBI::DBD::Pg::Statement < DBI::BaseStatement
         super(db)
         @db  = db
         @sql = sql
-        @stmt_name = PG_STMT_NAME_PREFIX + self.object_id.to_s
+        @stmt_name = PG_STMT_NAME_PREFIX + self.object_id.to_s + Time.now.to_f.to_s
         @result = nil
         @bindvars = []
         @prepared = false
@@ -33,17 +33,17 @@ class DBI::DBD::Pg::Statement < DBI::BaseStatement
     # DBI::Binary objects are passed in.
     #
     def execute
-        # replace DBI::Binary object by oid returned by lo_import 
+        # replace DBI::Binary object by oid returned by lo_import
         @bindvars.collect! do |var|
             if var.is_a? DBI::Binary then
                 oid = @db.__blob_create(PGconn::INV_WRITE)
                 @db.__blob_write(oid, var.to_s)
-                oid 
+                oid
             else
                 var
             end
         end
-        
+
         internal_prepare
 
         if not @db['AutoCommit'] then
@@ -93,7 +93,7 @@ class DBI::DBD::Pg::Statement < DBI::BaseStatement
 
     #
     # Attributes:
-    # 
+    #
     # If +pg_row_count+ is requested and the statement has already executed,
     # postgres will return what it believes is the row count.
     #
@@ -110,7 +110,7 @@ class DBI::DBD::Pg::Statement < DBI::BaseStatement
         end
     end
 
-    private 
+    private
 
     #
     # A native binding helper.
