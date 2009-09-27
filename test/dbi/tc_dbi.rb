@@ -22,7 +22,7 @@ class TC_DBI < Test::Unit::TestCase
     end
 
     def test_dbi_version
-        assert_equal("0.4.2", DBI::VERSION)
+        assert_equal("0.4.3", DBI::VERSION)
     end
 
     def test_dbd_module
@@ -138,7 +138,7 @@ class TC_DBI < Test::Unit::TestCase
    def test_connect
        assert_respond_to(DBI, :connect)
    end
-   
+
    def test_available_drivers
        assert_respond_to(DBI, :available_drivers)
        assert_equal(
@@ -167,7 +167,7 @@ class TC_DBI < Test::Unit::TestCase
 
       # XXX we're looking for a specific exception message here
       assert_nothing_raised do
-          begin 
+          begin
               DBI.send(:parse_url, 'dbi:blah')
           rescue DBI::InterfaceError => e
               assert true
