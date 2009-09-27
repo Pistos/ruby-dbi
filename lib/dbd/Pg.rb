@@ -3,16 +3,16 @@
 #
 # Copyright (c) 2001, 2002, 2003 Jim Weirich, Michael Neumann <mneumann@ntecs.de>
 # Copyright (c) 2008 Erik Hollensbe, Christopher Maujean
-# 
+#
 # All rights reserved.
 #
-# Redistribution and use in source and binary forms, with or without 
-# modification, are permitted provided that the following conditions 
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions
 # are met:
-# 1. Redistributions of source code must retain the above copyright 
+# 1. Redistributions of source code must retain the above copyright
 #    notice, this list of conditions and the following disclaimer.
-# 2. Redistributions in binary form must reproduce the above copyright 
-#    notice, this list of conditions and the following disclaimer in the 
+# 2. Redistributions in binary form must reproduce the above copyright
+#    notice, this list of conditions and the following disclaimer in the
 #    documentation and/or other materials provided with the distribution.
 # 3. The name of the author may not be used to endorse or promote products
 #    derived from this software without specific prior written permission.
@@ -49,12 +49,12 @@ module DBI
         # Only things that extend DBI's results are documented.
         #
         module Pg
-            VERSION          = "0.3.8"
+            VERSION          = "0.3.9"
             DESCRIPTION      = "PostgreSQL DBI DBD"
 
             #
             # returns 'Pg'
-            # 
+            #
             # See DBI::TypeUtil#convert for more information.
             #
             def self.driver_name
@@ -110,7 +110,7 @@ module DBI
                 pos = ftype.index('(')
                 decimal = nil
                 size = nil
-                array_of_type = nil 
+                array_of_type = nil
 
                 if pos != nil
                     type = ftype[0..pos-1]
