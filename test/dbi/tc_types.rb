@@ -135,6 +135,47 @@ class TC_DBI_Type < Test::Unit::TestCase
             "#{md}-2008 10:01:02",
             klass.parse(DateTime.parse("10/11/2008 10:01:02")).strftime("%m-%d-%Y %H:%M:%S")
         )
+
+        # precision tests, related to ticket #27182
+      
+        # iso8601 (bypasses regex)
+        [
+            '2009-09-27T19:41:00-05:00',
+            '2009-09-27T19:41:00.123-05:00'
+        ].each do |string|
+            assert_equal(DateTime.parse(string), klass.parse(string))
+        end
+
+        # offset comparison check
+        assert_equal(
+            DateTime.parse('2009-09-27T19:41:00.123-05:00'),
+            klass.parse('2009-09-28T00:41:00.123+00:00')
+        )
+
+        assert_equal(
+            DateTime.parse('2009-09-28T00:41:00.123+00:00'),
+            klass.parse('2009-09-27T19:41:00.123-05:00')
+        )
+
+        # unix convention (uses regex)
+        
+        [
+            '2009-09-27 19:41:00 -05:00',
+            '2009-09-27 19:41:00.123 -05:00'
+        ].each do |string|
+            assert_equal(DateTime.parse(string), klass.parse(string))
+        end
+
+        # offset comparison check
+        assert_equal(
+            DateTime.parse('2009-09-27 19:41:00.123 -05:00'),
+            klass.parse('2009-09-28 00:41:00.123 +00:00')
+        )
+
+        assert_equal(
+            DateTime.parse('2009-09-28 00:41:00.123 +00:00'),
+            klass.parse('2009-09-27 19:41:00.123 -05:00')
+        )
     end
 end
 
