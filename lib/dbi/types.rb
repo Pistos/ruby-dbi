@@ -1,5 +1,6 @@
 require 'time'
 require 'bigdecimal'
+require 'rational'
 
 module DBI
     #
@@ -108,30 +109,24 @@ module DBI
                 # store this before we modify it
                 civil = year, month, day
                 time  = hour, min, sec, usec
-                if month <= 2
-                    month += 12
-                    year  -= 1
-                end
-                y   = year + 4800
-                m   = month - 3
-                jd  = day + (153 * m + 2) / 5 + 365 * y + y / 4 - y / 100 + y / 400 - 32045
-                #fr  = hour / 24.0 + min / 1440.0 + sec / 86400.0
-                # ridiculously, this line does the same thing but twice as fast... :/
-                fr  = ::Time.gm(1970, 1, 1, hour, min, sec, usec).to_f / 86400
-                date = ::DateTime.new!(jd + fr - 0.5, of, ::DateTime::ITALY)
-                prefill_cache date, civil, time
+                
+                date = ::DateTime.civil(year, month, day, hour, min, sec, of)
+                date += usec
+                #prefill_cache date, civil, time
                 date
             end
 
+            # FIXME these methods are broken, I don't know why, and I don't really care right now.
+            #       we shouldn't be playing in datetime's garden anyways.
             if RUBY_VERSION =~ /^1\.8\./
                 def self.prefill_cache date, civil, time
-                		time[3] /= 86400000000.0
+                    time[3] /= 86400000000.0
                     date.instance_variable_set :"@__#{:civil.to_i}__", [civil]
                     date.instance_variable_set :"@__#{:time.to_i}__",  [time]
                 end
             else
                 def self.prefill_cache date, civil, time
-                		time[3] /= 1000000.0
+                    time[3] /= 1000000.0
                     date.instance_variable_get(:@__ca__)[:civil.object_id] = civil
                     date.instance_variable_get(:@__ca__)[:time.object_id] = time
                 end
@@ -143,8 +138,14 @@ module DBI
                 case str
                 when /^(\d{4})-(\d{2})-(\d{2})(?: (\d{2}):(\d{2}):(\d{2})(\.\d+)?)?(?: ([+-]?\d{2}):?(\d{2}))?$/
                     parts = $~[1..-4].map { |s| s.to_i }
-                    parts << $7.to_f * 1000000.0
-                    parts << ($8 ? ($8.to_f * 60 + $9.to_i) / 1440 : 0)
+                    # i feel unclean. if we have fractional seconds, pad the number and then stuff it into a rational.
+                    if $7
+                        frac = $7.to_f * 10000000
+                        parts << Rational(frac.to_i, 864000000000)
+                    else
+                        parts << 0
+                    end
+                    parts << Rational(($8 || 0).to_i * 60 + ($9 || 0).to_i, 1440)
                 else
                     parts = ::Date._parse(str).values_at(:year, :mon, :mday, :hour, :min, :sec, :sec_fraction, :offset)
                     # some defaults
@@ -154,8 +155,9 @@ module DBI
                         today ||= ::Time.now.to_a.values_at(5, 4, 3) + [0, 0, 0, 0, 0]
                         parts[i] = today[i]
                     end
-                    parts[6] *= 1000000.0
-                    parts[7] /= 86400.0
+                    parts[6] = parts[6].kind_of?(Rational) ? parts[6] : Rational(parts[6], 1)
+                    parts[6] *= Rational(1, 86400)
+                    parts[7] = Rational(parts[7], 86400)
                 end
                 parts
             end
@@ -167,7 +169,7 @@ module DBI
                 when ::Date
                     return create(obj.year, obj.month, obj.day, 0, 0, 0)
                 when ::Time
-                    return create(obj.year, obj.month, obj.day, obj.hour, obj.min, obj.sec, obj.usec, obj.utc_offset / 86400.0)
+                    return create(obj.year, obj.month, obj.day, obj.hour, obj.min, obj.sec, Rational(obj.usec, 86400000000), Rational(obj.utc_offset, 86400))
                 else
                     obj = super
                     return obj unless obj
