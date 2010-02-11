@@ -1,7 +1,7 @@
 module DBI::DBD::Mysql
     #
     # Models the DBI::BaseDatabase API to create DBI::DatabaseHandle objects.
-    # 
+    #
     class Database < DBI::BaseDatabase
         include Util
 
@@ -52,7 +52,7 @@ module DBI::DBD::Mysql
         }
 
 
-        # 
+        #
         # This maps type names to DBI Types.
         #
         TYPE_MAP = {}
@@ -139,7 +139,7 @@ module DBI::DBD::Mysql
             @have_transactions = (server_version >= 32317)
             # assume that the connection begins in AutoCommit mode
             @attr['AutoCommit'] = true
-            @mutex = Mutex.new 
+            @mutex = Mutex.new
         end
 
         def disconnect
@@ -182,7 +182,7 @@ module DBI::DBD::Mysql
         # * indexed: true if the column belongs to an index.
         # * primary: true if the column is a part of a primary key.
         # * unique: true if the values in this column are unique.
-        # * default: the default value if this column is not explicitly set. 
+        # * default: the default value if this column is not explicitly set.
         #
         def columns(table)
             dbh = DBI::DatabaseHandle.new(self)
@@ -191,7 +191,7 @@ module DBI::DBD::Mysql
                 sth.each do |row|
                     uniques << row[4] if row[1] == 0
                 end
-            end  
+            end
 
             ret = nil
             dbh.execute("SHOW FIELDS FROM #{table}") do |sth|
