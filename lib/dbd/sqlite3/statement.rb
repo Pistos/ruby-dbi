@@ -46,7 +46,7 @@ class DBI::DBD::SQLite3::Statement < DBI::BaseStatement
               'type_name' => m[1],
               'sql_type' => 
                     begin
-                          DBI.const_get('SQL_'+m[1].upcase)
+                        DBI.const_get('SQL_'+m[1].upcase)
                     rescue NameError
                         DBI::SQL_OTHER
                     end,

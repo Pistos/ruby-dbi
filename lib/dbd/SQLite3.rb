@@ -114,7 +114,9 @@ DBI::TypeUtil.register_conversion(DBI::DBD::SQLite3.driver_name) do |obj|
                  # SQLite3 is managing its own conversion right now, until I'm happy let's keep it that way
                  obj.dup rescue obj
              end
-    if newobj.object_id == obj.object_id
+    if newobj.kind_of?(::Symbol)
+        newobj.to_s
+    elsif newobj.object_id == obj.object_id
         [newobj, true]
     else
         [newobj, false]

@@ -259,6 +259,7 @@ class TC_DBI_TypeUtil_Custom < Test::Unit::TestCase
     end
 
     def test_custom_fallthrough
+        assert_equal("'foo'", cast(:foo))
         assert_equal("'foo'", cast("foo"))
         assert_equal("'foo''bar'", cast("foo'bar"))
         assert_equal("1", cast(1))

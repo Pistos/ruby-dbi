@@ -72,5 +72,17 @@ class TestStatement < DBDConfig.testbase(:sqlite3)
 
             assert_equal([[11111111.111111], [22]], @dbh.select_all("select * from db_specific_types_test"))
         end
+
+        assert_nothing_raised do
+            @sth = @dbh.prepare("insert into names (name, age) values (?, ?)")
+            @sth.execute(:joseph, 20)
+            @sth.finish
+
+            @sth = @dbh.prepare("select name, age from names where name=?")
+            @sth.execute("joseph")
+            rows = @sth.fetch_all
+            @sth.finish
+            assert_equal(rows, [["joseph", 20]])
+        end
     end
 end

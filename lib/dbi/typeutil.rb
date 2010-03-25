@@ -94,7 +94,8 @@ DBI::TypeUtil.register_conversion("default") do |obj|
         "'0'"
     when ::Time, ::Date, ::DateTime
         "'#{::DateTime.parse(obj.to_s).strftime("%Y-%m-%dT%H:%M:%S")}'"
-    when ::String
+    when ::String, ::Symbol
+        obj = obj.to_s
         obj = obj.gsub(/\\/) { "\\\\" }
         obj = obj.gsub(/'/) { "''" }
         "'#{obj}'"
